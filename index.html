@@ -3,22 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: 3 Turns Valkyrie</title>
+    <title>Viking Saga: Power Up</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #fff; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
-        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; }
-        .arena { height: 25vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; flex-shrink: 0; }
+        .arena { height: 26vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
         .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .p-icon { width: 85px; height: 85px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
+        .p-icon { width: 80px; height: 80px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
         
-        .bar-bg { width: 100%; height: 18px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
+        .bar-bg { width: 100%; height: 16px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
-        .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 10px; line-height: 18px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
+        .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 9px; line-height: 16px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
+
+        .skill-bar { width: 100%; height: 6px; background: #111; margin-top: 3px; border-radius: 3px; overflow: hidden; border: 1px solid #333; }
+        .skill-fill { height: 100%; width: 0%; transition: 0.3s; }
 
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
-        #grid-container { width: 95vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
+        #grid-container { width: 92vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
         .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; }
         .selected { outline: 3px solid #fff; z-index: 20; background-color: #333; }
         
@@ -26,7 +29,7 @@
         .light { border: 2px solid var(--gold); box-shadow: inset 0 0 10px var(--gold); }
         .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: #fff; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #fff; font-weight: bold; z-index: 10; }
 
-        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; }
+        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; flex-shrink: 0; }
         #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 10px var(--blue); cursor: pointer; }
 
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
@@ -48,10 +51,12 @@
         <div class="char-box" onclick="showInfo('p')">
             <img src="hero1.png" class="p-icon" style="border-color:var(--accent)">
             <div class="bar-bg"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div><div id="hp-p-txt" class="bar-txt">100/100</div></div>
+            <div class="skill-bar"><div id="p-skill-fill" class="skill-fill" style="background:var(--blue)"></div></div>
         </div>
         <div class="char-box" onclick="showInfo('e')">
             <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
             <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div id="hp-e-txt" class="bar-txt">100/100</div></div>
+            <div class="skill-bar" id="e-skill-wrap" style="display:none;"><div id="e-skill-fill" class="skill-fill" style="background:var(--purple)"></div></div>
         </div>
     </div>
 
@@ -91,17 +96,21 @@
 
 <script>
     let st = {
-        lvl: parseInt(localStorage.getItem('v_lvl')) || 1, atk: parseInt(localStorage.getItem('v_atk')) || 10,
-        mHP: parseInt(localStorage.getItem('v_mhp')) || 100, agi: parseInt(localStorage.getItem('v_agi')) || 5,
-        pts: parseInt(localStorage.getItem('v_pts')) || 0, thor: 0,
-        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 1, adm: 0, turnCnt: 0
+        lvl: parseInt(localStorage.getItem('v_lvl')) || 1, 
+        atk: parseInt(localStorage.getItem('v_atk')) || 10,
+        mHP: parseInt(localStorage.getItem('v_mhp')) || 100, 
+        agi: parseInt(localStorage.getItem('v_agi')) || 5,
+        pts: parseInt(localStorage.getItem('v_pts')) || 0, 
+        thor: 0, hp: 100, ehp: 100, mehp: 100, 
+        board: [], sel: null, lock: false, combo: 1, adm: 0, eSkill: 0
     };
 
     function init() {
         const isB = st.lvl % 25 === 0;
         st.mehp = isB ? (100 + st.lvl * 60) * 5 : 100 + st.lvl * 60;
-        st.ehp = st.mehp; st.hp = st.mHP; st.turnCnt = 0;
+        st.ehp = st.mehp; st.hp = st.mHP; st.eSkill = 0;
         document.getElementById('m-icon').src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
+        document.getElementById('e-skill-wrap').style.display = isB ? 'block' : 'none';
         
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
         for (let i = 0; i < 49; i++) {
@@ -119,6 +128,8 @@
         document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
         document.getElementById('hp-p-txt').innerText = Math.floor(st.hp) + "/" + st.mHP;
+        document.getElementById('p-skill-fill').style.width = st.thor + "%";
+        document.getElementById('e-skill-fill').style.width = st.eSkill + "%";
         document.getElementById('thor-btn').className = st.thor >= 100 ? 'ready' : '';
 
         st.board.forEach((o, i) => {
@@ -138,9 +149,7 @@
                 st.lock = true; swap(a, b);
                 if (!checkMatchesSimple()) {
                     setTimeout(() => { swap(a, b); st.lock = false; st.sel = null; draw(); }, 300);
-                } else {
-                    st.sel = null; resolveBoard();
-                }
+                } else { st.sel = null; resolveBoard(); }
             } else { st.sel = i; draw(); }
         }
     }
@@ -192,9 +201,7 @@
                     }
                 }
             }
-
             if (toClear.size === 0) break;
-
             rows4.forEach(r => { for(let c=0; c<7; c++) toClear.add(r*7+c); });
             expl5.forEach(ctr => {
                 for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) {
@@ -204,7 +211,7 @@
 
             let dmg = toClear.size * st.atk * st.combo;
             st.ehp -= dmg; pop(dmg + (st.combo>1?` x${st.combo}`:''));
-            st.thor = Math.min(100, st.thor + toClear.size);
+            st.thor = Math.min(100, st.thor + toClear.size * 2);
 
             toClear.forEach(i => { st.board[i].type = -1; st.board[i].light = 0; st.board[i].frozen = 0; });
             draw(); await new Promise(r => setTimeout(r, 300));
@@ -231,13 +238,15 @@
     function enemyTurn() {
         const isB = st.lvl % 25 === 0;
         let d = Math.floor(5 + st.lvl * 1.5);
-        st.turnCnt++;
-
-        if (isB && st.turnCnt >= 4) {
-            st.turnCnt = 0;
-            if (st.lvl === 25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen = 3; pop("ICE!"); }
-            if (st.lvl === 50) { d *= 3; pop("CRIT!"); }
-            if (st.lvl === 75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light = 4; pop("LIGHT!"); }
+        
+        if (isB) {
+            st.eSkill += 25;
+            if (st.eSkill >= 100) {
+                st.eSkill = 0;
+                if (st.lvl === 25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen = 3; pop("ICE!"); }
+                if (st.lvl === 50) { d *= 3; pop("CRIT!"); }
+                if (st.lvl === 75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light = 4; pop("LIGHT!"); }
+            }
         }
 
         st.board.forEach(o => {
@@ -255,7 +264,7 @@
 
     function useThor() {
         if (st.thor < 100 || st.lock) return;
-        st.thor = 0; st.ehp -= st.atk * 10;
+        st.thor = 0; st.ehp -= st.atk * 15; pop("THUNDER!");
         for(let i=0; i<15; i++) st.board[Math.floor(Math.random()*49)].type = -1;
         resolveBoard();
     }
@@ -267,23 +276,6 @@
         document.body.appendChild(p); setTimeout(() => p.remove(), 1000);
     }
 
-    function showInfo(t) {
-        const o = document.getElementById('info-overlay');
-        document.getElementById('info-t').innerText = t==='p' ? "ВИКИНГ" : "ВРАГ";
-        let b = "";
-        if (t === 'p') {
-            b = `Урон: ${st.atk}<br>Здоровье: ${st.mHP}<br>Ловкость: ${st.agi}%<br><br><b>Комбо:</b><br>4 в ряд - очистка линии.<br>5 в ряд - мощный взрыв вокруг.`;
-        } else {
-            let abi = "Рядовой противник.";
-            if (st.lvl === 25) abi = "<b>Босс Льда:</b> Морозит плитки на 3 хода.";
-            if (st.lvl === 50) abi = "<b>Босс Огня:</b> Наносит критический урон.";
-            if (st.lvl === 75) abi = "<b>Валькирия:</b> Создает 3 плитки Света. У тебя есть 3 хода, чтобы их убрать, иначе она исцелится.";
-            b = `Здоровье: ${st.mehp}<br>Урон: ${Math.floor(5 + st.lvl * 1.5)}<br><br>${abi}`;
-        }
-        document.getElementById('info-b').innerHTML = b;
-        o.style.display = 'flex';
-    }
-
     function admTrig() { st.adm++; if(st.adm>=5) { st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
     function jumpTo() { let l = parseInt(document.getElementById('jump-lvl').value); if(l>0){ st.lvl=l; save(); init(); closeO(); } }
     function addPts() { st.pts += 10; draw(); }
@@ -293,6 +285,12 @@
     function openF() { document.getElementById('f-menu').style.display='flex'; }
     function closeO() { document.querySelectorAll('.overlay').forEach(e => e.style.display='none'); }
     function buy(t) { if(st.pts>0){ if(t==='atk')st.atk+=2; if(t==='hp'){st.mHP+=20;st.hp+=20} if(t==='agi')st.agi++; st.pts--; draw(); save(); } }
+    function showInfo(t) {
+        const o = document.getElementById('info-overlay');
+        document.getElementById('info-t').innerText = t==='p' ? "ГЕРОЙ" : "ВРАГ";
+        document.getElementById('info-b').innerHTML = t==='p' ? `Урон: ${st.atk}<br>ОЗ: ${st.mHP}` : `Уровень: ${st.lvl}<br>ОЗ: ${st.mehp}`;
+        o.style.display = 'flex';
+    }
 
     init();
 </script>
