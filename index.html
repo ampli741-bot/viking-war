@@ -72,4 +72,242 @@
     <div class="arena" id="arena">
         <div id="upgrade-menu" class="overlay">
             <h2 style="color:var(--gold);">КУЗНИЦА</h2>
-            <p id="up-pts-
+            <p id="up-pts-info">Очков: 0</p>
+            <div class="up-row">
+                <div><b>СИЛА (ATK)</b><div style="font-size:10px; color:#aaa;">+2 к урону</div></div>
+                <button class="up-btn" onclick="upgrade('atk')">+</button>
+            </div>
+            <div class="up-row">
+                <div><b>ЖИЗНЬ (HP)</b><div style="font-size:10px; color:#aaa;">+20 макс HP</div></div>
+                <button class="up-btn" onclick="upgrade('hp')">+</button>
+            </div>
+            <div class="up-row">
+                <div><b>ЛОВКОСТЬ (AGI)</b><div style="font-size:10px; color:#aaa;">Шанс уворота</div></div>
+                <button class="up-btn" onclick="upgrade('agi')">+</button>
+            </div>
+            <div class="up-row">
+                <div><b>УДАЧА (ULT)</b><div style="font-size:10px; color:#aaa;">Быстрее заряд</div></div>
+                <button class="up-btn" onclick="upgrade('luck')">+</button>
+            </div>
+        </div>
+
+        <div id="info-screen" class="overlay">
+            <h2 style="color:var(--gold); margin: 0;">ГЕРОЙ</h2>
+            
+            <div class="stat-grid">
+                <div class="stat-card"><b>Сила (ATK)</b><span id="stat-atk">0</span></div>
+                <div class="stat-card"><b>Жизнь (HP)</b><span id="stat-hp">0</span></div>
+                <div class="stat-card"><b>Ловкость</b><span id="stat-agi">0%</span></div>
+                <div class="stat-card"><b>Удача (ULT)</b><span id="stat-luck">x0</span></div>
+            </div>
+
+            <div style="text-align:left; font-size:12px; line-height:1.4; background:#222; padding:12px; border-radius:8px; border:1px solid #444;">
+                <p style="margin-top:0; color:var(--gold);"><b>СПОСОБНОСТИ:</b></p>
+                🔨 <b>Молот Тора:</b> Наносит 20-кратный урон и ломает камни на поле. Заряжается синими рунами.<br><br>
+                💨 <b>Ловкость:</b> Шанс полностью проигнорировать удар врага.
+            </div>
+            <button class="btn ready" style="margin-top:15px" onclick="toggleInfo()">ВЕРНУТЬСЯ В БОЙ</button>
+        </div>
+
+        <div class="hp-bar"><div id="ehp" class="fill" style="background: #e74c3c;"></div></div>
+        <img id="mob-img" src="mob1.png">
+        <div class="hp-bar"><div id="php" class="fill" style="background: #2ecc71;"></div></div>
+    </div>
+
+    <div class="ui">
+        <div class="en-bar">
+            <div style="position:absolute; width:100%; line-height:24px; font-size:11px; font-weight:bold; z-index:11;">МОЛОТ ТОРА</div>
+            <div id="en-f" class="fill" style="background: #3498db; width: 0%;"></div>
+        </div>
+        <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
+    </div>
+
+    <div id="grid"></div>
+
+<script>
+    const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
+    const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6'];
+
+    let s = {
+        lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
+        atk: parseInt(localStorage.getItem('v_atk')) || 10,
+        maxHP: parseInt(localStorage.getItem('v_mhp')) || 100,
+        luck: parseInt(localStorage.getItem('v_luck')) || 5,
+        agi: parseInt(localStorage.getItem('v_agi')) || 0,
+        pts: parseInt(localStorage.getItem('v_pts')) || 0,
+        en: 0, hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null
+    };
+
+    function play(f) { new Audio(f + '.mp3').play().catch(()=>{}); }
+
+    function toggleInfo() {
+        const el = document.getElementById('info-screen');
+        // Обновляем цифры перед показом
+        document.getElementById('stat-atk').innerText = s.atk;
+        document.getElementById('stat-hp').innerText = s.maxHP;
+        document.getElementById('stat-luck').innerText = 'x' + s.luck;
+        document.getElementById('stat-agi').innerText = Math.floor((1 - (100 / (100 + s.agi))) * 100) + '%';
+        
+        el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    // Универсальный триггер админки
+    let admT;
+    const trig = document.getElementById('admin-trigger');
+    trig.addEventListener('mousedown', () => admT = setTimeout(() => document.getElementById('adm').style.display='block', 2000));
+    trig.addEventListener('mouseup', () => clearTimeout(admT));
+    trig.addEventListener('touchstart', () => admT = setTimeout(() => document.getElementById('adm').style.display='block', 2000));
+    trig.addEventListener('touchend', () => clearTimeout(admT));
+
+    window.addEventListener('keydown', (e) => { if(e.code === 'Space') useSuper(); });
+
+    function init() {
+        const isB = s.lvl % 25 === 0;
+        document.getElementById('mob-img').src = isB ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
+        s.maxEHP = (100 + (s.lvl * 30)) * (isB ? 4 : 1);
+        s.ehp = s.maxEHP; s.hp = s.maxHP;
+        
+        const g = document.getElementById('grid');
+        g.innerHTML = ''; s.board = [];
+        for (let i = 0; i < 49; i++) {
+            s.board.push(Math.floor(Math.random() * 5));
+            let d = document.createElement('div');
+            d.className = 'cell'; d.id = 'c' + i;
+            d.addEventListener('click', () => touch(i));
+            g.appendChild(d);
+        }
+        draw();
+    }
+
+    function upgrade(type) {
+        if (s.pts <= 0) return;
+        if (type === 'atk') s.atk += 2;
+        if (type === 'hp') s.maxHP += 20;
+        if (type === 'luck') s.luck += 1;
+        if (type === 'agi') s.agi += 5;
+        s.pts--; save(); 
+        if (s.pts <= 0) { document.getElementById('upgrade-menu').style.display='none'; init(); } 
+        else draw();
+    }
+
+    function save() {
+        localStorage.setItem('v_lvl', s.lvl);
+        localStorage.setItem('v_atk', s.atk);
+        localStorage.setItem('v_mhp', s.maxHP);
+        localStorage.setItem('v_luck', s.luck);
+        localStorage.setItem('v_agi', s.agi);
+        localStorage.setItem('v_pts', s.pts);
+    }
+
+    function draw() {
+        document.getElementById('lvl-txt').innerText = "LVL " + s.lvl;
+        document.getElementById('pts-txt').innerText = "PTS: " + s.pts;
+        document.getElementById('pts-txt').className = s.pts > 0 ? 'has-pts' : '';
+        
+        s.board.forEach((t, i) => {
+            const el = document.getElementById('c' + i);
+            el.style.backgroundColor = t === -1 ? '#000' : colors[t];
+            el.style.backgroundImage = t === -1 ? 'none' : `url(${runes[t]})`;
+            el.classList.toggle('sel', s.sel === i);
+        });
+        document.getElementById('php').style.width = (s.hp / s.maxHP * 100) + '%';
+        document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
+        document.getElementById('en-f').style.width = s.en + '%';
+        document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
+    }
+
+    function spawnDmg(val, isP) {
+        const d = document.createElement('div');
+        d.className = 'dmg-num'; d.innerText = (val === 0 ? 'DODGE' : '-' + Math.floor(val));
+        if(val === 0) d.style.color = '#3498db';
+        d.style.left = '50%'; d.style.top = isP ? '75%' : '35%';
+        document.getElementById('arena').appendChild(d);
+        setTimeout(() => d.remove(), 600);
+    }
+
+    async function touch(i) {
+        if (s.lock) return;
+        play('click');
+        if (s.sel === null) { s.sel = i; draw(); }
+        else {
+            let a = s.sel, b = i;
+            if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
+                s.lock = true;
+                [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+                draw();
+                if (!await check()) [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+            }
+            s.sel = null; s.lock = false; draw();
+        }
+    }
+
+    async function check() {
+        let found = false; let combo = 0;
+        while (true) {
+            let del = new Set();
+            for (let i = 0; i < 49; i++) {
+                if (s.board[i] === -1) continue;
+                if (i % 7 < 5 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) {
+                    for(let k=0; k<3; k++) del.add(i+k);
+                }
+                if (i < 35 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) {
+                    for(let k=0; k<3; k++) del.add(i+k*7);
+                }
+            }
+            if (del.size === 0) break;
+            found = true; combo++; play('match');
+            let d = del.size * s.atk * combo;
+            s.ehp -= d; spawnDmg(d, false);
+            del.forEach(idx => {
+                if (s.board[idx] === 1) s.en = Math.min(100, s.en + s.luck);
+                s.board[idx] = -1;
+            });
+            draw(); await new Promise(r => setTimeout(r, 200));
+            drop(); draw(); await new Promise(r => setTimeout(r, 200));
+        }
+        if (found) {
+            if (s.ehp <= 0) { 
+                play('win'); s.lvl++; s.pts += (s.lvl % 25 === 0 ? 5 : 1); save();
+                document.getElementById('upgrade-menu').style.display = 'flex';
+                draw();
+            } else enemy();
+        }
+        return found;
+    }
+
+    function drop() {
+        for (let c = 0; c < 7; c++) {
+            let empty = 0;
+            for (let r = 6; r >= 0; r--) {
+                let i = r * 7 + c;
+                if (s.board[i] === -1) empty++;
+                else if (empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
+            }
+            for (let r = 0; r < empty; r++) s.board[r*7+c] = Math.floor(Math.random() * 5);
+        }
+    }
+
+    function enemy() {
+        if (Math.random() < (1 - (100 / (100 + s.agi)))) {
+            spawnDmg(0, true); return; 
+        }
+        let dmg = 5 + Math.floor(s.lvl/5);
+        s.hp -= dmg; spawnDmg(dmg, true); play('hit');
+        const m = document.getElementById('mob-img');
+        m.style.transform = 'translate(-50%, -45%) scale(1.1)';
+        setTimeout(() => m.style.transform = 'translate(-50%, -50%) scale(1)', 100);
+        if (s.hp <= 0) { alert("Game Over"); location.reload(); }
+        draw();
+    }
+
+    async function useSuper() {
+        if (s.en < 100 || s.lock) return;
+        play('super'); s.lock = true; s.en = 0; 
+        s.ehp -= (s.atk * 20); spawnDmg(s.atk * 20, false);
+        for (let i = 0; i < 15; i++) s.board[Math.floor(Math.random()*49)] = -1;
+        draw(); await new Promise(r => setTimeout(r, 300));
+        drop(); await check(); s.lock = false;
+    }
+</script>
+</body>
+</html>
