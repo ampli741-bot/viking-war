@@ -3,44 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Fixed & Balanced</title>
+    <title>Viking Saga: Clean Arena</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #fff; }
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
         .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; flex-shrink: 0; }
-        .arena { height: 25vh; position: relative; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; flex-shrink: 0; }
-        .char-box { width: 42%; display: flex; flex-direction: column; align-items: center; z-index: 10; }
-        .p-icon { width: 90px; height: 90px; border-radius: 8px; border: 3px solid #444; background: #111; object-fit: cover; }
         
-        .bar-bg { width: 100%; height: 18px; background: #222; border-radius: 4px; margin-top: 3px; border: 1px solid #444; position: relative; overflow: hidden; }
+        /* АРЕНА БЕЗ ЛИШНИХ ИКОНОК */
+        .arena { height: 25vh; position: relative; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+        .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; z-index: 10; }
+        .p-icon { width: 95px; height: 95px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
+        
+        .bar-bg { width: 100%; height: 20px; background: #222; border-radius: 5px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
-        .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 10px; line-height: 18px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
+        .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 11px; line-height: 20px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
 
-        .skill-bar { width: 100%; height: 6px; background: #111; margin-top: 2px; border-radius: 3px; overflow: hidden; border: 1px solid #333; }
-        #main-mob { height: 100px; position: absolute; left: 50%; transform: translateX(-50%); z-index: 5; opacity: 0.8; }
+        .skill-bar { width: 100%; height: 8px; background: #111; margin-top: 4px; border-radius: 4px; overflow: hidden; border: 1px solid #333; }
 
-        /* Эффекты */
         #flash { position: fixed; inset: 0; background: var(--white); opacity: 0; pointer-events: none; z-index: 2000; }
         .lightning { animation: flash-anim 0.4s ease-out; }
         @keyframes flash-anim { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
 
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
         #grid-container { width: 95vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
-        .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; transition: 0.2s; }
+        .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; }
         .selected { background-color: #444 !important; outline: 2px solid #fff; z-index: 20; }
         
-        /* Модификаторы */
-        .frozen { border: 2px solid var(--blue) !important; filter: brightness(0.7) saturate(2); }
+        .frozen { border: 2px solid var(--blue) !important; filter: brightness(0.7) saturate(1.5); }
         .light { border: 2px solid var(--gold) !important; box-shadow: inset 0 0 15px var(--gold); }
-        .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; font-size: 10px; padding: 2px 5px; border-radius: 50%; font-weight: bold; border: 1px solid white; z-index: 5; }
+        .timer-badge { position: absolute; top: -4px; right: -4px; background: var(--red); color: white; font-size: 10px; min-width: 14px; height: 14px; border-radius: 50%; font-weight: bold; border: 1px solid white; display: flex; align-items: center; justify-content: center; z-index: 5; }
 
-        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; transition: 0.3s; }
-        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 15px var(--blue); cursor: pointer; }
+        #thor-btn { width: 90%; max-width: 350px; padding: 14px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; transition: 0.3s; text-transform: uppercase; }
+        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 15px var(--blue); cursor: pointer; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
 
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 15px; width: 85%; max-width: 300px; }
-        .menu-btn { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); color: #000; }
+        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 85%; max-width: 300px; }
+        .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); color: #000; }
         
         .dmg-text { position: absolute; font-size: 28px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
         @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-100px); } }
@@ -52,7 +52,7 @@
 
     <div class="header">
         <div style="color:var(--gold)" onclick="admTrigger()">УР. МИРА: <span id="lvl">1</span></div>
-        <div id="pts" onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: <span id="pts-val">0</span></div>
+        <div onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: <span id="pts-val">0</span></div>
     </div>
 
     <div class="arena">
@@ -62,10 +62,8 @@
                 <div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div>
                 <div id="hp-p-txt" class="bar-txt">100/100</div>
             </div>
-            <div class="skill-bar"><div id="thor-progress" style="height:100%; background:var(--blue); width:0%;"></div></div>
+            <div class="skill-bar"><div id="thor-progress" style="height:100%; background:var(--blue); width:0%; transition: 0.3s;"></div></div>
         </div>
-
-        <img id="main-mob" src="mob1.png">
 
         <div class="char-box">
             <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
@@ -120,7 +118,7 @@
         const isB = st.lvl % 25 === 0;
         document.getElementById('boss-skill-wrap').style.display = isB ? 'block' : 'none';
         let src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
-        document.getElementById('main-mob').src = document.getElementById('m-icon').src = src;
+        document.getElementById('m-icon').src = src;
         st.mehp = isB ? (100 + st.lvl * 60) * 5 : 100 + st.lvl * 60;
         st.ehp = st.mehp; st.hp = st.mHP; st.bSkill = 0;
 
@@ -136,7 +134,6 @@
     }
 
     function draw() {
-        document.getElementById('lvl').innerText = st.lvl;
         document.getElementById('pts-val').innerText = st.pts;
         document.getElementById('hp-e-fill').style.width = (st.ehp/st.mehp*100)+'%';
         document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
@@ -168,7 +165,7 @@
             if (isAdj) {
                 swap(a, b);
                 if (!checkAndResolve()) {
-                    setTimeout(() => { swap(a, b); draw(); }, 300);
+                    setTimeout(() => { swap(a, b); draw(); }, 250);
                 }
             }
             st.sel = null;
@@ -198,9 +195,9 @@
                 pop(toDel.size * st.atk, false);
                 toDel.forEach(idx => { st.board[idx].type = -1; st.board[idx].light = 0; st.board[idx].frozen = 0; });
                 
-                draw(); await new Promise(r => setTimeout(r, 300));
+                draw(); await new Promise(r => setTimeout(r, 250));
                 gravity();
-                draw(); await new Promise(r => setTimeout(r, 300));
+                draw(); await new Promise(r => setTimeout(r, 250));
                 matches = findMatches();
             }
             st.lock = false;
@@ -212,32 +209,26 @@
     }
 
     function findMatches() {
-        let matches = [];
-        // Horizontal
-        for (let r = 0; r < 7; r++) {
-            for (let c = 0; c < 5; c++) {
-                let i = r * 7 + c;
-                if (st.board[i].type !== -1 && st.board[i].type === st.board[i+1].type && st.board[i].type === st.board[i+2].type) {
-                    let m = [i, i+1, i+2];
-                    let k = i+3;
-                    while (k < (r+1)*7 && st.board[k].type === st.board[i].type) { m.push(k++); }
-                    matches.push(m); c += m.length - 1;
-                }
+        let m = [];
+        // Rows
+        for (let r=0; r<7; r++) {
+            let count=1;
+            for (let c=0; c<7; c++) {
+                let i = r*7+c;
+                if (c<6 && st.board[i].type !== -1 && st.board[i].type === st.board[i+1].type) count++;
+                else { if (count>=3) { let row=[]; for(let k=0; k<count; k++) row.push(i-k); m.push(row); } count=1; }
             }
         }
-        // Vertical
-        for (let c = 0; c < 7; c++) {
-            for (let r = 0; r < 5; r++) {
-                let i = r * 7 + c;
-                if (st.board[i].type !== -1 && st.board[i+7] && st.board[i+14] && st.board[i].type === st.board[i+7].type && st.board[i].type === st.board[i+14].type) {
-                    let m = [i, i+7, i+14];
-                    let k = i+21;
-                    while (k < 49 && st.board[k].type === st.board[i].type) { m.push(k); k += 7; }
-                    matches.push(m); r += m.length - 1;
-                }
+        // Cols
+        for (let c=0; c<7; c++) {
+            let count=1;
+            for (let r=0; r<7; r++) {
+                let i = r*7+c;
+                if (r<6 && st.board[i].type !== -1 && st.board[i].type === st.board[i+7].type) count++;
+                else { if (count>=3) { let col=[]; for(let k=0; k<count; k++) col.push(i-k*7); m.push(col); } count=1; }
             }
         }
-        return matches;
+        return m;
     }
 
     function gravity() {
@@ -265,12 +256,12 @@
             st.bSkill += 25;
             if (st.bSkill >= 100) {
                 st.bSkill = 0;
-                if (st.lvl === 25) {
-                    pop("FROZEN!", true);
+                if (st.lvl === 25) { // Мороз
+                    pop("ICE!", true);
                     for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen = 3;
-                } else if (st.lvl === 50) {
+                } else if (st.lvl === 50) { // Огонь
                     d *= 3; pop("FIRE!", true);
-                } else if (st.lvl === 75) {
+                } else if (st.lvl === 75) { // Валькирия
                     pop("LIGHT!", true);
                     for(let i=0; i<3; i++) {
                         let idx = Math.floor(Math.random()*49);
@@ -280,6 +271,7 @@
             }
         }
 
+        // Обновление таймеров
         st.board.forEach(o => {
             if (o.light > 0) {
                 o.light--;
@@ -292,7 +284,7 @@
         });
 
         if (Math.random()*100 < st.agi) pop("MISS!", true); else st.hp -= d;
-        if (st.hp <= 0) { alert("Game Over"); resetAll(); }
+        if (st.hp <= 0) { alert("Вальхалла ждет..."); resetAll(); }
         draw();
     }
 
