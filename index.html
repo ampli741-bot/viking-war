@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Hardcore & Recovery</title>
+    <title>Viking Saga: Thor's Thunder</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
@@ -25,9 +25,12 @@
 
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
         #grid-container { width: 92vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
-        .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; }
+        .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; transition: 0.2s; }
         .selected { outline: 3px solid #fff; z-index: 20; background-color: #333; }
         
+        /* Эффект свечения перед ударом Тора */
+        .thor-charge { box-shadow: inset 0 0 15px var(--gold); border: 2px solid var(--gold); filter: brightness(1.5); transform: scale(1.05); z-index: 50; }
+
         .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: #fff; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #fff; font-weight: bold; }
 
         #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; }
@@ -45,8 +48,8 @@
 <body>
 
     <div id="death-screen" class="overlay">
-        <h1 style="color:var(--red); font-size: 30px; margin-bottom: 10px;">ВЫ ПАЛИ В БОЮ</h1>
-        <p>Вальхалла закрыта на:</p>
+        <h1 style="color:var(--red); font-size: 30px;">ВЫ ПАЛИ В БОЮ</h1>
+        <p>Возвращение через:</p>
         <h2 id="ban-timer" style="font-size: 32px; color:var(--gold)">60:00</h2>
     </div>
 
@@ -77,10 +80,10 @@
 
     <div id="admin-overlay" class="overlay" style="z-index: 2000;">
         <div class="card">
-            <h3 style="margin:0 0 10px 0">ОДИН ПОМОЖЕТ</h3>
-            <input type="number" id="jump-lvl" placeholder="Этап" style="width:90%; padding:10px; margin-bottom:10px;">
-            <button class="menu-btn" onclick="jumpTo()">ПЕРЕЙТИ</button>
+            <h3>АДМИН-ПАНЕЛЬ</h3>
             <button class="menu-btn" onclick="resurrect()" style="background:var(--blue); color:#fff">ВОСКРЕСИТЬ (СНЯТЬ БАН)</button>
+            <input type="number" id="jump-lvl" placeholder="Этап" style="width:90%; padding:10px; margin-top:10px;">
+            <button class="menu-btn" onclick="jumpTo()">ПЕРЕЙТИ</button>
             <button class="menu-btn" onclick="closeO()" style="background:#444; color:#fff">ЗАКРЫТЬ</button>
         </div>
     </div>
@@ -107,21 +110,18 @@
         if (st.banUntil > now) {
             document.getElementById('death-screen').style.display = 'flex';
             const diff = Math.ceil((st.banUntil - now) / 1000);
-            const m = Math.floor(diff / 60);
-            const s = diff % 60;
+            const m = Math.floor(diff / 60); const s = diff % 60;
             document.getElementById('ban-timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-            setTimeout(checkBan, 1000);
-            return true;
+            setTimeout(checkBan, 1000); return true;
         } else {
-            document.getElementById('death-screen').style.display = 'none';
-            return false;
+            document.getElementById('death-screen').style.display = 'none'; return false;
         }
     }
 
     function init() {
         if (checkBan()) return;
         const isB = st.lvl % 25 === 0;
-        st.mehp = isB ? (100 + st.lvl * 75) * 6 : 100 + st.lvl * 75;
+        st.mehp = isB ? (100 + st.lvl * 80) * 6 : 100 + st.lvl * 80;
         st.ehp = st.mehp; st.eSkill = 0; st.mExp = st.hLvl * 600;
         document.getElementById('m-icon').src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
         document.getElementById('e-skill-wrap').style.visibility = isB ? 'visible' : 'hidden';
@@ -151,15 +151,13 @@
         st.board.forEach((o, i) => {
             const c = document.getElementById('c-' + i);
             c.style.backgroundImage = o.type === -1 ? 'none' : `url(rune${o.type+1}.png)`;
-            c.className = `cell ${st.sel === i ? 'selected' : ''} ${o.frozen > 0 ? 'frozen' : ''} ${o.light > 0 ? 'light' : ''}`;
-            if(o.light > 0) c.innerHTML = `<div class="timer-badge">${o.light}</div>`;
-            else if(o.frozen > 0) c.innerHTML = `<div class="timer-badge" style="background:var(--blue)">${o.frozen}</div>`;
-            else c.innerHTML = '';
+            c.className = `cell ${st.sel === i ? 'selected' : ''}`;
+            c.innerHTML = '';
         });
     }
 
     function handle(i) {
-        if (st.lock || st.board[i].frozen > 0) return;
+        if (st.lock) return;
         if (st.sel === null) { st.sel = i; draw(); }
         else {
             let a = st.sel, b = i;
@@ -186,7 +184,6 @@
         st.combo = 1;
         while (true) {
             let toClear = new Set();
-            let rowX = []; let colX = []; let boom = [];
             for (let r=0; r<7; r++) {
                 let cnt=1;
                 for (let c=0; c<7; c++) {
@@ -195,13 +192,19 @@
                     else {
                         if (cnt>=3) {
                             for(let k=0; k<cnt; k++) toClear.add(i-k);
-                            if(cnt===4) rowX.push(r);
-                            if(cnt>=5) boom.push(i-Math.floor(cnt/2));
+                            if(cnt===4) { for(let j=0; j<7; j++) toClear.add(r*7+j); } // Row blast
+                            if(cnt>=5) { 
+                                let mid = i-Math.floor(cnt/2);
+                                for(let rr=-1; rr<=1; rr++) for(let cc=-1; cc<=1; cc++) {
+                                    let idx=mid+rr*7+cc; if(idx>=0&&idx<49) toClear.add(idx);
+                                }
+                            }
                         }
                         cnt=1;
                     }
                 }
             }
+            // Vertical check
             for (let c=0; c<7; c++) {
                 let cnt=1;
                 for (let r=0; r<7; r++) {
@@ -210,27 +213,22 @@
                     else {
                         if (cnt>=3) {
                             for(let k=0; k<cnt; k++) toClear.add(i-k*7);
-                            if(cnt===4) colX.push(c);
-                            if(cnt>=5) boom.push(i-Math.floor(cnt/2)*7);
+                            if(cnt===4) { for(let j=0; j<7; j++) toClear.add(j*7+c); } // Col blast
                         }
                         cnt=1;
                     }
                 }
             }
-            if (toClear.size === 0) break;
-            rowX.forEach(r => { for(let c=0; c<7; c++) toClear.add(r*7+c); });
-            colX.forEach(c => { for(let r=0; r<7; r++) toClear.add(r*7+c); });
-            boom.forEach(ctr => { for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) { let idx=ctr+r*7+c; if(idx>=0&&idx<49) toClear.add(idx); } });
 
+            if (toClear.size === 0) break;
             sfx('match');
-            let d = Math.floor(toClear.size * st.atk * (1 + (st.combo-1)*0.35));
-            st.ehp -= d; st.exp += d; st.thor = Math.min(100, st.thor + toClear.size * 2);
+            let d = Math.floor(toClear.size * st.atk * (1 + (st.combo-1)*0.3));
+            st.ehp -= d; st.exp += d; st.thor = Math.min(100, st.thor + toClear.size * 1.8);
             pop(d + (st.combo>1?` x${st.combo}`:''));
             checkExp();
-            toClear.forEach(i => { st.board[i].type = -1; st.board[i].light = 0; st.board[i].frozen = 0; });
+            toClear.forEach(i => { st.board[i].type = -1; });
             draw(); await new Promise(r => setTimeout(r, 250));
-            fillBoard();
-            draw(); await new Promise(r => setTimeout(r, 250));
+            fillBoard(); draw(); await new Promise(r => setTimeout(r, 250));
             st.combo++;
         }
         st.lock = false;
@@ -257,24 +255,7 @@
     }
 
     function enemyTurn() {
-        const isB = st.lvl % 25 === 0;
-        let d = Math.floor(5 + st.lvl * 2.2);
-        if (isB) {
-            st.eSkill += 25;
-            if (st.eSkill >= 100) {
-                st.eSkill = 0;
-                if (st.lvl === 25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen = 3; pop("ICE!"); }
-                if (st.lvl === 50) { d *= 3; pop("CRIT!"); }
-                if (st.lvl === 75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light = 4; pop("LIGHT!"); }
-            }
-        }
-        st.board.forEach(o => {
-            if (o.light > 0) {
-                o.light--;
-                if (o.light === 1) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.15); pop("HEAL"); o.light = 0; }
-            }
-            if (o.frozen > 0) o.frozen--;
-        });
+        let d = Math.floor(5 + st.lvl * 2.5);
         if (Math.random()*100 > st.agi) st.hp -= d; else pop("MISS");
         if (st.hp <= 0) death();
         draw();
@@ -284,27 +265,45 @@
         sfx('death');
         st.exp = Math.max(0, Math.floor(st.exp * 0.9));
         st.banUntil = Date.now() + (60 * 60 * 1000);
-        save();
-        checkBan();
+        save(); checkBan();
     }
 
     function resurrect() {
-        st.banUntil = 0;
-        st.hp = st.mHP;
-        save();
-        document.getElementById('death-screen').style.display = 'none';
-        init();
-        closeO();
+        st.banUntil = 0; st.hp = st.mHP;
+        save(); document.getElementById('death-screen').style.display = 'none';
+        init(); closeO();
     }
 
     async function useThor() {
         if (st.thor < 100 || st.lock) return;
-        sfx('thor'); st.thor = 0; st.lock = true;
-        let d = st.atk * 15; st.ehp -= d; st.exp += d;
-        pop(d + " [THOR]"); checkExp();
-        for(let i=0; i<15; i++) st.board[Math.floor(Math.random()*49)].type = -1;
-        fillBoard(); draw();
-        setTimeout(() => { resolveBoard(); }, 400);
+        st.lock = true; st.thor = 0;
+        
+        // 1. Выбираем случайные цели
+        let targets = [];
+        while(targets.length < 15) {
+            let r = Math.floor(Math.random()*49);
+            if(!targets.includes(r)) targets.push(r);
+        }
+
+        // 2. Эффект свечения (заряд)
+        targets.forEach(idx => {
+            document.getElementById('c-' + idx).classList.add('thor-charge');
+        });
+        
+        // 3. Звук грома и взрыв через 600мс
+        setTimeout(() => {
+            sfx('thor'); // Должен быть звук грома
+            let d = st.atk * 15; st.ehp -= d; st.exp += d;
+            pop(d + " [THOR]"); checkExp();
+            
+            targets.forEach(idx => {
+                st.board[idx].type = -1;
+                document.getElementById('c-' + idx).classList.remove('thor-charge');
+            });
+            
+            fillBoard(); draw();
+            setTimeout(() => { resolveBoard(); }, 400);
+        }, 600);
     }
 
     function pop(txt) {
@@ -315,9 +314,7 @@
     }
 
     function win() {
-        st.lvl++;
-        st.pts++;
-        // Восстановление 15% ХП после победы
+        st.lvl++; st.pts++;
         let heal = Math.floor(st.mHP * 0.15);
         st.hp = Math.min(st.mHP, st.hp + heal);
         pop("+"+heal+" HP");
@@ -330,14 +327,7 @@
         localStorage.setItem('v_pts', st.pts); localStorage.setItem('v_ban', st.banUntil);
     }
 
-    function admTrig() { 
-        st.adm++; 
-        if(st.adm>=5) { 
-            st.adm=0; 
-            document.getElementById('admin-overlay').style.display='flex'; 
-        } 
-    }
-
+    function admTrig() { st.adm++; if(st.adm>=5) { st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
     function jumpTo() { let l = parseInt(document.getElementById('jump-lvl').value); if(l>0){ st.lvl=l; save(); init(); closeO(); } }
     function openF() { document.getElementById('f-menu').style.display='flex'; }
     function closeO() { document.querySelectorAll('.overlay').forEach(e => { if(e.id !== 'death-screen') e.style.display='none'; }); }
