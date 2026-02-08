@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Hammer Power</title>
+    <title>Viking Saga: Stable Hammer</title>
     <style>
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
@@ -20,9 +20,6 @@
         #msg { position: absolute; top: 40%; width: 100%; font-weight: bold; background: rgba(0,0,0,0.9); display: none; padding: 20px 0; z-index: 100; }
         @keyframes shake { 0% { transform: translate(2px, 2px); } 100% { transform: translate(0,0); } }
         .shaking { animation: shake 0.1s infinite; }
-        /* Эффект взрыва плитки */
-        @keyframes boom { 0% { transform: scale(1); } 50% { transform: scale(1.2); filter: brightness(2); } 100% { transform: scale(1); } }
-        .exploding { animation: boom 0.4s ease-out; }
     </style>
 </head>
 <body>
@@ -82,7 +79,7 @@
             if (c) {
                 if (t === -1) {
                     c.style.backgroundImage = 'none';
-                    c.style.backgroundColor = '#fff';
+                    c.style.backgroundColor = '#fff'; // Белый цвет при взрыве
                 } else {
                     c.style.backgroundColor = colors[t];
                     c.style.backgroundImage = "url(" + runes[t] + ")";
@@ -137,10 +134,10 @@
                 s.board[idx] = -1;
             });
             sfx('match'); draw();
-            await new Promise(r => setTimeout(r, 300));
+            await new Promise(r => setTimeout(r, 250));
             for (let i = 0; i < 49; i++) if (s.board[i] === -1) s.board[i] = Math.floor(Math.random() * 5);
             draw();
-            await new Promise(r => setTimeout(r, 200));
+            await new Promise(r => setTimeout(r, 150));
         }
         if (isPlayer && hasMatched) {
             if (s.ehp <= 0) win(); else setTimeout(enemyTurn, 600);
@@ -157,4 +154,52 @@
         s.hp -= (6 + Math.floor(s.lvl/2));
         shake(); sfx('player_hit');
         processMatches(false);
-        if (s.hp <= 0) { alert("Game Over"); location
+        if (s.hp <= 0) { alert("Game Over"); location.reload(); }
+        s.lock = false; draw();
+    }
+
+    function win() {
+        s.lvl++; s.hp = Math.min(100, s.hp + 15);
+        sfx('win');
+        let m = document.getElementById('msg');
+        m.innerText = "ПОБЕДА! +15% HP"; m.style.display = 'block';
+        setTimeout(() => { m.style.display = 'none'; init(); }, 1500);
+    }
+
+    function shake() {
+        document.getElementById('battle-screen').classList.add('shaking');
+        setTimeout(() => document.getElementById('battle-screen').classList.remove('shaking'), 300);
+    }
+
+    async function useSuper() {
+        if (s.en < 100 || s.lock) return;
+        s.lock = true;
+        s.en = 0;
+        sfx('super');
+
+        // Мощный урон
+        s.ehp -= 100;
+        // Оглушение
+        s.stunTurns = (s.lvl === 25) ? 1 : 2;
+
+        // Взрываем случайные плитки (делаем их белыми)
+        for (let i = 0; i < 15; i++) {
+            let r = Math.floor(Math.random() * 49);
+            s.board[r] = -1;
+        }
+        
+        draw(); // Показываем взрыв (белые плитки)
+        
+        await new Promise(r => setTimeout(r, 400));
+        
+        // Запускаем стандартную логику падения плиток и комбо
+        await processMatches(true);
+        
+        s.lock = false;
+        draw();
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
