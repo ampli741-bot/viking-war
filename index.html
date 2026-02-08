@@ -3,27 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Fixed</title>
+    <title>Viking Saga: Stun & Shake</title>
     <style>
+        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --enemy: #9b59b6; --stun: #3498db; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
-        .arena { height: 180px; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
-        .hp-bar { width: 90%; height: 10px; background: #333; margin: 4px; border-radius: 5px; }
+        
+        .arena { height: 180px; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; transition: 0.1s; }
+        .hp-bar { width: 90%; height: 10px; background: #333; margin: 4px; border-radius: 5px; position: relative; }
         .fill { height: 100%; transition: 0.3s; width: 100%; }
-        #mob { width: 110px; height: 110px; z-index: 2; transition: 0.2s; }
+        
+        #mob { width: 110px; height: 110px; z-index: 2; transition: 0.3s; }
+        .stunned { filter: drop-shadow(0 0 15px var(--stun)) grayscale(0.5); }
+        
         #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; width: 320px; margin: 0 auto; background: #000; }
-        .cell { width: 42px; height: 42px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333; }
-        .sel { outline: 3px solid gold; transform: scale(0.9); }
-        .enemy-sel { outline: 3px solid purple; box-shadow: 0 0 10px purple; }
-        .btn { width: 90%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
-        .ready { background: orange !important; color: #fff !important; box-shadow: 0 0 15px gold; }
-        .hit { filter: brightness(2) contrast(2); transform: scale(1.2); }
+        
+        .cell { 
+            width: 42px; height: 42px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333;
+            animation: fadeIn 0.5s ease; transition: transform 0.2s;
+        }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0% { transform: translate(2px, 2px); } 20% { transform: translate(-2px, -1px); } 40% { transform: translate(1px, -2px); } 100% { transform: translate(0,0); } }
+        
+        .shaking { animation: shake 0.1s infinite; }
+        .sel { outline: 3px solid var(--gold); transform: scale(0.9); z-index: 5; }
+        .enemy-sel { outline: 3px solid var(--enemy); box-shadow: 0 0 10px var(--enemy); }
+        
+        .btn { width: 90%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; transition: 0.3s; }
+        .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; cursor: pointer; }
+        .hit { filter: brightness(2) contrast(2) !important; transform: scale(1.2); }
+        #stun-txt { position: absolute; top: 50px; color: var(--stun); font-weight: bold; display: none; text-shadow: 0 0 5px black; }
     </style>
 </head>
 <body>
-    <div class="arena">
-        <div class="hp-bar"><div id="ehp" class="fill" style="background: red;"></div></div>
+    <div id="battle-screen" class="arena">
+        <div id="stun-txt">ОГЛУШЕН!</div>
+        <div class="hp-bar"><div id="ehp" class="fill" style="background: var(--red);"></div></div>
         <img src="mob1.png" id="mob">
-        <div class="hp-bar"><div id="php" class="fill" style="background: green;"></div></div>
+        <div class="hp-bar"><div id="php" class="fill" style="background: var(--green);"></div></div>
     </div>
 
     <div id="grid"></div>
@@ -35,12 +52,9 @@
 
 <script>
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
-    let s = { board: [], sel: null, hp: 100, ehp: 100, en: 0, lock: false, lvl: 1 };
+    let s = { board: [], sel: null, hp: 100, ehp: 100, en: 0, lock: false, lvl: 1, stunTurns: 0 };
 
-    // Звуки теперь вызываются максимально безопасно
-    function sfx(n) { 
-        try { new Audio(n + '.mp3').play().catch(()=>{}); } catch(e){} 
-    }
+    function sfx(n) { try { new Audio(n + '.mp3').play().catch(()=>{}); } catch(e){} }
 
     function init() {
         const g = document.getElementById('grid');
@@ -64,9 +78,13 @@
             c.className = 'cell' + (s.sel === i ? ' sel' : '');
         });
         document.getElementById('php').style.width = s.hp + '%';
-        document.getElementById('ehp').style.width = s.ehp + '%';
+        document.getElementById('ehp').style.width = (s.ehp > 0 ? s.ehp : 0) + '%';
         document.getElementById('en-fill').style.width = s.en + '%';
         document.getElementById('s-btn').classList.toggle('ready', s.en >= 100);
+        
+        const m = document.getElementById('mob');
+        m.classList.toggle('stunned', s.stunTurns > 0);
+        document.getElementById('stun-txt').style.display = s.stunTurns > 0 ? 'block' : 'none';
     }
 
     function touch(i) {
@@ -102,13 +120,13 @@
         if (m.size > 0) {
             m.forEach(idx => {
                 if (isP) {
-                    if (s.board[idx] === 0) s.en = Math.min(100, s.en + 10);
-                    if (s.board[idx] === 4) s.hp = Math.min(100, s.hp + 1);
-                    s.ehp -= 2;
-                } else { s.hp -= 2; }
+                    if (s.board[idx] === 0) s.en = Math.min(100, s.en + 12);
+                    if (s.board[idx] === 4) s.hp = Math.min(100, s.hp + 2);
+                    s.ehp -= 3;
+                } else { s.hp -= 3; }
                 s.board[idx] = Math.floor(Math.random() * 5);
             });
-            if (isP) { sfx('match'); sfx('hit'); anim(); }
+            if (isP) { sfx('match'); sfx('hit'); animHit(); }
             draw();
             return true;
         }
@@ -117,6 +135,13 @@
 
     function enemyTurn() {
         if (s.ehp <= 0) { s.lock = false; return; }
+        
+        if (s.stunTurns > 0) {
+            s.stunTurns--;
+            setTimeout(() => { s.lock = false; draw(); }, 500);
+            return;
+        }
+
         let i1 = Math.floor(Math.random() * 49);
         let n = [i1-1, i1+1, i1-7, i1+7].filter(x => x>=0 && x<49);
         let i2 = n[Math.floor(Math.random() * n.length)];
@@ -126,16 +151,23 @@
 
         setTimeout(() => {
             swap(i1, i2);
-            s.hp -= (5 + s.lvl);
+            s.hp -= (6 + s.lvl);
             sfx('player_hit');
+            shakeScreen();
             check(false);
-            if (s.hp <= 0) { sfx('lose'); alert('Поражение!'); location.reload(); }
+            if (s.hp <= 0) { sfx('lose'); alert('Вы пали в бою!'); location.reload(); }
             s.lock = false;
             draw();
         }, 700);
     }
 
-    function anim() {
+    function shakeScreen() {
+        const a = document.getElementById('battle-screen');
+        a.classList.add('shaking');
+        setTimeout(() => a.classList.remove('shaking'), 400);
+    }
+
+    function animHit() {
         let m = document.getElementById('mob');
         m.classList.add('hit');
         setTimeout(() => m.classList.remove('hit'), 200);
@@ -143,14 +175,26 @@
 
     function useSuper() {
         if (s.en < 100 || s.lock) return;
-        s.ehp -= 40; s.en = 0; sfx('super'); anim();
-        if (s.ehp <= 0) win();
+        s.ehp -= 45;
+        s.en = 0;
+        
+        // Механика стана: обычный моб - 2 хода, босс (ур. 5, 10...) - 1 ход
+        s.stunTurns = (s.lvl % 5 === 0) ? 1 : 2;
+        
+        sfx('super'); 
+        shakeScreen();
+        animHit();
+        if (s.ehp <= 0) setTimeout(win, 500);
         draw();
     }
 
     function win() {
-        sfx('win'); alert('Победа!');
-        s.lvl++; s.ehp = 100; s.en = 0;
+        sfx('win');
+        alert('Враг повержен!');
+        s.lvl++;
+        s.ehp = 100 + (s.lvl * 10);
+        s.en = 0;
+        s.stunTurns = 0;
         document.getElementById('mob').src = `mob${Math.min(4, Math.floor(s.lvl/2)+1)}.png`;
         init();
     }
