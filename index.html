@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Combo & Tactics</title>
+    <title>Viking Saga: Final Boss Edition</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #fff; }
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
@@ -11,14 +11,13 @@
         .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; flex-shrink: 0; }
         .arena { height: 25vh; position: relative; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
         .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .p-icon { width: 95px; height: 95px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
+        .p-icon { width: 90px; height: 90px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
         
-        .bar-bg { width: 100%; height: 20px; background: #222; border-radius: 5px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
+        .bar-bg { width: 100%; height: 18px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
-        .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 11px; line-height: 20px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
+        .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 10px; line-height: 18px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
 
-        .skill-bar { width: 100%; height: 8px; background: #111; margin-top: 4px; border-radius: 4px; overflow: hidden; border: 1px solid #333; }
-
+        .skill-bar { width: 100%; height: 6px; background: #111; margin-top: 3px; border-radius: 3px; overflow: hidden; border: 1px solid #333; }
         #flash { position: fixed; inset: 0; background: var(--white); opacity: 0; pointer-events: none; z-index: 2000; }
         .lightning { animation: flash-anim 0.4s ease-out; }
         @keyframes flash-anim { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
@@ -30,16 +29,16 @@
         
         .frozen { border: 2px solid var(--blue) !important; filter: brightness(0.7) saturate(1.5); }
         .light { border: 2px solid var(--gold) !important; box-shadow: inset 0 0 15px var(--gold); }
-        .timer-badge { position: absolute; top: -4px; right: -4px; background: var(--red); color: white; font-size: 10px; min-width: 15px; height: 15px; border-radius: 50%; font-weight: bold; border: 1px solid white; display: flex; align-items: center; justify-content: center; z-index: 5; }
+        .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; font-size: 11px; min-width: 16px; height: 16px; border-radius: 50%; font-weight: bold; border: 1px solid white; display: flex; align-items: center; justify-content: center; z-index: 10; }
 
-        #thor-btn { width: 90%; max-width: 350px; padding: 14px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; transition: 0.3s; }
-        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; cursor: pointer; }
+        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; transition: 0.3s; }
+        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 10px var(--blue); cursor: pointer; }
 
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 85%; max-width: 300px; }
         .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); color: #000; }
         
-        .dmg-text { position: absolute; font-size: 28px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
+        .dmg-text { position: absolute; font-size: 26px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
         @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
@@ -58,7 +57,6 @@
             <div class="bar-bg"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div><div id="hp-p-txt" class="bar-txt">100/100</div></div>
             <div class="skill-bar"><div id="thor-progress" style="height:100%; background:var(--blue); width:0%;"></div></div>
         </div>
-
         <div class="char-box" onclick="showInfo('e')">
             <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
             <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div id="hp-e-txt" class="bar-txt">100/100</div></div>
@@ -71,18 +69,21 @@
         <button id="thor-btn" onclick="useThor()">МОЛОТ ТОРА</button>
     </div>
 
-    <div id="info-overlay" class="overlay" onclick="closeM()">
-        <div class="card" onclick="event.stopPropagation()">
-            <h2 id="info-title" style="color:var(--gold); margin:0;">ИНФО</h2>
-            <div id="info-body" style="text-align:left; margin:15px 0; font-size:14px; line-height:1.5;"></div>
-            <button class="menu-btn" onclick="closeM()">ПОНЯТНО</button>
+    <div id="admin-overlay" class="overlay">
+        <div class="card">
+            <h2 style="color:var(--gold)">АДМИН-ПАНЕЛЬ</h2>
+            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:80%; padding:10px; margin-bottom:10px; background:#222; border:1px solid #444; color:#fff; text-align:center;">
+            <button class="menu-btn" onclick="jumpToLvl()">ПЕРЕЙТИ НА УРОВЕНЬ</button>
+            <button class="menu-btn" style="background:var(--blue)" onclick="addPts()">+10 PTS</button>
+            <button class="menu-btn" style="background:var(--red)" onclick="resetAll()">СБРОСИТЬ ВСЁ</button>
+            <button class="menu-btn" style="background:#444" onclick="closeM()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
-    <div id="admin-overlay" class="overlay">
-        <div class="card">
-            <h2>АДМИНКА</h2>
-            <button class="menu-btn" style="background:var(--red)" onclick="resetAll()">СБРОСИТЬ ВСЁ</button>
+    <div id="info-overlay" class="overlay" onclick="closeM()">
+        <div class="card" onclick="event.stopPropagation()">
+            <h2 id="info-title" style="color:var(--gold); margin:0;">ИНФО</h2>
+            <div id="info-body" style="text-align:left; margin:15px 0; font-size:14px; line-height:1.4;"></div>
             <button class="menu-btn" onclick="closeM()">ЗАКРЫТЬ</button>
         </div>
     </div>
@@ -103,10 +104,10 @@
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1, atk: parseInt(localStorage.getItem('v_atk')) || 10,
         mHP: parseInt(localStorage.getItem('v_mhp')) || 100, agi: parseInt(localStorage.getItem('v_agi')) || 5,
         pts: parseInt(localStorage.getItem('v_pts')) || 0, thor: parseInt(localStorage.getItem('v_thor')) || 0,
-        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 1, bSkill: 0
+        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 1, bSkill: 0, adm: 0
     };
 
-    function startAudio() {} 
+    function startAudio() {}
 
     function init() {
         const isB = st.lvl % 25 === 0;
@@ -138,7 +139,7 @@
             const c = document.getElementById('c-' + i);
             c.style.backgroundImage = o.type===-1 ? 'none' : `url(rune${o.type+1}.png)`;
             c.className = 'cell' + (st.sel===i?' selected':'') + (o.frozen>0?' frozen':'') + (o.light>0?' light':'');
-            c.innerHTML = (o.light > 0) ? `<div class="timer-badge">${o.light}</div>` : '';
+            c.innerHTML = (o.light > 0) ? `<div class="timer-badge">${o.light-1}</div>` : '';
         });
     }
 
@@ -148,8 +149,7 @@
         else {
             let a = st.sel, b = i;
             if ((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
-                swap(a, b);
-                st.combo = 1;
+                swap(a, b); st.combo = 1;
                 if (!checkAndResolve()) setTimeout(() => { swap(a, b); draw(); }, 250);
             }
             st.sel = null;
@@ -168,30 +168,20 @@
                 let toDel = new Set();
                 matches.forEach(m => {
                     if (st.board[m[0]].type === 3) st.thor = Math.min(100, st.thor + m.length * 4);
-                    
-                    // Эффекты за длину
-                    if (m.length === 4) { // Линия
-                        let row = Math.floor(m[0]/7);
-                        for(let c=0; c<7; c++) toDel.add(row*7+c);
-                    } else if (m.length >= 5) { // Взрыв
-                        let center = m[1];
-                        for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) {
-                            let idx = center + r*7 + c;
-                            if (idx>=0 && idx<49) toDel.add(idx);
+                    if (m.length === 4) { let r = Math.floor(m[0]/7); for(let c=0; c<7; c++) toDel.add(r*7+c); }
+                    else if (m.length >= 5) { 
+                        let ctr = m[1]; for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) {
+                            let idx = ctr + r*7 + c; if (idx>=0 && idx<49) toDel.add(idx);
                         }
                     }
                     m.forEach(idx => toDel.add(idx));
                 });
-
                 let dmg = toDel.size * st.atk * st.combo;
-                st.ehp -= dmg; pop(dmg + (st.combo>1 ? ` (x${st.combo})` : ""), false);
+                st.ehp -= dmg; pop(dmg + (st.combo>1 ? ` x${st.combo}` : ""), false);
                 toDel.forEach(idx => { st.board[idx].type = -1; st.board[idx].light = 0; st.board[idx].frozen = 0; });
-                
                 draw(); await new Promise(r => setTimeout(r, 250));
-                gravity();
-                draw(); await new Promise(r => setTimeout(r, 250));
-                st.combo++;
-                matches = findMatches();
+                gravity(); draw(); await new Promise(r => setTimeout(r, 250));
+                st.combo++; matches = findMatches();
             }
             st.lock = false; save();
             if (st.ehp <= 0) win(); else enemyTurn();
@@ -240,13 +230,13 @@
             st.bSkill += 25;
             if (st.bSkill >= 100) {
                 st.bSkill = 0;
-                if (st.lvl===25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen=3; pop("ICE!", true); }
+                if (st.lvl===25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen=4; pop("ICE!", true); }
                 if (st.lvl===50) { d*=3; pop("FIRE!", true); }
-                if (st.lvl===75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light=3; pop("VALKYRIE!", true); }
+                if (st.lvl===75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light=4; pop("VALKYRIE!", true); }
             }
         }
         st.board.forEach(o => {
-            if (o.light > 0) { o.light--; if (o.light===0) { st.ehp=Math.min(st.mehp, st.ehp+st.mehp*0.1); pop("HEAL", false); } }
+            if (o.light > 0) { o.light--; if (o.light===1) { st.ehp=Math.min(st.mehp, st.ehp+st.mehp*0.15); pop("HEAL", false); o.light=0; } }
             if (o.frozen > 0) o.frozen--;
         });
         if (Math.random()*100 < st.agi) pop("MISS!", true); else st.hp -= d;
@@ -274,32 +264,26 @@
         const tit = document.getElementById('info-title');
         const bod = document.getElementById('info-body');
         if (t === 'p') {
-            tit.innerText = "ВИКИНГ (ВЫ)";
-            bod.innerHTML = `<b>Урон:</b> ${st.atk}<br><b>Здоровье:</b> ${st.mHP}<br><b>Ловкость:</b> ${st.agi}%<br><hr><b>Сбор 4:</b> Уничтожает ряд.<br><b>Сбор 5:</b> Взрыв 3х3.<br><b>Комбо:</b> Каждый каскад увеличивает урон.`;
+            tit.innerText = "ГЕРОЙ";
+            bod.innerHTML = `<b>Урон:</b> ${st.atk}<br><b>ОЗ:</b> ${st.mHP}<br><b>Уворот:</b> ${st.agi}%<br><hr><b>4 в ряд:</b> Ряд уничтожается.<br><b>5 в ряд:</b> Взрыв 3х3.`;
         } else {
             const isB = st.lvl % 25 === 0;
-            tit.innerText = isB ? "БОСС" : "ВРАГ";
-            let sk = "Обычный моб. Бьет каждый ход.";
-            if(st.lvl===25) sk = "<b>Лёд:</b> Замораживает 3 плитки на 3 хода.";
-            if(st.lvl===50) sk = "<b>Огонь:</b> Наносит тройной урон раз в 4 хода.";
-            if(st.lvl===75) sk = "<b>Валькирия:</b> Создает 3 плитки света. Если не убрать за 3 хода - лечится.";
-            bod.innerHTML = `<b>Урон:</b> ${Math.floor(5 + st.lvl * 1.5)}<br><b>Здоровье:</b> ${st.mehp}<br><hr>${sk}`;
+            tit.innerText = isB ? "БОСС" : "МОБ";
+            let desc = "Обычный противник.";
+            if(st.lvl===25) desc = "Замораживает клетки.";
+            if(st.lvl===50) desc = "Наносит мощный огненный удар.";
+            if(st.lvl===75) desc = "Валькирия: исцеляется за счет света.";
+            bod.innerHTML = `<b>Урон:</b> ${Math.floor(5 + st.lvl * 1.5)}<br><b>ОЗ:</b> ${st.mehp}<br><hr>${desc}`;
         }
         o.style.display = 'flex';
-    }
-
-    function pop(v, p) {
-        const d = document.createElement('div'); d.className = 'dmg-text';
-        d.innerText = isNaN(v) ? v : "-" + v;
-        d.style.color = p ? 'var(--red)' : 'var(--gold)';
-        d.style.left = '50%'; d.style.top = '30%';
-        document.body.appendChild(d); setTimeout(() => d.remove(), 1200);
     }
 
     function win() { st.lvl++; st.pts++; save(); init(); }
     function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_atk', st.atk); localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi); localStorage.setItem('v_pts', st.pts); localStorage.setItem('v_thor', st.thor); }
     function resetAll() { localStorage.clear(); location.reload(); }
     function admTrigger() { st.adm++; if(st.adm>=5){ st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
+    function jumpToLvl() { let nl = parseInt(document.getElementById('jump-lvl').value); if(nl>0){ st.lvl=nl; save(); init(); closeM(); } }
+    function addPts() { st.pts += 10; draw(); }
     function openF() { document.getElementById('f-menu').style.display='flex'; }
     function closeM() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
     function buy(t) { if(st.pts>0){ if(t==='atk') st.atk+=2; else if(t==='hp'){st.mHP+=20; st.hp+=20;} else if(t==='agi') st.agi+=1; st.pts--; save(); draw(); } }
