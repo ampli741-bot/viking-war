@@ -3,30 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Combo Master</title>
+    <title>Viking Saga: The First Boss</title>
     <style>
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --enemy: #9b59b6; --stun: #3498db; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
-        .arena { height: 180px; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; transition: 0.1s; }
+        .arena { height: 180px; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
         .hp-bar { width: 90%; height: 10px; background: #333; margin: 4px; border-radius: 5px; position: relative; }
         .fill { height: 100%; transition: 0.3s; width: 100%; }
         #mob { width: 110px; height: 110px; z-index: 2; transition: 0.3s; }
-        .stunned { filter: drop-shadow(0 0 15px var(--stun)) grayscale(0.5); }
+        .boss-glow { filter: drop-shadow(0 0 20px red) !important; transform: scale(1.2); }
         #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; width: 320px; margin: 0 auto; background: #000; }
-        .cell { width: 42px; height: 42px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333; transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
-        .sel { outline: 3px solid var(--gold); transform: scale(0.85); z-index: 5; }
-        .enemy-sel { outline: 3px solid var(--enemy); box-shadow: 0 0 10px var(--enemy); }
+        .cell { width: 42px; height: 42px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333; transition: 0.3s; }
+        .sel { outline: 3px solid var(--gold); transform: scale(0.85); }
         .btn { width: 90%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
-        .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; cursor: pointer; }
-        .hit { filter: brightness(2) contrast(2) !important; transform: scale(1.2); }
-        #stun-txt { position: absolute; top: 50px; color: var(--stun); font-weight: bold; display: none; text-shadow: 0 0 5px black; z-index: 10; }
-        @keyframes shake { 0% { transform: translate(2px, 2px); } 20% { transform: translate(-2px, -1px); } 100% { transform: translate(0,0); } }
+        .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; }
+        #msg { position: absolute; top: 50%; width: 100%; font-weight: bold; color: #fff; background: rgba(0,0,0,0.8); display: none; padding: 20px 0; z-index: 100; }
+        @keyframes shake { 0% { transform: translate(2px, 2px); } 100% { transform: translate(0,0); } }
         .shaking { animation: shake 0.1s infinite; }
     </style>
 </head>
 <body>
     <div id="battle-screen" class="arena">
-        <div id="stun-txt">ОГЛУШЕН!</div>
+        <div id="msg"></div>
         <div class="hp-bar"><div id="ehp" class="fill" style="background: var(--red);"></div></div>
         <img src="mob1.png" id="mob">
         <div class="hp-bar"><div id="php" class="fill" style="background: var(--green);"></div></div>
@@ -39,32 +37,28 @@
 
 <script>
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
-    let s = { board: [], sel: null, hp: 100, ehp: 100, en: 0, lock: false, lvl: 1, stunTurns: 0 };
+    let s = { board: [], sel: null, hp: 100, ehp: 100, en: 0, lock: false, lvl: 1, stunTurns: 0, unlockedBerserk: false };
 
     function sfx(n) { try { new Audio(n + '.mp3').play().catch(()=>{}); } catch(e){} }
 
     function init() {
         const g = document.getElementById('grid');
-        g.innerHTML = '';
-        s.board = [];
+        g.innerHTML = ''; s.board = [];
         for (let i = 0; i < 49; i++) {
             let type;
-            // Проверка: не более 2-х одинаковых подряд при генерации
-            do {
-                type = Math.floor(Math.random() * 5);
-            } while (
-                (i % 7 >= 2 && type === s.board[i-1] && type === s.board[i-2]) ||
-                (i >= 14 && type === s.board[i-7] && type === s.board[i-14])
-            );
+            do { type = Math.floor(Math.random() * 5); } 
+            while ((i % 7 >= 2 && type === s.board[i-1] && type === s.board[i-2]) || (i >= 14 && type === s.board[i-7] && type === s.board[i-14]));
             s.board.push(type);
             let c = document.createElement('div');
-            c.className = 'cell';
-            c.id = 'c' + i;
+            c.className = 'cell'; c.id = 'c' + i;
             c.onclick = () => touch(i);
             g.appendChild(c);
         }
+        if (s.lvl === 25) { 
+            document.getElementById('mob').classList.add('boss-glow');
+            s.ehp = 500; // У босса много ХП
+        }
         draw();
-        updateStats();
     }
 
     function draw() {
@@ -73,83 +67,108 @@
             c.style.backgroundImage = `url(${runes[t]})`;
             c.className = 'cell' + (s.sel === i ? ' sel' : '');
         });
+        document.getElementById('php').style.width = s.hp + '%';
+        let maxEHP = (s.lvl === 25) ? 500 : 100 + (s.lvl * 10);
+        document.getElementById('ehp').style.width = (s.ehp / maxEHP * 100) + '%';
         document.getElementById('en-fill').style.width = s.en + '%';
         document.getElementById('s-btn').classList.toggle('ready', s.en >= 100);
-        document.getElementById('mob').classList.toggle('stunned', s.stunTurns > 0);
-        document.getElementById('stun-txt').style.display = s.stunTurns > 0 ? 'block' : 'none';
     }
 
-    function updateStats() {
-        document.getElementById('php').style.width = s.hp + '%';
-        let maxEHP = 100 + (s.lvl * 10);
-        document.getElementById('ehp').style.width = Math.max(0, (s.ehp / maxEHP) * 100) + '%';
-    }
-
-    function touch(i) {
+    async function touch(i) {
         if (s.lock) return;
         if (s.sel === null) { s.sel = i; draw(); } 
         else {
             let d = Math.abs(s.sel - i);
             if (d === 1 || d === 7) {
                 s.lock = true;
-                swap(s.sel, i);
-                // Запускаем проверку с поддержкой комбо
-                processMatches(true);
+                let t = s.board[s.sel]; s.board[s.sel] = s.board[i]; s.board[i] = t;
+                await processMatches(true);
             }
-            s.sel = null;
-            draw();
+            s.sel = null; draw();
         }
     }
 
-    function swap(a, b) {
-        let t = s.board[a]; s.board[a] = s.board[b]; s.board[b] = t;
-    }
-
-    async function processMatches(isPlayerAction) {
-        let hasMatched = false;
-        let comboCount = 0;
-
+    async function processMatches(isPlayer) {
+        let combo = 0;
         while (true) {
-            let match = findMatches();
-            if (match.size === 0) break;
-            
-            hasMatched = true;
-            comboCount++;
-            
-            // Начисляем урон и бонусы
-            match.forEach(idx => {
-                let type = s.board[idx];
-                if (isPlayerAction) {
-                    if (type === 0) s.en = Math.min(100, s.en + 8);
-                    if (type === 4) s.hp = Math.min(100, s.hp + 1);
-                    s.ehp -= (3 + comboCount); // Урон растет с комбо
-                }
-                // Визуально "очищаем" перед падением
-                s.board[idx] = -1; 
-            });
-
-            if (isPlayerAction) { sfx('match'); sfx('hit'); animHit(); }
-            updateStats();
-            draw();
-            
-            await new Promise(r => setTimeout(r, 400));
-            fillEmpty();
-            draw();
-            await new Promise(r => setTimeout(r, 300));
-        }
-
-        if (isPlayerAction) {
-            if (hasMatched) {
-                if (s.ehp <= 0) setTimeout(win, 300);
-                else setTimeout(enemyTurn, 600);
-            } else {
-                // Если хода не было, возвращаем назад
-                s.lock = false;
-                init(); // Проще перерисовать, чтобы не усложнять логику реверса
+            let matches = [];
+            for (let i = 0; i < 49; i++) {
+                if (i % 7 < 5 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) matches.push(i, i+1, i+2);
+                if (i < 35 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) matches.push(i, i+7, i+14);
             }
+            if (matches.length === 0) break;
+            
+            combo++;
+            new Set(matches).forEach(idx => {
+                let type = s.board[idx];
+                if (isPlayer) {
+                    if (type === 0) s.en = Math.min(100, s.en + 10); // Красные - Ульта
+                    if (type === 4) s.hp = Math.min(100, s.hp + (s.unlockedBerserk ? 3 : 1)); // Реген
+                    s.ehp -= (5 * combo);
+                } else if (s.lvl === 25 && type === 1) { // Босс копит синие
+                    bossSuper();
+                }
+                s.board[idx] = Math.floor(Math.random() * 5);
+            });
+            sfx('match'); draw();
+            await new Promise(r => setTimeout(r, 400));
+        }
+        if (isPlayer) {
+            if (s.ehp <= 0) win();
+            else setTimeout(enemyTurn, 500);
         }
     }
 
-    function findMatches() {
-        let m = new Set();
-        for (let i = 0; i
+    function bossSuper() {
+        s.hp -= 20;
+        s.en = 0; // Сбрасывает твою ульту!
+        showMsg("БОСС: ЛЕДЯНОЙ ВЗРЫВ!");
+        shakeScreen();
+    }
+
+    function enemyTurn() {
+        if (s.stunTurns > 0) { s.stunTurns--; s.lock = false; return; }
+        let i1 = Math.floor(Math.random() * 49);
+        let i2 = i1 + (Math.random() > 0.5 ? 1 : 7);
+        if (i2 > 48) i2 = i1 - 7;
+        let t = s.board[i1]; s.board[i1] = s.board[i2]; s.board[i2] = t;
+        s.hp -= (5 + Math.floor(s.lvl/3));
+        shakeScreen(); sfx('player_hit');
+        processMatches(false);
+        if (s.hp <= 0) { alert("Вы пали..."); location.reload(); }
+        s.lock = false;
+    }
+
+    function showMsg(t) {
+        let m = document.getElementById('msg');
+        m.innerText = t; m.style.display = 'block';
+        setTimeout(() => m.style.display = 'none', 1500);
+    }
+
+    function shakeScreen() {
+        document.getElementById('battle-screen').classList.add('shaking');
+        setTimeout(() => document.getElementById('battle-screen').classList.remove('shaking'), 300);
+    }
+
+    function useSuper() {
+        if (s.en < 100 || s.lock) return;
+        s.ehp -= 100; s.en = 0; s.stunTurns = (s.lvl === 25) ? 1 : 2;
+        sfx('super'); draw();
+        if (s.ehp <= 0) win();
+    }
+
+    function win() {
+        if (s.lvl === 25) {
+            s.unlockedBerserk = true;
+            showMsg("БОСС ПОВЕРЖЕН! КЛАСС БЕРСЕРК ОТКРЫТ (+РЕГЕН)");
+        } else {
+            showMsg("ПОБЕДА!");
+        }
+        s.lvl++; s.hp = 100; s.en = 0; s.ehp = 100 + (s.lvl * 10);
+        init();
+    }
+
+    init();
+</script>
+</body>
+</html>
