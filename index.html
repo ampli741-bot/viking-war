@@ -3,26 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Enemy AI</title>
+    <title>Viking Saga: AI Battle</title>
     <style>
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --enemy: #9b59b6; }
         body { background: #0a0a0a; color: white; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; touch-action: manipulation; }
+        
+        /* Арена */
         .arena { width: 100%; height: 200px; position: relative; background: #111; border-bottom: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
-        #enemy-img { width: 130px; height: 130px; margin-bottom: 10px; transition: 0.2s; }
-        .hit { filter: brightness(2) sepia(1); transform: scale(1.1); }
+        #enemy-img { width: 130px; height: 130px; margin-bottom: 10px; transition: 0.2s; z-index: 2; }
+        .hit { filter: brightness(2) red; transform: scale(1.1); }
+        
+        /* Полоски ХП */
         .bars { position: absolute; top: 10px; width: 90%; display: flex; flex-direction: column; gap: 6px; }
         .bar-wrap { height: 14px; background: #222; border-radius: 7px; overflow: hidden; border: 1px solid #444; position: relative; }
         .bar-fill { height: 100%; width: 100%; transition: 0.4s; }
         .label { position: absolute; width: 100%; text-align: center; font-size: 9px; line-height: 14px; font-weight: bold; text-shadow: 1px 1px 1px black; }
-        #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; background: #000; margin-top: 10px; position: relative; }
-        .cell { width: 44px; height: 44px; border-radius: 4px; background-size: cover; background-color: #1a1a1a; transition: all 0.3s ease; }
-        .selected { outline: 3px solid var(--gold); transform: scale(0.9); z-index: 2; }
-        .enemy-target { outline: 3px solid var(--enemy); box-shadow: 0 0 10px var(--enemy); }
+
+        /* Сетка */
+        #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; background: #000; border-radius: 8px; margin-top: 10px; }
+        .cell { width: 44px; height: 44px; border-radius: 4px; background-size: cover; background-color: #1a1a1a; transition: transform 0.2s, outline 0.2s; }
+        .selected { outline: 3px solid var(--gold); transform: scale(0.9); z-index: 5; }
+        .enemy-move { outline: 3px solid var(--enemy); box-shadow: 0 0 10px var(--enemy); }
+
+        /* Кнопки */
         .controls { width: 90%; margin-top: 15px; }
         #super-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; }
-        #super-btn.ready { background: linear-gradient(orange, darkorange); color: white; box-shadow: 0 0 15px gold; }
+        #super-btn.ready { background: linear-gradient(orange, darkorange); color: white; box-shadow: 0 0 15px gold; cursor: pointer; }
+
         @keyframes shake { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(0,0); } }
-        .shaking { animation: shake 0.15s infinite; }
+        .shaking { animation: shake 0.1s infinite; }
     </style>
 </head>
 <body>
@@ -38,87 +47,6 @@
 <div id="grid"></div>
 
 <div class="controls">
+    <div style="font-size: 10px; color: var(--gold); margin-bottom: 4px; text-align: center;">УЛЬТА (КРАСНЫЕ РУНЫ)</div>
     <div class="bar-wrap" style="height:8px; border-color: var(--gold);"><div id="energy-fill" class="bar-fill" style="background:var(--gold); width:0%;"></div></div>
-    <button id="super-btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
-</div>
-
-<script>
-    let state = { pHP: 100, eHP: 100, maxEHP: 100, lvl: 1, energy: 0, board: [], selected: null, isLocked: false };
-    const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
-
-    function sfx(name) {
-        try { let a = new Audio(name + '.mp3'); a.volume = 0.4; a.play().catch(()=>{}); } catch(e) {}
-    }
-
-    function init() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        state.board = [];
-        for (let i = 0; i < 49; i++) {
-            let type;
-            do { type = Math.floor(Math.random() * 5); } 
-            while ((i % 7 >= 2 && type === state.board[i-1] && type === state.board[i-2]) || (i >= 14 && type === state.board[i-7] && type === state.board[i-14]));
-            state.board.push(type);
-            let cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.id = 'c' + i;
-            cell.onclick = () => userSelect(i);
-            grid.appendChild(cell);
-        }
-        render();
-        updateUI();
-    }
-
-    function render() {
-        for (let i = 0; i < 49; i++) {
-            const cell = document.getElementById('c' + i);
-            cell.style.backgroundImage = `url(${runes[state.board[i]]})`;
-            cell.classList.remove('selected', 'enemy-target');
-            if (state.selected === i) cell.classList.add('selected');
-        }
-    }
-
-    function userSelect(id) {
-        if (state.isLocked) return;
-        if (state.selected === null) {
-            state.selected = id;
-        } else {
-            let diff = Math.abs(state.selected - id);
-            if (diff === 1 || diff === 7) {
-                swap(state.selected, id);
-                if (checkMatches(true)) {
-                    state.isLocked = true;
-                    setTimeout(enemyLogic, 1200);
-                } else {
-                    let s = state.selected, cur = id;
-                    setTimeout(() => { swap(s, cur); render(); }, 300);
-                }
-            }
-            state.selected = null;
-        }
-        render();
-    }
-
-    function swap(i1, i2) {
-        let t = state.board[i1];
-        state.board[i1] = state.board[i2];
-        state.board[i2] = t;
-        render();
-    }
-
-    function checkMatches(isPlayer) {
-        let matched = new Set();
-        for (let i = 0; i < 49; i++) {
-            if (i % 7 < 5 && state.board[i] === state.board[i+1] && state.board[i] === state.board[i+2]) {
-                matched.add(i); matched.add(i+1); matched.add(i+2);
-            }
-            if (i < 35 && state.board[i] === state.board[i+7] && state.board[i] === state.board[i+14]) {
-                matched.add(i); matched.add(i+7); matched.add(i+14);
-            }
-        }
-
-        if (matched.size > 0) {
-            let dmg = 0;
-            matched.forEach(idx => {
-                let type = state.board[idx];
-                if
+    <button id="super-btn" onclick="use
