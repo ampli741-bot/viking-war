@@ -3,35 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Combo Balance</title>
+    <title>Viking Saga: Storm & Blast</title>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
         #adm { display: none; background: #400; padding: 5px; font-size: 10px; position: sticky; top: 0; z-index: 1000; }
         .adm-btn { background: #fff; color: #000; border: none; padding: 3px 8px; margin: 0 3px; font-weight: bold; border-radius: 3px; }
+        
         .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; display: flex; justify-content: space-around; }
-        .arena { height: 180px; background: #050505; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0; }
-        .hp-bar { width: 90%; height: 12px; background: #333; border-radius: 6px; overflow: hidden; border: 1px solid #444; position: relative; z-index: 10; }
+        .arena { height: 170px; background: #050505; position: relative; padding-top: 10px; overflow: hidden; transition: 0.1s; }
+        
+        /* Эффект тряски */
+        .shake { animation: shake 0.2s infinite; }
+        @keyframes shake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
+
+        .hp-bar { width: 90%; height: 12px; background: #333; margin: 5px auto; border-radius: 6px; overflow: hidden; border: 1px solid #444; position: relative; z-index: 20; }
         .fill { height: 100%; width: 100%; transition: 0.3s; }
-        #boss-en-bar { width: 60%; height: 8px; background: #222; border-radius: 4px; border: 1px solid #ff4500; display: none; overflow: hidden; z-index: 10; margin-top: -5px; }
-        #mob-img { height: 100px; width: auto; transition: 0.5s; z-index: 5; margin: 5px 0; }
-        .boss-glow { filter: drop-shadow(0 0 15px red); }
+        #boss-en-bar { width: 60%; height: 6px; background: #222; margin: 2px auto; border-radius: 3px; border: 1px solid #ff4500; display: none; overflow: hidden; z-index: 20; position: relative; }
+        
+        #mob-img { height: 95px; width: auto; transition: 0.5s; z-index: 10; position: relative; }
+        .boss-glow { filter: drop-shadow(0 0 15px red) !important; }
+
+        #combo-txt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 44px; color: gold; font-weight: bold; z-index: 50; display: none; text-shadow: 0 0 10px #f00; pointer-events: none; }
+
         .ui { padding: 10px 0; background: #111; }
         .en-bar { width: 280px; height: 20px; background: #222; margin: 0 auto 5px; border-radius: 10px; overflow: hidden; position: relative; border: 1px solid #3498db; }
-        #en-txt { position: absolute; width: 100%; font-size: 11px; line-height: 20px; color: #fff; font-weight: bold; z-index: 15; text-shadow: 1px 1px 2px #000; }
+        #en-txt { position: absolute; width: 100%; font-size: 11px; line-height: 20px; color: #fff; font-weight: bold; z-index: 5; text-shadow: 1px 1px 2px #000; }
+
         .btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
         .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; }
+        
         #grid { width: 315px; margin: 5px auto; display: block; font-size: 0; }
         .cell { display: inline-block; width: 40px; height: 40px; margin: 2px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333; vertical-align: top; box-sizing: border-box; }
-        .sel { border: 2px solid #fff !important; transform: scale(0.85); box-shadow: 0 0 10px #fff; }
+        .sel { border: 2px solid #fff !important; transform: scale(0.85); }
         #msg { position: fixed; top: 40%; width: 100%; background: rgba(0,0,0,0.95); color: gold; display: none; padding: 20px 0; font-size: 26px; z-index: 100; font-weight: bold; border-top: 2px solid gold; border-bottom: 2px solid gold; }
     </style>
 </head>
 <body>
 
     <div id="adm">
-        <button class="adm-btn" onclick="changeLvl(-1)">-1 LVL</button>
-        <button class="adm-btn" onclick="changeLvl(1)">+1 LVL</button>
-        <button class="adm-btn" onclick="s.en=100;draw();">⚡ MAX</button>
+        <button class="adm-btn" onclick="changeLvl(-1)">-1</button>
+        <button class="adm-btn" onclick="changeLvl(1)">+1</button>
+        <button class="adm-btn" onclick="s.en=100;draw();">⚡</button>
     </div>
 
     <div class="header" onclick="admOn()">
@@ -40,6 +52,7 @@
 
     <div class="arena" id="arena-bg">
         <div id="msg"></div>
+        <div id="combo-txt">COMBO X1</div>
         <div class="hp-bar"><div id="ehp" class="fill" style="background: #e74c3c;"></div></div>
         <div id="boss-en-bar"><div id="boss-en-fill" class="fill" style="background: #ff4500; width: 0%;"></div></div>
         <img id="mob-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/90/red?text=MOB'">
@@ -64,12 +77,10 @@
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
         en: parseInt(localStorage.getItem('v_en')) || 0,
         hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null,
-        bossEn: 0
+        bossEn: 0, combo: 0
     };
 
-    let audioCtx = null;
-    let bossTimer = null;
-
+    let audioCtx, bossTimer;
     function play(f) { new Audio(f).play().catch(()=>{}); }
 
     function startBossMusic() {
@@ -80,28 +91,28 @@
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
             osc.type = 'triangle';
-            const freqs = [60, 60, 80, 0, 60, 60, 50, 0];
+            const freqs = [60, 0, 60, 80, 60, 0, 60, 50];
             let f = freqs[step % 8];
             if(f > 0) {
                 osc.frequency.setValueAtTime(f, audioCtx.currentTime);
                 g.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
                 osc.connect(g); g.connect(audioCtx.destination);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
             }
             step++;
-        }, 200);
+        }, 250);
     }
 
     function stopBossMusic() { if (bossTimer) { clearInterval(bossTimer); bossTimer = null; } }
 
-    let hits = 0;
     function admOn() { if(++hits >= 5) { localStorage.setItem('v_adm','1'); document.getElementById('adm').style.display='block'; } }
+    let hits = 0;
     
-    function changeLvl(v) { s.lvl = Math.max(1, s.lvl + v); localStorage.setItem('v_lvl', s.lvl); init(); }
+    function changeLvl(v) { s.lvl = Math.max(1, s.lvl + v); init(); }
 
     function init() {
         stopBossMusic();
+        if(localStorage.getItem('v_adm')) document.getElementById('adm').style.display='block';
         const isBoss = s.lvl % 25 === 0;
         let mobFile = 'mob1.png';
         if (isBoss) {
@@ -147,6 +158,7 @@
         document.getElementById('en-txt').innerText = `МОЛОТ: ${s.en}%`;
         document.getElementById('boss-en-fill').style.width = s.bossEn + '%';
         document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
+        localStorage.setItem('v_lvl', s.lvl);
     }
 
     async function touch(i) {
@@ -159,6 +171,7 @@
                 s.lock = true;
                 [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
                 draw();
+                s.combo = 0;
                 if (!await check()) [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
             }
             s.sel = null; s.lock = false; draw();
@@ -169,35 +182,61 @@
         let found = false;
         while (true) {
             let del = new Set();
-            let horizontalMatches = [];
-            let verticalMatches = [];
-
-            // Поиск совпадений и их длины
+            // Проверка горизонтали
             for (let r = 0; r < 7; r++) {
-                for (let c = 0; c < 5; c++) {
+                let count = 1;
+                for (let c = 0; c < 7; c++) {
                     let i = r * 7 + c;
-                    if (s.board[i] !== -1 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) {
-                        let match = [i, i+1, i+2];
-                        if (c < 4 && s.board[i] === s.board[i+3]) match.push(i+3);
-                        if (c < 3 && s.board[i] === s.board[i+4]) match.push(i+4);
-                        horizontalMatches.push(match);
-                        match.forEach(idx => del.add(idx));
-                        c += match.length - 1;
+                    if (c < 6 && s.board[i] !== -1 && s.board[i] === s.board[i+1]) count++;
+                    else {
+                        if (count >= 3) {
+                            for (let k = 0; k < count; k++) del.add(i - k);
+                            if (count === 4) thunder(r, 'h'); // 4 в ряд - линия
+                            if (count >= 5) explosion(i - 2); // 5 в ряд - взрыв
+                        }
+                        count = 1;
                     }
                 }
             }
+            // Проверка вертикали
             for (let c = 0; c < 7; c++) {
-                for (let r = 0; r < 5; r++) {
+                let count = 1;
+                for (let r = 0; r < 7; r++) {
                     let i = r * 7 + c;
-                    if (s.board[i] !== -1 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) {
-                        let match = [i, i+7, i+14];
-                        if (r < 4 && s.board[i] === s.board[i+21]) match.push(i+21);
-                        if (r < 3 && s.board[i] === s.board[i+28]) match.push(i+28);
-                        verticalMatches.push(match);
-                        match.forEach(idx => del.add(idx));
-                        r += match.length - 1;
+                    if (r < 6 && s.board[i] !== -1 && s.board[i] === s.board[i+7]) count++;
+                    else {
+                        if (count >= 3) {
+                            for (let k = 0; k < count; k++) del.add(i - k*7);
+                            if (count === 4) thunder(c, 'v');
+                            if (count >= 5) explosion(i - 14);
+                        }
+                        count = 1;
                     }
                 }
             }
 
-            if (
+            if (del.size === 0) break;
+            found = true; s.combo++; play('match.mp3');
+            
+            // Комбо эффекты
+            const ct = document.getElementById('combo-txt');
+            ct.innerText = "COMBO X" + s.combo;
+            ct.style.display = 'block';
+            if (s.combo >= 5) document.getElementById('arena-bg').classList.add('shake');
+            setTimeout(() => { ct.style.display = 'none'; document.getElementById('arena-bg').classList.remove('shake'); }, 500);
+
+            del.forEach(idx => {
+                if (s.board[idx] === 1) s.en = Math.min(100, s.en + 5);
+                if (s.board[idx] === 0) s.hp = Math.min(100, s.hp + 2);
+                s.ehp -= (10 * s.combo);
+                s.board[idx] = -1;
+            });
+            draw(); await new Promise(r => setTimeout(r, 250));
+            drop(); draw(); await new Promise(r => setTimeout(r, 200));
+        }
+        if (found) {
+            if (s.ehp <= 0) { 
+                stopBossMusic(); play('win.mp3');
+                document.getElementById('msg').style.display='block';
+                document.getElementById('msg').innerText = "ПОБЕДА!";
+                setTimeout(() => { s.lvl++; init
