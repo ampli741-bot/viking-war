@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Power Up</title>
+    <title>Viking Saga: RPG Edition</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #fff; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
-        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; flex-shrink: 0; }
+        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 12px; flex-shrink: 0; }
+        #exp-bar { width: 100%; height: 3px; background: #222; flex-shrink: 0; }
+        #exp-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.3s; }
+
         .arena { height: 26vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
         .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .p-icon { width: 80px; height: 80px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
+        .p-icon { width: 75px; height: 75px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
         
         .bar-bg { width: 100%; height: 16px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
@@ -43,9 +46,11 @@
 <body>
 
     <div class="header">
-        <div style="color:var(--gold)" onclick="admTrig()">УРОВЕНЬ: <span id="lvl">1</span></div>
+        <div style="color:var(--gold)" onclick="admTrig()">STG: <span id="lvl">1</span></div>
+        <div style="color:var(--purple)">HERO LVL: <span id="h-lvl">1</span></div>
         <div onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: <span id="pts-val">0</span></div>
     </div>
+    <div id="exp-bar"><div id="exp-fill"></div></div>
 
     <div class="arena">
         <div class="char-box" onclick="showInfo('p')">
@@ -56,7 +61,7 @@
         <div class="char-box" onclick="showInfo('e')">
             <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
             <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div id="hp-e-txt" class="bar-txt">100/100</div></div>
-            <div class="skill-bar" id="e-skill-wrap" style="display:none;"><div id="e-skill-fill" class="skill-fill" style="background:var(--purple)"></div></div>
+            <div class="skill-bar" id="e-skill-wrap"><div id="e-skill-fill" class="skill-fill" style="background:var(--purple)"></div></div>
         </div>
     </div>
 
@@ -65,52 +70,29 @@
         <button id="thor-btn" onclick="useThor()">МОЛОТ ТОРА</button>
     </div>
 
-    <div id="admin-overlay" class="overlay">
-        <div class="card">
-            <h3>АДМИНКА</h3>
-            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:90%; padding:10px; margin-bottom:10px; text-align:center; background:#222; color:#fff; border:1px solid #444;">
-            <button class="menu-btn" onclick="jumpTo()">ПЕРЕЙТИ</button>
-            <button class="menu-btn" onclick="addPts()" style="background:var(--blue); color:#fff">+10 PTS</button>
-            <button class="menu-btn" onclick="resetAll()" style="background:var(--red); color:#fff">СБРОСИТЬ ВСЁ</button>
-            <button class="menu-btn" onclick="closeO()" style="background:#444; color:#fff">ЗАКРЫТЬ</button>
-        </div>
-    </div>
-
-    <div id="info-overlay" class="overlay" onclick="closeO()">
-        <div class="card" onclick="event.stopPropagation()">
-            <h2 id="info-t" style="margin-top:0; color:var(--gold)"></h2>
-            <p id="info-b" style="text-align:left; font-size:14px; line-height:1.4;"></p>
-            <button class="menu-btn" onclick="closeO()">ЗАКРЫТЬ</button>
-        </div>
-    </div>
-
-    <div id="f-menu" class="overlay">
-        <div class="card">
-            <h2 style="color:var(--gold)">КУЗНИЦА</h2>
-            <button class="menu-btn" onclick="buy('atk')">УРОН +2</button>
-            <button class="menu-btn" onclick="buy('hp')">ОЗ +20</button>
-            <button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ +1%</button>
-            <button class="menu-btn" onclick="closeO()" style="background:#444; color:#fff">ЗАКРЫТЬ</button>
-        </div>
-    </div>
+    <div id="admin-overlay" class="overlay"><div class="card"><h3>ADMIN</h3><input type="number" id="jump-lvl" placeholder="Stage" style="width:90%; padding:10px; margin-bottom:10px; text-align:center;"><button class="menu-btn" onclick="jumpTo()">GO</button><button class="menu-btn" onclick="closeO()">CLOSE</button></div></div>
+    <div id="f-menu" class="overlay"><div class="card"><h2 style="color:var(--gold)">КУЗНИЦА</h2><button class="menu-btn" onclick="buy('atk')">УРОН +2</button><button class="menu-btn" onclick="buy('hp')">ОЗ +20</button><button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ +1%</button><button class="menu-btn" onclick="closeO()" style="background:#444; color:#fff">ЗАКРЫТЬ</button></div></div>
+    <div id="info-overlay" class="overlay" onclick="closeO()"><div class="card" onclick="event.stopPropagation()"><h2 id="info-t"></h2><p id="info-b"></p><button class="menu-btn" onclick="closeO()">ОК</button></div></div>
 
 <script>
     let st = {
-        lvl: parseInt(localStorage.getItem('v_lvl')) || 1, 
+        lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
+        hLvl: parseInt(localStorage.getItem('v_hlvl')) || 1,
+        exp: parseInt(localStorage.getItem('v_exp')) || 0,
+        mExp: 500,
         atk: parseInt(localStorage.getItem('v_atk')) || 10,
-        mHP: parseInt(localStorage.getItem('v_mhp')) || 100, 
+        mHP: parseInt(localStorage.getItem('v_mhp')) || 100,
         agi: parseInt(localStorage.getItem('v_agi')) || 5,
-        pts: parseInt(localStorage.getItem('v_pts')) || 0, 
-        thor: 0, hp: 100, ehp: 100, mehp: 100, 
-        board: [], sel: null, lock: false, combo: 1, adm: 0, eSkill: 0
+        pts: parseInt(localStorage.getItem('v_pts')) || 0,
+        thor: 0, hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, eSkill: 0, combo: 1, adm: 0
     };
 
     function init() {
         const isB = st.lvl % 25 === 0;
         st.mehp = isB ? (100 + st.lvl * 60) * 5 : 100 + st.lvl * 60;
-        st.ehp = st.mehp; st.hp = st.mHP; st.eSkill = 0;
+        st.ehp = st.mehp; st.hp = st.mHP; st.eSkill = 0; st.mExp = st.hLvl * 800;
         document.getElementById('m-icon').src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
-        document.getElementById('e-skill-wrap').style.display = isB ? 'block' : 'none';
+        document.getElementById('e-skill-wrap').style.visibility = isB ? 'visible' : 'hidden';
         
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
         for (let i = 0; i < 49; i++) {
@@ -124,6 +106,8 @@
     function draw() {
         document.getElementById('pts-val').innerText = st.pts;
         document.getElementById('lvl').innerText = st.lvl;
+        document.getElementById('h-lvl').innerText = st.hLvl;
+        document.getElementById('exp-fill').style.width = (st.exp/st.mExp*100)+'%';
         document.getElementById('hp-e-fill').style.width = (st.ehp/st.mehp*100)+'%';
         document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
@@ -147,15 +131,13 @@
             let a = st.sel, b = i;
             if ((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
                 st.lock = true; swap(a, b);
-                if (!checkMatchesSimple()) {
-                    setTimeout(() => { swap(a, b); st.lock = false; st.sel = null; draw(); }, 300);
-                } else { st.sel = null; resolveBoard(); }
+                if (!checkMatchesSimple()) { setTimeout(() => { swap(a, b); st.lock = false; st.sel = null; draw(); }, 300); }
+                else { st.sel = null; resolveBoard(); }
             } else { st.sel = i; draw(); }
         }
     }
 
     function swap(a, b) { let t = {...st.board[a]}; st.board[a] = {...st.board[b]}; st.board[b] = t; }
-
     function checkMatchesSimple() {
         for (let r=0; r<7; r++) for (let c=0; c<5; c++) {
             let i = r*7+c; if (st.board[i].type!==-1 && st.board[i].type===st.board[i+1].type && st.board[i].type===st.board[i+2].type) return true;
@@ -170,7 +152,7 @@
         st.combo = 1;
         while (true) {
             let toClear = new Set();
-            let rows4 = []; let expl5 = [];
+            let rowEffect = []; let colEffect = []; let boom = [];
 
             for (let r=0; r<7; r++) {
                 let cnt=1;
@@ -180,8 +162,8 @@
                     else {
                         if (cnt>=3) {
                             for(let k=0; k<cnt; k++) toClear.add(i-k);
-                            if(cnt===4) rows4.push(r);
-                            if(cnt>=5) expl5.push(i-Math.floor(cnt/2));
+                            if(cnt===4) rowEffect.push(r);
+                            if(cnt>=5) boom.push(i-Math.floor(cnt/2));
                         }
                         cnt=1;
                     }
@@ -195,28 +177,36 @@
                     else {
                         if (cnt>=3) {
                             for(let k=0; k<cnt; k++) toClear.add(i-k*7);
-                            if(cnt>=5) expl5.push(i-Math.floor(cnt/2)*7);
+                            if(cnt===4) colEffect.push(c);
+                            if(cnt>=5) boom.push(i-Math.floor(cnt/2)*7);
                         }
                         cnt=1;
                     }
                 }
             }
+
             if (toClear.size === 0) break;
-            rows4.forEach(r => { for(let c=0; c<7; c++) toClear.add(r*7+c); });
-            expl5.forEach(ctr => {
+
+            rowEffect.forEach(r => { for(let c=0; c<7; c++) toClear.add(r*7+c); });
+            colEffect.forEach(c => { for(let r=0; r<7; r++) toClear.add(r*7+c); });
+            boom.forEach(ctr => {
                 for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) {
                     let idx = ctr+r*7+c; if(idx>=0 && idx<49) toClear.add(idx);
                 }
             });
 
-            let dmg = toClear.size * st.atk * st.combo;
-            st.ehp -= dmg; pop(dmg + (st.combo>1?` x${st.combo}`:''));
-            st.thor = Math.min(100, st.thor + toClear.size * 2);
-
+            let baseDmg = toClear.size * st.atk;
+            let finalDmg = Math.floor(baseDmg * (1 + (st.combo-1)*0.2));
+            st.ehp -= finalDmg; 
+            st.exp += finalDmg; 
+            st.thor = Math.min(100, st.thor + toClear.size * 1.5);
+            pop(finalDmg + (st.combo > 1 ? ` x${st.combo}` : ""));
+            
+            checkExp();
             toClear.forEach(i => { st.board[i].type = -1; st.board[i].light = 0; st.board[i].frozen = 0; });
-            draw(); await new Promise(r => setTimeout(r, 300));
+            draw(); await new Promise(r => setTimeout(r, 250));
             fillBoard();
-            draw(); await new Promise(r => setTimeout(r, 300));
+            draw(); await new Promise(r => setTimeout(r, 250));
             st.combo++;
         }
         st.lock = false;
@@ -235,20 +225,26 @@
         }
     }
 
+    function checkExp() {
+        if (st.exp >= st.mExp) {
+            st.exp -= st.mExp; st.hLvl++; st.pts++;
+            st.mExp = st.hLvl * 800;
+            pop("LEVEL UP!"); save();
+        }
+    }
+
     function enemyTurn() {
         const isB = st.lvl % 25 === 0;
-        let d = Math.floor(5 + st.lvl * 1.5);
-        
+        let d = Math.floor(5 + st.lvl * 1.8);
         if (isB) {
             st.eSkill += 25;
             if (st.eSkill >= 100) {
                 st.eSkill = 0;
                 if (st.lvl === 25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen = 3; pop("ICE!"); }
-                if (st.lvl === 50) { d *= 3; pop("CRIT!"); }
+                if (st.lvl === 50) { d *= 3; pop("FIRE!"); }
                 if (st.lvl === 75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light = 4; pop("LIGHT!"); }
             }
         }
-
         st.board.forEach(o => {
             if (o.light > 0) {
                 o.light--;
@@ -256,39 +252,44 @@
             }
             if (o.frozen > 0) o.frozen--;
         });
-
         if (Math.random()*100 > st.agi) st.hp -= d; else pop("MISS");
-        if (st.hp <= 0) { alert("Game Over!"); resetAll(); }
+        if (st.hp <= 0) { alert("Вальхалла ждет..."); resetAll(); }
         draw();
     }
 
-    function useThor() {
+    async function useThor() {
         if (st.thor < 100 || st.lock) return;
-        st.thor = 0; st.ehp -= st.atk * 15; pop("THUNDER!");
+        st.thor = 0; st.lock = true;
+        let d = st.atk * 15; st.ehp -= d; st.exp += d;
+        pop(d + " [THOR]"); checkExp();
         for(let i=0; i<15; i++) st.board[Math.floor(Math.random()*49)].type = -1;
-        resolveBoard();
+        fillBoard(); draw();
+        setTimeout(() => { resolveBoard(); }, 400);
     }
 
     function pop(txt) {
         const p = document.createElement('div'); p.className = 'dmg-text';
         p.innerText = isNaN(txt) ? txt : "-"+txt;
-        p.style.left = '50%'; p.style.top = '30%';
+        p.style.left = (Math.random()*40+30)+'%'; p.style.top = '30%';
         document.body.appendChild(p); setTimeout(() => p.remove(), 1000);
     }
 
     function admTrig() { st.adm++; if(st.adm>=5) { st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
     function jumpTo() { let l = parseInt(document.getElementById('jump-lvl').value); if(l>0){ st.lvl=l; save(); init(); closeO(); } }
-    function addPts() { st.pts += 10; draw(); }
     function win() { st.lvl++; st.pts++; save(); init(); }
-    function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_atk', st.atk); localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi); localStorage.setItem('v_pts', st.pts); }
-    function resetAll() { localStorage.clear(); location.reload(); }
     function openF() { document.getElementById('f-menu').style.display='flex'; }
     function closeO() { document.querySelectorAll('.overlay').forEach(e => e.style.display='none'); }
     function buy(t) { if(st.pts>0){ if(t==='atk')st.atk+=2; if(t==='hp'){st.mHP+=20;st.hp+=20} if(t==='agi')st.agi++; st.pts--; draw(); save(); } }
+    function save() { 
+        localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_hlvl', st.hLvl); localStorage.setItem('v_exp', st.exp);
+        localStorage.setItem('v_atk', st.atk); localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi); 
+        localStorage.setItem('v_pts', st.pts); 
+    }
+    function resetAll() { localStorage.clear(); location.reload(); }
     function showInfo(t) {
         const o = document.getElementById('info-overlay');
         document.getElementById('info-t').innerText = t==='p' ? "ГЕРОЙ" : "ВРАГ";
-        document.getElementById('info-b').innerHTML = t==='p' ? `Урон: ${st.atk}<br>ОЗ: ${st.mHP}` : `Уровень: ${st.lvl}<br>ОЗ: ${st.mehp}`;
+        document.getElementById('info-b').innerHTML = t==='p' ? `Урон: ${st.atk}<br>Ловкость: ${st.agi}%<br>HP: ${st.mHP}` : `Этап: ${st.lvl}<br>HP: ${st.mehp}`;
         o.style.display = 'flex';
     }
 
