@@ -8,13 +8,12 @@
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --bg: #000; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; }
         
-        /* Панель статуса */
         .header { background: #151515; height: 55px; display: flex; justify-content: space-around; align-items: center; border-bottom: 3px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.8); position: relative; z-index: 100; }
+        #lvl-trigger { cursor: pointer; font-size: 18px; color: var(--gold); }
         #pts-txt { font-weight: bold; padding: 6px 15px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all 0.3s; }
         .has-pts { color: var(--accent); border-color: var(--accent); background: rgba(46, 204, 113, 0.1); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0px var(--accent); } 50% { box-shadow: 0 0 15px var(--accent); } 100% { box-shadow: 0 0 0px var(--accent); } }
 
-        /* Игровая зона */
         .arena { max-width: 500px; height: 250px; margin: 0 auto; position: relative; background: #080808; overflow: hidden; border-bottom: 2px solid #222; }
         .boss-active { background: radial-gradient(circle at center, #700 0%, #000 100%) !important; }
         #mob-img { height: 150px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 5; filter: drop-shadow(0 0 10px #000); }
@@ -22,21 +21,18 @@
         .bar-wrap { width: 92%; height: 18px; background: #222; margin: 8px auto; border-radius: 9px; border: 1px solid #444; overflow: hidden; position: relative; z-index: 10; }
         .bar-fill { height: 100%; width: 100%; transition: 0.5s cubic-bezier(0.1, 0.9, 0.2, 1); }
 
-        /* Поле боя */
         #grid { width: 322px; margin: 15px auto; line-height: 0; background: #111; padding: 8px; border-radius: 15px; border: 3px solid #333; box-shadow: inset 0 0 30px #000; }
         .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-position: center; background-color: #222; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; box-sizing: border-box; }
         .selected { border: 3px solid #fff; box-shadow: 0 0 20px #fff; transform: scale(0.8); z-index: 50; position: relative; }
 
-        /* Оверлеи (Меню) - ТУТ ВКЛЮЧЕН СКРОЛЛ */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 1000; display: none; flex-direction: column; justify-content: flex-start; align-items: center; backdrop-filter: blur(8px); overflow-y: auto; padding: 40px 0; box-sizing: border-box; }
+        /* ОВЕРЛЕИ СО СКРОЛЛОМ */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 1000; display: none; flex-direction: column; align-items: center; backdrop-filter: blur(8px); overflow-y: auto; padding: 30px 0; box-sizing: border-box; }
         .menu-btn { width: 240px; padding: 18px; margin: 12px; border: none; border-radius: 10px; background: #252525; color: #fff; font-weight: bold; font-size: 18px; cursor: pointer; border: 1px solid #444; transition: 0.3s; flex-shrink: 0; }
         .buy-btn { background: var(--accent) !important; color: #000 !important; border: none; }
         
-        /* Всплывающий урон */
         .dmg-text { position: absolute; font-size: 32px; font-weight: 900; pointer-events: none; animation: flyUp 0.8s ease-out forwards; z-index: 200; text-shadow: 3px 3px #000; }
         @keyframes flyUp { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -100px); } }
 
-        /* Ульта */
         .super-container { width: 310px; margin: 10px auto; }
         #super-btn { width: 100%; padding: 15px; background: #222; color: #666; border: 2px solid #333; border-radius: 10px; font-weight: bold; font-size: 16px; transition: 0.4s; }
         #super-btn.ready { background: var(--blue) !important; color: #fff !important; border-color: #fff; cursor: pointer; box-shadow: 0 0 20px var(--blue); }
@@ -45,7 +41,7 @@
 <body onclick="unlockAudioContext()">
 
     <div class="header">
-        <div style="color:var(--gold); font-size: 18px; cursor: pointer;" onclick="adminClick()">LEVEL <span id="lvl-val">1</span></div>
+        <div id="lvl-trigger" onclick="adminTouch()">LEVEL <span id="lvl-val">1</span></div>
         <div id="pts-txt" onclick="openForge()">PTS: <span id="pts-val">0</span></div>
         <div onclick="openInfo()" style="cursor:pointer; font-size: 20px;">🛡️</div>
     </div>
@@ -60,21 +56,22 @@
             <p>Улучши свои навыки за очки PTS</p>
             <button class="menu-btn buy-btn" onclick="buyStat('atk')">АТАКА (+2)</button>
             <button class="menu-btn buy-btn" onclick="buyStat('hp')">ЗДОРОВЬЕ (+20)</button>
+            <button class="menu-btn buy-btn" onclick="buyStat('agi')">ЛОВКОСТЬ (+1)</button>
             <button class="menu-btn" onclick="closeMenus()">ВЕРНУТЬСЯ</button>
         </div>
 
         <div id="info-menu" class="overlay">
             <h1 style="color:var(--gold)">ГЕРОЙ</h1>
-            <div id="hero-stats" style="font-size: 22px; line-height: 2; width: 80%;"></div>
+            <div id="hero-stats" style="font-size: 22px; line-height: 2; width: 85%;"></div>
             <button class="menu-btn buy-btn" onclick="closeMenus()">ЗАКРЫТЬ</button>
         </div>
 
         <div id="admin-menu" class="overlay">
-            <h1 style="color:var(--red)">MODERATOR</h1>
-            <button class="menu-btn" onclick="addCheatPts()">+100 PTS</button>
-            <button class="menu-btn" onclick="goToBoss()">УРОВЕНЬ 25 (BOSS)</button>
-            <button class="menu-btn" onclick="localStorage.clear(); location.reload();">СБРОСИТЬ СОХРАНЕНИЯ</button>
-            <button class="menu-btn" onclick="closeMenus()">ЗАКРЫТЬ</button>
+            <h1 style="color:var(--red)">ADMIN PANEL</h1>
+            <button class="menu-btn" onclick="cheatPts()">+100 PTS</button>
+            <button class="menu-btn" onclick="cheatLvl(25)">LEVEL 25 (BOSS)</button>
+            <button class="menu-btn" onclick="localStorage.clear(); location.reload();">FULL RESET</button>
+            <button class="menu-btn" onclick="closeMenus()">EXIT</button>
         </div>
     </div>
 
@@ -88,39 +85,25 @@
     <div id="grid"></div>
 
 <script>
-    // --- ЗВУКИ ---
     const audio = {
-        click: new Audio('click.mp3'),
-        match: new Audio('match.mp3'),
-        hit: new Audio('hit.mp3'),
-        win: new Audio('win.mp3'),
-        super: new Audio('super.mp3'),
-        bg: new Audio('track_normal.mp3'),
+        click: new Audio('click.mp3'), match: new Audio('match.mp3'),
+        hit: new Audio('hit.mp3'), win: new Audio('win.mp3'),
+        super: new Audio('super.mp3'), bg: new Audio('track_normal.mp3'),
         bgBoss: new Audio('track_boss.mp3')
     };
-    audio.bg.loop = true;
-    audio.bgBoss.loop = true;
+    audio.bg.loop = true; audio.bgBoss.loop = true;
 
-    // --- ДАННЫЕ ---
     let state = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
         atk: parseInt(localStorage.getItem('v_atk')) || 10,
         mHP: parseInt(localStorage.getItem('v_mhp')) || 100,
+        agi: parseInt(localStorage.getItem('v_agi')) || 5, // Ловкость вернулась
         pts: parseInt(localStorage.getItem('v_pts')) || 0,
-        hp: 100, ehp: 100, mehp: 100,
-        en: 0,
-        board: [],
-        sel: null,
-        isA: false,
-        lock: false,
-        adminHits: 0 // Счётчик для админки
+        hp: 100, ehp: 100, mehp: 100, en: 0,
+        board: [], sel: null, isA: false, lock: false, aHits: 0
     };
 
-    function unlockAudioContext() {
-        if (state.isA) return;
-        state.isA = true;
-        updateMusic();
-    }
+    function unlockAudioContext() { if (!state.isA) { state.isA = true; updateMusic(); } }
 
     function updateMusic() {
         if (!state.isA) return;
@@ -131,43 +114,29 @@
 
     function init() {
         const isB = state.lvl % 25 === 0;
-        const arena = document.getElementById('arena');
-        const mob = document.getElementById('mob-img');
-
-        arena.classList.toggle('boss-active', isB);
-        mob.src = isB ? 'mob4.png' : (state.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
-
+        document.getElementById('arena').classList.toggle('boss-active', isB);
+        document.getElementById('mob-img').src = isB ? 'mob4.png' : (state.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
         state.mehp = (100 + (state.lvl * 40)) * (isB ? 4 : 1);
-        state.ehp = state.mehp;
-        state.hp = state.mHP;
-
-        const g = document.getElementById('grid');
-        g.innerHTML = '';
-        state.board = [];
-
+        state.ehp = state.mehp; state.hp = state.mHP;
+        const g = document.getElementById('grid'); g.innerHTML = ''; state.board = [];
         for (let i = 0; i < 49; i++) {
             const type = Math.floor(Math.random() * 5);
             state.board.push(type);
             const c = document.createElement('div');
-            c.className = 'cell';
-            c.id = 'c-' + i;
+            c.className = 'cell'; c.id = 'c-' + i;
             c.style.backgroundImage = `url(rune${type + 1}.png)`;
             c.onclick = () => handleInput(i);
             g.appendChild(c);
         }
-        updateMusic();
-        draw();
+        updateMusic(); draw();
     }
 
     function handleInput(i) {
         if (state.lock) return;
         if (state.isA) { audio.click.currentTime = 0; audio.click.play(); }
-
-        if (state.sel === null) {
-            state.sel = i;
-        } else {
-            const a = state.sel;
-            const b = i;
+        if (state.sel === null) state.sel = i;
+        else {
+            const a = state.sel; const b = i;
             if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
                 [state.board[a], state.board[b]] = [state.board[b], state.board[a]];
                 processMatches();
@@ -179,9 +148,7 @@
 
     async function processMatches() {
         state.lock = true;
-        let matched = false;
         let del = new Set();
-
         for (let i = 0; i < 49; i++) {
             if (i % 7 < 5 && state.board[i] !== -1 && state.board[i] === state.board[i+1] && state.board[i] === state.board[i+2]) {
                 del.add(i); del.add(i+1); del.add(i+2);
@@ -190,163 +157,9 @@
                 del.add(i); del.add(i+7); del.add(i+14);
             }
         }
-
         if (del.size > 0) {
-            matched = true;
             if (state.isA) { audio.match.currentTime = 0; audio.match.play(); }
-            
             let dmg = del.size * state.atk;
-            state.ehp -= dmg;
-            popDmg(dmg, false);
-
+            state.ehp -= dmg; popDmg(dmg, false);
             del.forEach(idx => {
-                if (state.board[idx] === 1) state.en = Math.min(100, state.en + 7);
-                state.board[idx] = -1;
-            });
-
-            draw();
-            await new Promise(r => setTimeout(r, 300));
-            gravity();
-            draw();
-            await new Promise(r => setTimeout(r, 300));
-            processMatches();
-        } else {
-            state.lock = false;
-            if (state.ehp <= 0) {
-                win();
-            } else {
-                enemyTurn();
-            }
-        }
-    }
-
-    function gravity() {
-        for (let c = 0; c < 7; c++) {
-            let empty = 0;
-            for (let r = 6; r >= 0; r--) {
-                let i = r * 7 + c;
-                if (state.board[i] === -1) empty++;
-                else if (empty > 0) {
-                    state.board[i + empty * 7] = state.board[i];
-                    state.board[i] = -1;
-                }
-            }
-            for (let r = 0; r < empty; r++) {
-                state.board[r * 7 + c] = Math.floor(Math.random() * 5);
-            }
-        }
-    }
-
-    function enemyTurn() {
-        let dmg = 5 + Math.floor(state.lvl / 3.5);
-        state.hp -= dmg;
-        if (state.isA) { audio.hit.currentTime = 0; audio.hit.play(); }
-        popDmg(dmg, true);
-        if (state.hp <= 0) {
-            alert("Твоё путешествие окончено. Уровень: " + state.lvl);
-            localStorage.clear();
-            location.reload();
-        }
-        draw();
-    }
-
-    function win() {
-        if (state.isA) audio.win.play();
-        state.lvl++;
-        if (state.lvl % 3 === 0) state.pts++;
-        if ((state.lvl - 1) % 25 === 0) state.pts += 3;
-        save();
-        init();
-    }
-
-    function draw() {
-        document.getElementById('lvl-val').innerText = state.lvl;
-        document.getElementById('pts-val').innerText = state.pts;
-        document.getElementById('pts-txt').className = state.pts > 0 ? 'has-pts' : '';
-        
-        document.getElementById('hp-e').style.width = Math.max(0, (state.ehp / state.mehp * 100)) + '%';
-        document.getElementById('hp-p').style.width = Math.max(0, (state.hp / state.mHP * 100)) + '%';
-        document.getElementById('en-fill').style.width = state.en + '%';
-        
-        const sBtn = document.getElementById('super-btn');
-        if (state.en >= 100) sBtn.classList.add('ready');
-        else sBtn.classList.remove('ready');
-
-        state.board.forEach((type, i) => {
-            const cell = document.getElementById('c-' + i);
-            cell.style.backgroundImage = type === -1 ? 'none' : `url(rune${type + 1}.png)`;
-            cell.style.backgroundColor = type === -1 ? '#000' : '#222';
-            cell.classList.toggle('selected', state.sel === i);
-        });
-    }
-
-    function popDmg(v, p) {
-        const d = document.createElement('div');
-        d.className = 'dmg-text';
-        d.innerText = '-' + v;
-        d.style.color = p ? 'var(--red)' : 'var(--gold)';
-        d.style.left = '50%';
-        d.style.top = p ? '70%' : '30%';
-        document.getElementById('arena').appendChild(d);
-        setTimeout(() => d.remove(), 800);
-    }
-
-    /* ФУНКЦИИ ИНТЕРФЕЙСА */
-    function openForge() {
-        if (state.pts <= 0 && document.getElementById('forge-menu').style.display !== 'flex') return;
-        document.getElementById('forge-menu').style.display = 'flex';
-    }
-
-    function openInfo() {
-        document.getElementById('hero-stats').innerHTML = `АТАКА: ${state.atk}<br>ЗДОРОВЬЕ: ${state.mHP}<br>ТЕКУЩИЙ УРОВЕНЬ: ${state.lvl}<br>ОЧКИ ОПЫТА (PTS): ${state.pts}<br><br>СОВЕТ: Собирай синие руны, чтобы зарядить Молот Тора!`;
-        document.getElementById('info-menu').style.display = 'flex';
-    }
-
-    function closeMenus() {
-        document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none');
-    }
-
-    function buyStat(t) {
-        if (state.pts <= 0) return;
-        if (t === 'atk') state.atk += 2;
-        if (t === 'hp') { state.mHP += 20; state.hp += 20; }
-        state.pts--;
-        save();
-        draw();
-        if (state.pts <= 0) closeMenus();
-    }
-
-    /* ФУНКЦИИ АДМИНА */
-    function adminClick() {
-        state.adminHits++;
-        if(state.adminHits >= 5) {
-            state.adminHits = 0;
-            document.getElementById('admin-menu').style.display = 'flex';
-        }
-    }
-    function addCheatPts() { state.pts += 100; save(); draw(); }
-    function goToBoss() { state.lvl = 25; save(); init(); closeMenus(); }
-
-    function activateSuper() {
-        if (state.en < 100) return;
-        if (state.isA) audio.super.play();
-        state.en = 0;
-        let dmg = state.atk * 15;
-        state.ehp -= dmg;
-        popDmg(dmg, false);
-        for(let i=0; i<15; i++) state.board[Math.floor(Math.random()*49)] = -1;
-        draw();
-        setTimeout(() => { gravity(); processMatches(); }, 400);
-    }
-
-    function save() {
-        localStorage.setItem('v_lvl', state.lvl);
-        localStorage.setItem('v_atk', state.atk);
-        localStorage.setItem('v_mhp', state.mHP);
-        localStorage.setItem('v_pts', state.pts);
-    }
-
-    init();
-</script>
-</body>
-</html>
+                if (state.board[idx] === 1) state.en = Math.min(100, state.en + 7
