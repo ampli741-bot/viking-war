@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Viking War Match-3</title>
+    <style>
+        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; }
+        .game-header { display: flex; justify-content: space-around; padding: 15px; background: #2a2a2a; border-bottom: 2px solid #3d3d3d; }
+        .hp-bar { width: 120px; height: 18px; background: #444; border: 2px solid #000; border-radius: 10px; overflow: hidden; }
+        .hp-fill { height: 100%; background: #e74c3c; width: 100%; transition: width 0.3s; }
+        #grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 5px; 
+            padding: 10px; 
+            margin: 10px auto;
+            max-width: 380px;
+            background: #252525;
+            border-radius: 8px;
+        }
+        .cell { 
+            aspect-ratio: 1/1; 
+            background: #333; 
+            border-radius: 6px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .selected { transform: scale(0.9); outline: 3px solid #f1c40f; box-shadow: 0 0 15px #f1c40f; }
+    </style>
+</head>
+<body>
+    <div class="game-header">
+        <div>🛡️ ВИКИНГ<div class="hp-bar"><div id="hero-hp" class="hp-fill"></div></div></div>
+        <div>💀 ДРАУГР<div class="hp-bar"><div id="enemy-hp" class="hp-fill"></div></div></div>
+    </div>
+
+    <div id="grid"></div>
+
+    <div style="margin-top: 20px;">
+        <button id="ability-btn" style="padding: 15px 40px; background: #d35400; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 0 #a34100;">УДАР ТОРОМ (0/10)</button>
+    </div>
+
+    <script>
+        const gridElement = document.getElementById('grid');
+        const runes = ['🔴', '🔵', '🟢', '🟡', '🟣'];
+        let selectedCell = null;
+
+        function createGrid() {
+            gridElement.innerHTML = '';
+            for (let i = 0; i < 49; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.innerHTML = runes[Math.floor(Math.random() * runes.length)];
+                cell.onclick = () => handleCellClick(cell);
+                gridElement.appendChild(cell);
+            }
+        }
+
+        function handleCellClick(cell) {
+            if (!selectedCell) {
+                selectedCell = cell;
+                cell.classList.add('selected');
+            } else {
+                let temp = cell.innerHTML;
+                cell.innerHTML = selectedCell.innerHTML;
+                selectedCell.innerHTML = temp;
+                selectedCell.classList.remove('selected');
+                selectedCell = null;
+                damageEnemy(8);
+            }
+        }
+
+        function damageEnemy(amount) {
+            const hpFill = document.getElementById('enemy-hp');
+            let currentW = parseFloat(hpFill.style.width) || 100;
+            currentW -= amount;
+            if (currentW <= 0) {
+                alert("ПОБЕДА! Враг повержен.");
+                currentW = 100;
+            }
+            hpFill.style.width = currentW + '%';
+        }
+
+        createGrid();
+    </script>
+</body>
+</html>
