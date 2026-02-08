@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking RPG: Admin & Loot</title>
+    <title>Viking RPG: Guaranteed Loot</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --gray: #95a5a6; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
@@ -13,8 +13,9 @@
         #exp-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.3s; }
 
         .arena { height: 26vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
-        .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; }
-        .p-icon { width: 70px; height: 70px; border-radius: 12px; border: 3px solid #444; background: #111; cursor: pointer; object-fit: cover; }
+        .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; position: relative; }
+        .p-icon { width: 70px; height: 70px; border-radius: 12px; border: 3px solid #444; background: #111; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 40px; overflow: hidden; }
+        .p-icon img { width: 100%; height: 100%; object-fit: cover; }
         
         .bar-bg { width: 100%; height: 14px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
@@ -33,10 +34,10 @@
         .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
         
         .loot-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; font-size: 12px; }
-        .item-box { padding: 10px; border-radius: 6px; border: 1px solid #444; background: #000; min-height: 60px; }
+        .item-box { padding: 10px; border-radius: 6px; border: 1px solid #444; background: #000; min-height: 60px; text-align: left; }
         .rarity-0 { border-color: var(--gray); color: #fff; }
         .rarity-1 { border-color: var(--blue); color: var(--blue); }
-        .rarity-2 { border-color: var(--gold); color: var(--gold); }
+        .rarity-2 { border-color: var(--gold); color: var(--gold); text-shadow: 0 0 5px rgba(255,215,0,0.3); }
 
         #death-screen { background: rgba(30, 0, 0, 0.98); z-index: 999; }
         .dmg-text { position: absolute; font-size: 22px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
@@ -64,12 +65,16 @@
 
     <div class="arena">
         <div class="char-box">
-            <img src="hero1.png" class="p-icon" style="border-color:var(--accent)" onclick="showInfo('hero')">
+            <div class="p-icon" style="border-color:var(--accent)" onclick="showInfo('hero')">
+                <img src="hero1.png" onerror="this.style.display='none'; this.parentElement.innerHTML='🪓'">
+            </div>
             <div class="bar-bg"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div></div>
             <div style="width:100%; height:4px; background:#111; margin-top:3px;"><div id="p-skill-fill" style="height:100%; width:0%; background:var(--blue);"></div></div>
         </div>
         <div class="char-box">
-            <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)" onclick="showInfo('enemy')">
+            <div class="p-icon" id="m-icon-box" style="border-color:var(--red)" onclick="showInfo('enemy')">
+                <img id="m-img" src="mob1.png" onerror="this.style.display='none'; this.parentElement.innerHTML=(st.lvl%25===0?'🐲':'👹')">
+            </div>
             <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div></div>
             <div id="e-skill-wrap" style="width:100%; height:4px; background:#111; margin-top:3px;"><div id="e-skill-fill" style="height:100%; width:0%; background:var(--purple);"></div></div>
         </div>
@@ -82,9 +87,9 @@
 
     <div id="loot-overlay" class="overlay">
         <div class="card">
-            <h2 id="loot-title" style="margin:0;">ТРОФЕЙ!</h2>
+            <h2 id="loot-title" style="margin:0; font-size: 20px;">НОВЫЙ ТРОФЕЙ!</h2>
             <div class="loot-compare"><div id="current-item" class="item-box"></div><div id="new-item" class="item-box"></div></div>
-            <button class="menu-btn" style="background:var(--accent)" onclick="equipLoot()">НАДЕТЬ</button>
+            <button class="menu-btn" style="background:var(--accent); color:#000" onclick="equipLoot()">НАДЕТЬ</button>
             <button class="menu-btn" style="background:var(--red); color:#fff" onclick="closeLoot()">ВЫБРОСИТЬ</button>
         </div>
     </div>
@@ -101,10 +106,10 @@
     <div id="admin-overlay" class="overlay">
         <div class="card">
             <h3>АДМИН-ПАНЕЛЬ</h3>
-            <button class="menu-btn" onclick="st.bottles++; draw(); sfx('match');">+1 БУТЫЛКА</button>
-            <input type="number" id="jump-lvl" placeholder="Введите этап (STG)">
-            <button class="menu-btn" style="background:var(--blue); color:#fff" onclick="jumpTo()">ПЕРЕЙТИ НА ЭТАП</button>
-            <button class="menu-btn" style="background:var(--accent)" onclick="resurrect()">ВОСКРЕСИТЬ (БЕСПЛАТНО)</button>
+            <button class="menu-btn" onclick="st.bottles++; draw(); closeO();">+1 БУТЫЛКА</button>
+            <input type="number" id="jump-lvl" placeholder="Этап (STG)">
+            <button class="menu-btn" style="background:var(--blue); color:#fff" onclick="jumpTo()">ПЕРЕЙТИ</button>
+            <button class="menu-btn" onclick="resurrect()">ВОСКРЕСИТЬ</button>
             <button class="menu-btn" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
     </div>
@@ -149,16 +154,8 @@
     }
 
     function useBottle() { if(st.bottles > 0) { st.bottles--; st.banUntil = 0; save(); resurrect(); } }
-
-    function resurrect() {
-        st.banUntil = 0; st.hp = st.mHP; save();
-        document.getElementById('death-screen').style.display = 'none'; init(); closeO();
-    }
-
-    function jumpTo() {
-        let l = parseInt(document.getElementById('jump-lvl').value);
-        if(l > 0) { st.lvl = l; save(); init(); closeO(); }
-    }
+    function resurrect() { st.banUntil = 0; st.hp = st.mHP; save(); document.getElementById('death-screen').style.display = 'none'; init(); closeO(); }
+    function jumpTo() { let l = parseInt(document.getElementById('jump-lvl').value); if(l > 0) { st.lvl = l; save(); init(); closeO(); } }
 
     function init() {
         calcStats();
@@ -166,7 +163,10 @@
         const isB = st.lvl % 25 === 0;
         st.mehp = isB ? (100 + st.lvl * 80) * 6 : 100 + st.lvl * 80;
         st.ehp = st.mehp; st.eSkill = 0;
-        document.getElementById('m-icon').src = isB ? `boss.png` : `mob.png`;
+        
+        // Обновление иконки моба
+        const mBox = document.getElementById('m-icon-box');
+        mBox.innerHTML = `<img src="${isB?'boss.png':'mob.png'}" onerror="this.style.display='none'; this.parentElement.innerHTML='${isB?'🐲':'👹'}'">`;
         document.getElementById('e-skill-wrap').style.visibility = isB ? 'visible' : 'hidden';
         
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
@@ -219,21 +219,31 @@
         if (st.ehp <= 0) {
             const isB = st.lvl % 25 === 0;
             if(isB) st.bottles++; else if(Math.random() < 0.05) st.bottles++;
-            if(Math.random() < 0.3 || isB) generateLoot(); else winCleanup();
+            generateLoot(isB); // Лут теперь всегда
         } else enemyTurn();
         st.lock = false;
     }
 
-    function generateLoot() {
+    function generateLoot(isBoss) {
         const type = TYPES[Math.floor(Math.random()*TYPES.length)];
-        const rare = Math.random() > 0.9 ? 2 : (Math.random() > 0.7 ? 1 : 0);
+        // Если босс - 100% легендарка (rare=2). Если моб - рандом.
+        const rare = isBoss ? 2 : (Math.random() > 0.95 ? 2 : (Math.random() > 0.7 ? 1 : 0));
         const mult = (rare + 1) * (1 + st.lvl * 0.1);
-        st.pendingItem = { type, rare, atk: Math.floor(Math.random()*5*mult), hp: Math.floor(Math.random()*30*mult), agi: rare===2?1:0 };
+        
+        st.pendingItem = { 
+            type, rare, 
+            atk: Math.floor(Math.random()*5*mult), 
+            hp: Math.floor(Math.random()*30*mult), 
+            agi: rare===2 ? Math.floor(Math.random()*2)+1 : 0 
+        };
+
         const cur = st.equip[type] || {atk:0, hp:0, agi:0};
-        document.getElementById('loot-title').innerText = RARITY[rare] + " " + type;
-        document.getElementById('loot-title').className = "rarity-"+rare;
-        document.getElementById('current-item').innerHTML = `<small>Надето:</small><br>⚔️${cur.atk} ❤️${cur.hp} 🍃${cur.agi}`;
-        document.getElementById('new-item').innerHTML = `<small>Новое:</small><br>⚔️${st.pendingItem.atk} ❤️${st.pendingItem.hp} 🍃${st.pendingItem.agi}`;
+        const lt = document.getElementById('loot-title');
+        lt.innerText = RARITY[rare] + " " + type;
+        lt.className = "rarity-"+rare;
+        
+        document.getElementById('current-item').innerHTML = `<b style="font-size:10px; color:#666">НАДЕТО:</b><br>⚔️${cur.atk} ❤️${cur.hp} 🍃${cur.agi}`;
+        document.getElementById('new-item').innerHTML = `<b style="font-size:10px; color:#666">НОВОЕ:</b><br>⚔️${st.pendingItem.atk} ❤️${st.pendingItem.hp} 🍃${st.pendingItem.agi}`;
         document.getElementById('loot-overlay').style.display = 'flex';
     }
 
@@ -294,12 +304,12 @@
             n.innerText = "ГЕРОЙ";
             s.innerHTML = `⚔️ АТК: ${st.atk}<br>❤️ HP: ${Math.floor(st.hp)}/${st.mHP}<br>🍃 ЛОВК: ${st.agi}%`;
             e.innerHTML = "<b>СЕТ:</b><br>" + TYPES.map(t => {
-                let i = st.equip[t]; return i ? `<span class="rarity-${i.rare}">${t}: ⚔️${i.atk} ❤️${i.hp}</span>` : `${t}: пусто`;
+                let i = st.equip[t]; return i ? `<span class="rarity-${i.rare}">${t}: ⚔️${i.atk} ❤️${i.hp} 🍃${i.agi}</span>` : `${t}: пусто`;
             }).join("<br>");
         } else {
             n.innerText = (st.lvl % 25 === 0) ? "БОСС" : "МОБ";
             s.innerHTML = `⚔️ УРОН: ${Math.floor(5 + st.lvl * 2)}<br>❤️ HP: ${st.ehp}/${st.mehp}`;
-            e.innerHTML = "Шанс выпадения лута повышен на боссах.";
+            e.innerHTML = "С каждого врага падает трофей!";
         }
         document.getElementById('info-overlay').style.display='flex';
     }
