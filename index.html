@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Stable Hammer</title>
+    <title>Viking Saga: Physics Fix</title>
     <style>
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
@@ -48,27 +48,19 @@
         const g = document.getElementById('grid');
         g.innerHTML = '';
         s.board = [];
-        
         for (let i = 0; i < 49; i++) {
             let type;
-            do {
-                type = Math.floor(Math.random() * 5);
-            } while (
-                (i % 7 >= 2 && type === s.board[i-1] && type === s.board[i-2]) ||
-                (i >= 14 && type === s.board[i-7] && type === s.board[i-14])
-            );
+            do { type = Math.floor(Math.random() * 5); } 
+            while ((i % 7 >= 2 && type === s.board[i-1] && type === s.board[i-2]) || (i >= 14 && type === s.board[i-7] && type === s.board[i-14]));
             s.board.push(type);
             let c = document.createElement('div');
-            c.className = 'cell';
-            c.id = 'c' + i;
+            c.className = 'cell'; c.id = 'c' + i;
             c.onclick = () => touch(i);
             g.appendChild(c);
         }
-        
         let maxEHP = (s.lvl === 25) ? 500 : 100 + (s.lvl * 15);
         s.ehp = maxEHP;
         document.getElementById('mob').src = (s.lvl === 25) ? 'boss.png' : 'mob' + (Math.min(4, Math.floor(s.lvl/3)+1)) + '.png';
-        
         s.lock = false;
         draw();
     }
@@ -79,7 +71,7 @@
             if (c) {
                 if (t === -1) {
                     c.style.backgroundImage = 'none';
-                    c.style.backgroundColor = '#fff'; // Белый цвет при взрыве
+                    c.style.backgroundColor = '#fff';
                 } else {
                     c.style.backgroundColor = colors[t];
                     c.style.backgroundImage = "url(" + runes[t] + ")";
@@ -135,6 +127,7 @@
             });
             sfx('match'); draw();
             await new Promise(r => setTimeout(r, 250));
+            // Механика падения плиток
             for (let i = 0; i < 49; i++) if (s.board[i] === -1) s.board[i] = Math.floor(Math.random() * 5);
             draw();
             await new Promise(r => setTimeout(r, 150));
@@ -173,26 +166,26 @@
 
     async function useSuper() {
         if (s.en < 100 || s.lock) return;
-        s.lock = true;
-        s.en = 0;
-        sfx('super');
-
-        // Мощный урон
+        s.lock = true; s.en = 0; sfx('super');
         s.ehp -= 100;
-        // Оглушение
         s.stunTurns = (s.lvl === 25) ? 1 : 2;
 
-        // Взрываем случайные плитки (делаем их белыми)
+        // Взрываем случайные плитки
         for (let i = 0; i < 15; i++) {
             let r = Math.floor(Math.random() * 49);
             s.board[r] = -1;
         }
-        
-        draw(); // Показываем взрыв (белые плитки)
+        draw(); 
         
         await new Promise(r => setTimeout(r, 400));
         
-        // Запускаем стандартную логику падения плиток и комбо
+        // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: принудительное заполнение пустых мест перед проверкой матчей
+        for (let i = 0; i < 49; i++) {
+            if (s.board[i] === -1) s.board[i] = Math.floor(Math.random() * 5);
+        }
+        draw();
+
+        // Теперь проверяем, не создались ли новые ряды после падения
         await processMatches(true);
         
         s.lock = false;
