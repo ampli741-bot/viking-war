@@ -3,58 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Boss Fixed</title>
+    <title>Viking Saga: Full Build</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
-        .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; }
+        body { background: #000; color: #fff; font-family: 'Courier New', monospace; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; user-select: none; }
         
-        /* АРЕНА */
-        .arena { height: 180px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0; }
+        /* HEADER */
+        .header { background: #1a1a1a; padding: 12px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; font-weight: bold; font-size: 14px; text-shadow: 1px 1px #000; }
         
-        /* Полоски поверх иконки */
-        .hp-bar { width: 90%; height: 12px; background: #333; border-radius: 6px; overflow: hidden; border: 1px solid #444; position: relative; z-index: 100; }
-        #boss-en-bar { width: 60%; height: 6px; background: #222; border-radius: 3px; border: 1px solid orange; display: none; overflow: hidden; position: relative; z-index: 100; margin-top: -5px; }
-        .fill { height: 100%; width: 100%; transition: 0.3s; }
+        /* ARENA SECTION */
+        .arena { height: 190px; background: #050505; position: relative; overflow: hidden; border-bottom: 3px solid #333; transition: background 0.2s; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; }
         
-        /* Иконка босса ЗА полосками */
-        #mob-img { height: 100px; width: auto; transition: 0.5s; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1; }
-        .boss-glow { filter: drop-shadow(0 0 20px red) !important; }
-
-        #combo-txt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; color: gold; font-weight: bold; z-index: 150; display: none; text-shadow: 2px 2px #000; pointer-events: none; }
-
-        .ui { padding: 10px 0; background: #111; }
-        .en-bar { width: 280px; height: 18px; background: #222; margin: 0 auto 5px; border-radius: 9px; overflow: hidden; position: relative; border: 1px solid #3498db; }
-        #en-txt { position: absolute; width: 100%; font-size: 10px; line-height: 18px; z-index: 5; font-weight: bold; text-shadow: 1px 1px #000; }
-
-        /* СЕТКА ПЛИТОК */
-        #grid { width: 322px; margin: 5px auto; display: block; font-size: 0; line-height: 0; }
-        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333; box-sizing: border-box; vertical-align: top; }
-        .sel { border: 2px solid #fff !important; transform: scale(0.9); box-shadow: 0 0 10px #fff; }
-
-        .btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
-        .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; }
+        /* BARS - Z-INDEX 100 */
+        .hp-bar { width: 92%; height: 14px; background: #222; border-radius: 7px; margin: 2px auto; overflow: hidden; border: 1px solid #555; position: relative; z-index: 100; }
+        #boss-en-bar { width: 65%; height: 8px; background: #111; border-radius: 4px; border: 1px solid #ff4500; display: none; overflow: hidden; position: relative; z-index: 100; margin: 2px auto; }
+        .fill { height: 100%; width: 100%; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        .shake { animation: shake 0.2s 2; }
-        @keyframes shake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(0,0); } }
+        /* BOSS IMAGE - Z-INDEX 10 */
+        #mob-img { height: 110px; width: auto; transition: 0.5s; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
+        .boss-glow { filter: drop-shadow(0 0 20px #ff0000) brightness(1.2); }
+
+        /* TEXT OVERLAYS */
+        #combo-txt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 45px; color: gold; font-weight: 900; z-index: 150; display: none; text-shadow: 4px 4px 0 #000; font-style: italic; }
+
+        /* UI SECTION */
+        .ui { padding: 12px 0; background: #111; border-bottom: 1px solid #333; }
+        .en-bar { width: 280px; height: 22px; background: #222; margin: 0 auto 8px; border-radius: 11px; overflow: hidden; position: relative; border: 1px solid #3498db; }
+        #en-txt { position: absolute; width: 100%; font-size: 11px; line-height: 22px; z-index: 10; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+
+        /* GRID - STABLE PIXELS */
+        #grid { width: 322px; margin: 8px auto; display: block; font-size: 0; line-height: 0; background: #1a1a1a; padding: 4px; border-radius: 8px; border: 2px solid #444; }
+        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-color: #222; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; vertical-align: top; transition: 0.1s; }
+        .sel { border: 3px solid #fff !important; transform: scale(0.85); box-shadow: 0 0 15px #fff; }
+
+        /* BUTTONS */
+        .btn { width: 280px; padding: 14px; border: none; border-radius: 10px; background: #333; color: #666; font-weight: bold; font-size: 16px; text-transform: uppercase; }
+        .ready { background: linear-gradient(135deg, #ff9900, #ff4400) !important; color: #fff !important; box-shadow: 0 0 20px rgba(255,100,0,0.5); }
+        
+        /* ANIMATIONS */
+        .shake { animation: shake-anim 0.1s infinite; }
+        @keyframes shake-anim { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(0,0); } }
+        .flash { filter: invert(1); }
     </style>
 </head>
 <body onclick="initAudio()">
 
-    <div class="header"><span id="lvl-txt" style="color:gold">УРОВЕНЬ 1</span></div>
+    <div class="header">
+        <span id="lvl-txt" style="color:gold">УРОВЕНЬ 1</span>
+        <span id="score-txt">XP: 0</span>
+    </div>
 
     <div class="arena" id="arena-bg">
         <div id="combo-txt">COMBO X1</div>
         <div class="hp-bar"><div id="ehp" class="fill" style="background: #e74c3c;"></div></div>
-        <div id="boss-en-bar"><div id="boss-en-fill" class="fill" style="background: orange; width: 0%;"></div></div>
-        
-        <img id="mob-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/90/red?text=MOB'">
-        
+        <div id="boss-en-bar"><div id="boss-en-fill" class="fill" style="background: #ff8000; width: 0%;"></div></div>
+        <img id="mob-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/100/red?text=MOB'">
         <div class="hp-bar"><div id="php" class="fill" style="background: #2ecc71;"></div></div>
     </div>
 
     <div class="ui">
         <div class="en-bar">
-            <div id="en-txt">МОЛОТ: 0%</div>
+            <div id="en-txt">ЭНЕРГИЯ ТОРА: 0%</div>
             <div id="en-f" class="fill" style="background: #3498db; width: 0%;"></div>
         </div>
         <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
@@ -63,16 +71,20 @@
     <div id="grid"></div>
 
 <script>
+    // Ресурсы
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6'];
 
+    // Состояние
     let s = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
-        en: 0, hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null, bossEn: 0, combo: 0
+        en: 0, hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null, 
+        bossEn: 0, combo: 0, score: 0
     };
 
     let audioCtx = null, bossTimer = null;
 
+    // Музыкальный движок
     function initAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (s.lvl % 25 === 0) startBossMusic();
@@ -84,22 +96,20 @@
         bossTimer = setInterval(() => {
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
-            osc.type = 'triangle';
-            const notes = [60, 0, 60, 90, 60, 0, 50, 40];
-            let f = notes[step % 8];
-            if(f > 0) {
-                osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-                g.gain.setValueAtTime(0.06, audioCtx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-                osc.connect(g); g.connect(audioCtx.destination);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-            }
+            osc.type = (step % 4 === 0) ? 'square' : 'triangle';
+            const notes = [55, 62, 55, 49, 55, 65, 55, 41]; // Мрачный мотив
+            osc.frequency.setValueAtTime(notes[step % 8], audioCtx.currentTime);
+            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
             step++;
         }, 250);
     }
 
     function stopBossMusic() { if (bossTimer) { clearInterval(bossTimer); bossTimer = null; } }
 
+    // Инициализация уровня
     function init() {
         stopBossMusic();
         const isBoss = s.lvl % 25 === 0;
@@ -112,7 +122,7 @@
         
         if (isBoss && audioCtx) startBossMusic();
 
-        s.maxEHP = (100 + (s.lvl * 25)) * (isBoss ? 3 : 1);
+        s.maxEHP = (100 + (s.lvl * 25)) * (isBoss ? 4 : 1);
         s.ehp = s.maxEHP; s.hp = 100; s.bossEn = 0;
         document.getElementById('lvl-txt').innerText = (isBoss ? "БОСС " : "УРОВЕНЬ ") + s.lvl;
 
@@ -122,7 +132,7 @@
             s.board.push(Math.floor(Math.random() * 5));
             let d = document.createElement('div');
             d.className = 'cell'; d.id = 'c' + i;
-            d.onclick = (e) => { e.stopPropagation(); touch(i); };
+            d.onclick = () => touch(i);
             g.appendChild(d);
         }
         draw();
@@ -135,12 +145,14 @@
             el.style.backgroundColor = t === -1 ? '#000' : colors[t];
             el.style.backgroundImage = t === -1 ? 'none' : `url(${runes[t]})`;
             el.classList.toggle('sel', s.sel === i);
+            el.style.opacity = t === -1 ? '0' : '1';
         });
         document.getElementById('php').style.width = s.hp + '%';
         document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
         document.getElementById('en-f').style.width = s.en + '%';
-        document.getElementById('en-txt').innerText = `МОЛОТ: ${s.en}%`;
+        document.getElementById('en-txt').innerText = `ЭНЕРГИЯ ТОРА: ${s.en}%`;
         document.getElementById('boss-en-fill').style.width = s.bossEn + '%';
+        document.getElementById('score-txt').innerText = `XP: ${s.score}`;
         document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
         localStorage.setItem('v_lvl', s.lvl);
     }
@@ -166,4 +178,95 @@
         while (true) {
             let del = new Set();
             for (let i = 0; i < 49; i++) {
-                if (i % 7 < 5 && s.board
+                if (s.board[i] === -1) continue;
+                // Линии горизонталь
+                if (i % 7 < 5 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) {
+                    let match = 3;
+                    if (i % 7 < 4 && s.board[i] === s.board[i+3]) match = 4;
+                    if (i % 7 < 3 && s.board[i] === s.board[i+4]) match = 5;
+                    for(let k=0; k<match; k++) del.add(i+k);
+                    if (match === 4) for(let c=0; c<7; c++) del.add(Math.floor(i/7)*7+c); // Гром
+                    if (match === 5) blast(i+2, del); // Взрыв
+                }
+                // Линии вертикаль
+                if (i < 35 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) {
+                    let match = 3;
+                    if (i < 28 && s.board[i] === s.board[i+21]) match = 4;
+                    if (i < 21 && s.board[i] === s.board[i+28]) match = 5;
+                    for(let k=0; k<match; k++) del.add(i+k*7);
+                    if (match === 4) for(let r=0; r<7; r++) del.add(r*7 + (i%7)); // Гром
+                    if (match === 5) blast(i+14, del); // Взрыв
+                }
+            }
+
+            if (del.size === 0) break;
+            found = true; s.combo++;
+            if(s.combo > 1) {
+                const ct = document.getElementById('combo-txt');
+                ct.innerText = "COMBO X" + s.combo;
+                ct.style.display = 'block';
+                if (s.combo >= 4) document.getElementById('arena-bg').classList.add('shake');
+                setTimeout(() => { ct.style.display = 'none'; document.getElementById('arena-bg').classList.remove('shake'); }, 500);
+            }
+
+            del.forEach(idx => {
+                if (s.board[idx] === 1) s.en = Math.min(100, s.en + 5);
+                s.ehp -= (10 * s.combo);
+                s.score += 5;
+                s.board[idx] = -1;
+            });
+            draw(); await new Promise(r => setTimeout(r, 200));
+            drop(); draw(); await new Promise(r => setTimeout(r, 200));
+        }
+        if (found) {
+            if (s.ehp <= 0) { s.lvl++; s.score += 100; init(); } else enemy();
+        }
+        return found;
+    }
+
+    function blast(idx, set) {
+        for(let r=-2; r<=2; r++) {
+            for(let c=-2; c<=2; c++) {
+                let t = idx + r*7 + c;
+                if(t >= 0 && t < 49) set.add(t);
+            }
+        }
+    }
+
+    function drop() {
+        for (let c = 0; c < 7; c++) {
+            let empty = 0;
+            for (let r = 6; r >= 0; r--) {
+                let i = r * 7 + c;
+                if (s.board[i] === -1) empty++;
+                else if (empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
+            }
+            for (let r = 0; r < empty; r++) s.board[r*7+c] = Math.floor(Math.random() * 5);
+        }
+    }
+
+    function enemy() {
+        let dmg = 5 + Math.floor(s.lvl/5);
+        if (s.lvl % 25 === 0) {
+            s.bossEn += 25;
+            if (s.bossEn >= 100) { dmg *= 3.5; s.bossEn = 0; document.getElementById('arena-bg').style.background = '#400'; setTimeout(()=>document.getElementById('arena-bg').style.background='#050505', 200); }
+        }
+        s.hp -= dmg;
+        if (s.hp <= 0) location.reload();
+        draw();
+    }
+
+    async function useSuper() {
+        if (s.en < 100 || s.lock) return;
+        s.lock = true; s.en = 0; s.ehp -= (s.maxEHP * 0.2);
+        document.body.classList.add('flash');
+        setTimeout(()=>document.body.classList.remove('flash'), 200);
+        for (let i = 0; i < 20; i++) s.board[Math.floor(Math.random()*49)] = -1;
+        draw(); await new Promise(r => setTimeout(r, 300));
+        drop(); await check(); s.lock = false;
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
