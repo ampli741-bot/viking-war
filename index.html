@@ -3,57 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Final Fix</title>
+    <title>Viking Saga: Sound & Admin Fix</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; }
-        
-        /* Админка в самом верху, не мешает */
-        #adm { display: none; background: #400; padding: 5px; font-size: 10px; }
-        
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
+        #adm { display: none; background: #400; padding: 5px; font-size: 10px; position: sticky; top: 0; z-index: 1000; }
+        .adm-btn { background: #fff; color: #000; border: none; padding: 3px 8px; margin: 0 3px; font-weight: bold; border-radius: 3px; }
         .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; display: flex; justify-content: space-around; }
-        
-        /* Арена */
         .arena { height: 140px; background: #111; position: relative; padding-top: 10px; }
         .hp-bar { width: 90%; height: 10px; background: #333; margin: 5px auto; border-radius: 5px; overflow: hidden; border: 1px solid #444; }
         .fill { height: 100%; width: 100%; transition: 0.3s; }
         #mob-img { height: 80px; width: auto; }
-
-        /* Контейнер управления */
         .ui { padding: 10px 0; }
         .en-bar { width: 280px; height: 6px; background: #222; margin: 0 auto 5px; border-radius: 3px; overflow: hidden; }
         .btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
         .ready { background: orange !important; color: #fff !important; box-shadow: 0 0 10px gold; }
-
-        /* Игровое поле — старый добрый метод без наворотов */
-        #grid { 
-            width: 315px; 
-            margin: 0 auto; 
-            display: block; 
-            font-size: 0; /* Убирает зазоры между inline-block */
-        }
-        .cell { 
-            display: inline-block;
-            width: 40px; 
-            height: 40px; 
-            margin: 2px;
-            background-size: cover;
-            background-color: #222;
-            border-radius: 4px;
-            border: 1px solid #333;
-            vertical-align: top;
-            box-sizing: border-box;
-        }
+        #grid { width: 315px; margin: 0 auto; display: block; font-size: 0; }
+        .cell { display: inline-block; width: 40px; height: 40px; margin: 2px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333; vertical-align: top; box-sizing: border-box; }
         .sel { border: 2px solid #fff !important; transform: scale(0.9); }
-
         #msg { position: fixed; top: 40%; width: 100%; background: rgba(0,0,0,0.9); color: gold; display: none; padding: 20px 0; font-size: 24px; z-index: 100; }
     </style>
 </head>
 <body>
 
     <div id="adm">
-        <button onclick="changeLvl(1)">+1 LVL</button> | 
-        <button onclick="s.en=100;draw();">⚡ MAX</button> | 
-        <button onclick="localStorage.removeItem('v_ban');location.reload();">FIX BAN</button>
+        <button class="adm-btn" onclick="changeLvl(-1)">-1 LVL</button>
+        <button class="adm-btn" onclick="changeLvl(1)">+1 LVL</button>
+        <button class="adm-btn" onclick="s.en=100;draw();">⚡ MAX</button>
+        <button class="adm-btn" onclick="localStorage.removeItem('v_ban');location.reload();">FIX BAN</button>
     </div>
 
     <div class="header" onclick="admOn()">
@@ -85,10 +61,35 @@
         hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null
     };
 
+    // ЗВУКОВОЙ ДВИЖОК
+    let audioCtx = null;
+    function playSnd(f, type='sine', d=0.1, v=0.05) {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = type; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+            g.gain.setValueAtTime(v, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + d);
+        } catch(e) {}
+    }
+
     let hits = 0;
     function admOn() { if(++hits >= 5) { localStorage.setItem('v_adm','1'); document.getElementById('adm').style.display='block'; } }
-    function changeLvl(v) { s.lvl += v; save(); init(); }
-    function save() { localStorage.setItem('v_lvl', s.lvl); localStorage.setItem('v_en', s.en); if(s.lvl > s.best) localStorage.setItem('v_best', s.lvl); }
+    
+    function changeLvl(v) { 
+        s.lvl = Math.max(1, s.lvl + v); 
+        save(); 
+        init(); 
+    }
+
+    function save() { 
+        localStorage.setItem('v_lvl', s.lvl); 
+        localStorage.setItem('v_en', s.en); 
+        if(s.lvl > s.best) localStorage.setItem('v_best', s.lvl); 
+    }
 
     function init() {
         const ban = localStorage.getItem('v_ban');
@@ -99,7 +100,6 @@
 
         if(localStorage.getItem('v_adm')) document.getElementById('adm').style.display='block';
 
-        // Логика босса (каждые 25 уровней)
         const isBoss = s.lvl % 25 === 0;
         let hpMult = isBoss ? 3 : 1;
         s.maxEHP = (100 + (s.lvl * 25)) * hpMult;
@@ -138,6 +138,7 @@
 
     async function touch(i) {
         if (s.lock) return;
+        playSnd(300, 'sine', 0.05); // Звук клика
         if (s.sel === null) { s.sel = i; draw(); }
         else {
             let a = s.sel, b = i;
@@ -161,6 +162,7 @@
             }
             if (del.size === 0) break;
             found = true;
+            playSnd(440 + (del.size * 20), 'triangle', 0.2); // Звук совпадения
             del.forEach(idx => {
                 if (s.board[idx] === 1) s.en = Math.min(100, s.en + 5);
                 if (s.board[idx] === 0) s.hp = Math.min(100, s.hp + 2);
@@ -172,6 +174,7 @@
         }
         if (found) {
             if (s.ehp <= 0) { 
+                playSnd(600, 'sine', 0.5, 0.1);
                 document.getElementById('msg').style.display='block';
                 document.getElementById('msg').innerText = "ПОБЕДА!";
                 setTimeout(() => { s.lvl++; init(); document.getElementById('msg').style.display='none'; }, 1000);
@@ -196,6 +199,7 @@
         let d = 5 + Math.floor(s.lvl/3);
         if (s.lvl % 25 === 0) d *= 2;
         s.hp -= d;
+        playSnd(150, 'sawtooth', 0.3, 0.05); // Звук удара врага
         if (s.hp <= 0) { localStorage.setItem('v_ban', Date.now() + 3600000); location.reload(); }
         draw();
     }
@@ -203,6 +207,7 @@
     async function useSuper() {
         if (s.en < 100 || s.lock) return;
         s.lock = true; s.en = 0; s.ehp -= 150;
+        playSnd(800, 'square', 0.6, 0.1); // Звук суперудара
         for (let i = 0; i < 15; i++) s.board[Math.floor(Math.random()*49)] = -1;
         draw(); await new Promise(r => setTimeout(r, 300));
         drop(); await check();
