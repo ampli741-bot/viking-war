@@ -3,171 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Age of Runes</title>
+    <title>Viking War: Battle Saga</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --gold: #f1c40f; --red: #e74c3c; --gray: #95a5a6; }
+        :root { --gold: #f1c40f; --red: #e74c3c; --blue: #3498db; --green: #2ecc71; }
         body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
         
-        /* Блок врага */
-        .enemy-container { width: 100%; height: 200px; position: relative; background: url('bg_arena.jpg') center/cover; border-bottom: 3px solid #333; overflow: hidden; }
-        #enemy-img { width: 160px; height: 160px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); transition: 0.5s; z-index: 2; }
-        .hp-bar-container { position: absolute; top: 10px; width: 80%; left: 10%; height: 20px; background: #222; border: 2px solid #444; border-radius: 10px; overflow: hidden; }
-        #enemy-hp-fill { height: 100%; background: var(--red); width: 100%; transition: 0.3s; }
+        /* Арена и HP */
+        .arena { width: 100%; height: 220px; position: relative; background: #1a1a1a; border-bottom: 3px solid #333; }
+        #enemy-img { width: 150px; height: 150px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); transition: 0.3s; }
         
-        /* Игровое поле */
-        #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; background: rgba(20,20,20,0.9); border-radius: 8px; margin-top: 10px; }
-        .cell { aspect-ratio: 1/1; width: 45px; border-radius: 6px; background-size: cover; cursor: pointer; transition: transform 0.1s; }
-        .cell:active { transform: scale(0.9); }
-        .selected { outline: 3px solid var(--gold); box-shadow: 0 0 15px var(--gold); z-index: 10; }
+        .bars { position: absolute; top: 10px; width: 90%; left: 5%; display: flex; flex-direction: column; gap: 8px; }
+        .bar-wrap { height: 16px; background: #222; border: 1px solid #444; border-radius: 8px; overflow: hidden; position: relative; }
+        .bar-fill { height: 100%; width: 100%; transition: 0.4s; }
+        .bar-label { position: absolute; width: 100%; text-align: center; font-size: 10px; font-weight: bold; line-height: 16px; text-shadow: 1px 1px 2px black; }
         
-        /* Нижняя панель */
-        .ui-bottom { width: 90%; margin-top: 15px; }
-        .energy-bar { height: 12px; background: #222; border-radius: 6px; border: 1px solid #555; overflow: hidden; }
-        #energy-fill { height: 100%; background: var(--gold); width: 0%; transition: 0.3s; }
-        #super-btn { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; font-size: 16px; }
-        #super-btn.ready { background: linear-gradient(to bottom, #e67e22, #d35400); color: white; box-shadow: 0 0 15px rgba(230,126,34,0.6); cursor: pointer; animation: pulse 1s infinite; }
+        #enemy-hp { background: var(--red); }
+        #player-hp { background: var(--green); }
 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
-        @keyframes shake { 0% { transform: translate(0,0); } 25% { transform: translate(5px,0); } 50% { transform: translate(-5px,0); } 75% { transform: translate(5px,0); } 100% { transform: translate(0,0); } }
-        .shaking { animation: shake 0.2s ease-in-out; }
+        /* Сетка */
+        #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; background: #111; border-radius: 8px; margin-top: 10px; }
+        .cell { width: 45px; height: 45px; border-radius: 6px; background-size: cover; cursor: pointer; transition: 0.2s; position: relative; }
+        .selected { outline: 3px solid var(--gold); transform: scale(1.1); z-index: 5; }
+        
+        /* Ульта */
+        .controls { width: 90%; margin-top: 15px; }
+        #super-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; }
+        #super-btn.ready { background: linear-gradient(orange, darkorange); color: white; box-shadow: 0 0 15px gold; }
+
+        @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-5px)} 75% {transform:translateX(5px)} }
+        .shaking { animation: shake 0.2s infinite; }
     </style>
 </head>
 <body>
 
-    <div class="enemy-container" id="arena">
-        <div class="hp-bar-container"><div id="enemy-hp-fill"></div></div>
-        <img id="enemy-img" src="mob1.png" alt="Враг">
-        <div style="position:absolute; bottom:5px; right:10px; font-weight:bold;" id="lvl-txt">УРОВЕНЬ 1</div>
+    <div class="arena" id="arena">
+        <div class="bars">
+            <div class="bar-wrap"><div id="enemy-hp" class="bar-fill"></div><div class="bar-label">ВРАГ</div></div>
+            <div class="bar-wrap"><div id="player-hp" class="bar-fill"></div><div class="bar-label">ВАШЕ ЗДОРОВЬЕ</div></div>
+        </div>
+        <img id="enemy-img" src="mob1.png">
     </div>
 
     <div id="grid"></div>
 
-    <div class="ui-bottom">
-        <div style="font-size: 12px; margin-bottom: 4px;">ЭНЕРГИЯ УЛЬТЫ</div>
-        <div class="energy-bar"><div id="energy-fill"></div></div>
-        <button id="super-btn" onclick="useSuper()">МОЛНИЯ ТОРА</button>
+    <div class="controls">
+        <div style="font-size:10px; margin-bottom:5px;">ЭНЕРГИЯ МОЛНИИ</div>
+        <div class="bar-wrap" style="height:10px;"><div id="energy-fill" class="bar-fill" style="background:var(--gold); width:0%;"></div></div>
+        <button id="super-btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
     </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.expand();
+    let state = { pHP: 100, eHP: 100, lvl: 1, energy: 0, selected: null, board: [] };
+    const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
 
-    let state = {
-        lvl: 1,
-        eHP: 100,
-        energy: 0,
-        selected: null
-    };
-
-    const runeFiles = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
-    const mobFiles = ['mob1.png', 'mob2.png', 'mob3.png', 'mob4.png'];
-
-    function initBoard() {
+    function init() {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
+        state.board = [];
         for (let i = 0; i < 49; i++) {
-            const cell = document.createElement('div');
+            let r = Math.floor(Math.random() * 5);
+            let cell = document.createElement('div');
             cell.className = 'cell';
-            const runeIdx = Math.floor(Math.random() * 5);
-            cell.style.backgroundImage = `url('${runeFiles[runeIdx]}')`;
-            cell.dataset.type = runeIdx;
+            cell.style.backgroundImage = `url(${runes[r]})`;
             cell.dataset.id = i;
-            cell.onclick = () => handleSelect(cell);
+            cell.dataset.type = r;
+            cell.onclick = () => select(cell);
             grid.appendChild(cell);
+            state.board.push(r);
         }
-        updateMob();
     }
 
-    function handleSelect(cell) {
-        if (state.selected) {
-            let id1 = parseInt(state.selected.dataset.id);
-            let id2 = parseInt(cell.dataset.id);
-            let diff = Math.abs(id1 - id2);
-            
-            if (diff === 1 || diff === 7) {
-                swap(state.selected, cell);
-                attack(cell.dataset.type);
-                state.selected.classList.remove('selected');
-                state.selected = null;
-                setTimeout(enemyTurn, 500);
-            } else {
-                state.selected.classList.remove('selected');
-                state.selected = cell;
-                cell.classList.add('selected');
-            }
-        } else {
+    function select(cell) {
+        if (!state.selected) {
             state.selected = cell;
             cell.classList.add('selected');
+        } else {
+            let id1 = parseInt(state.selected.dataset.id);
+            let id2 = parseInt(cell.dataset.id);
+            if ([1, -1, 7, -7].includes(id1 - id2)) {
+                swap(id1, id2);
+                checkMatches();
+            }
+            state.selected.classList.remove('selected');
+            state.selected = null;
         }
     }
 
-    function swap(c1, c2) {
-        let tmpBg = c1.style.backgroundImage;
-        let tmpType = c1.dataset.type;
-        c1.style.backgroundImage = c2.style.backgroundImage;
-        c1.dataset.type = c2.dataset.type;
-        c2.style.backgroundImage = tmpBg;
-        c2.dataset.type = tmpType;
+    function swap(i1, i2) {
+        let t = state.board[i1];
+        state.board[i1] = state.board[i2];
+        state.board[i2] = t;
+        render();
     }
 
-    function attack(type) {
-        let damage = 10;
-        let energyGain = 15;
-
-        if (type == 4) { // Серая руна
-            damage = 2;
-            energyGain = 0;
-        }
-
-        state.eHP -= damage;
-        state.energy = Math.min(100, state.energy + energyGain);
-        
-        if (state.eHP <= 0) {
-            state.lvl++;
-            state.eHP = 100 + (state.lvl * 5);
-            alert("Победа! Переход на уровень " + state.lvl);
-        }
-        updateUI();
+    function render() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach((c, i) => {
+            c.style.backgroundImage = `url(${runes[state.board[i]]})`;
+            c.dataset.type = state.board[i];
+        });
     }
 
-    function enemyTurn() {
-        const arena = document.getElementById('arena');
-        arena.classList.add('shaking');
-        setTimeout(() => arena.classList.remove('shaking'), 200);
-    }
-
-    function updateUI() {
-        document.getElementById('enemy-hp-fill').style.width = (state.eHP / (100 + (state.lvl * 5)) * 100) + '%';
-        document.getElementById('energy-fill').style.width = state.energy + '%';
-        document.getElementById('lvl-txt').innerText = `УРОВЕНЬ ${state.lvl}`;
-        
-        const btn = document.getElementById('super-btn');
-        if (state.energy >= 100) btn.classList.add('ready');
-        else btn.classList.remove('ready');
-        
-        updateMob();
-    }
-
-    function updateMob() {
-        let mobIdx = 0;
-        if (state.lvl > 5) mobIdx = 1;
-        if (state.lvl > 12) mobIdx = 2;
-        if (state.lvl > 20) mobIdx = 3;
-        document.getElementById('enemy-img').src = mobFiles[mobIdx];
-    }
-
-    function useSuper() {
-        if (state.energy >= 100) {
-            state.eHP -= 50;
-            state.energy = 0;
-            updateUI();
-            tg.HapticFeedback.notificationOccurred('success');
-        }
-    }
-
-    initBoard();
-    updateUI();
-</script>
-</body>
-</html>
+    function checkMatches() {
+        let toClear = new Set();
+        // Горизонтали
+        for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 5; c++) {
+                let idx = r * 7 + c;
+                if (state.board[idx] === state.board[idx+1] && state.board[idx] === state.board[idx+2]) {
+                    toClear.add(idx); to
