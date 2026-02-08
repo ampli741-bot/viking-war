@@ -3,24 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Mobs & Sounds</title>
+    <title>Viking Saga: Boss Mob4</title>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
         #adm { display: none; background: #400; padding: 5px; font-size: 10px; position: sticky; top: 0; z-index: 1000; }
         .adm-btn { background: #fff; color: #000; border: none; padding: 3px 8px; margin: 0 3px; font-weight: bold; border-radius: 3px; }
         .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; display: flex; justify-content: space-around; }
-        .arena { height: 140px; background: #111; position: relative; padding-top: 10px; }
-        .hp-bar { width: 90%; height: 10px; background: #333; margin: 5px auto; border-radius: 5px; overflow: hidden; border: 1px solid #444; }
+        .arena { height: 170px; background: #050505; position: relative; padding-top: 10px; overflow: hidden; }
+        .hp-bar { width: 90%; height: 12px; background: #333; margin: 5px auto; border-radius: 6px; overflow: hidden; border: 1px solid #444; position: relative; }
         .fill { height: 100%; width: 100%; transition: 0.3s; }
-        #mob-img { height: 80px; width: auto; transition: 0.3s; }
-        .ui { padding: 10px 0; }
-        .en-bar { width: 280px; height: 6px; background: #222; margin: 0 auto 5px; border-radius: 3px; overflow: hidden; }
+        
+        #boss-en-bar { width: 60%; height: 6px; background: #222; margin: 2px auto; border-radius: 3px; border: 1px solid #ff4500; display: none; overflow: hidden; }
+        
+        #mob-img { height: 90px; width: auto; transition: 0.5s; z-index: 2; filter: drop-shadow(0 0 5px rgba(255,0,0,0.3)); }
+        .boss-glow { filter: drop-shadow(0 0 15px red) !important; }
+
+        .ui { padding: 10px 0; background: #111; }
+        .en-bar { width: 280px; height: 20px; background: #222; margin: 0 auto 5px; border-radius: 10px; overflow: hidden; position: relative; border: 1px solid #3498db; }
+        #en-txt { position: absolute; width: 100%; font-size: 11px; line-height: 20px; color: #fff; font-weight: bold; z-index: 5; text-shadow: 1px 1px 2px #000; }
+
         .btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
-        .ready { background: orange !important; color: #fff !important; box-shadow: 0 0 10px gold; }
-        #grid { width: 315px; margin: 0 auto; display: block; font-size: 0; }
+        .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; }
+        
+        #grid { width: 315px; margin: 5px auto; display: block; font-size: 0; }
         .cell { display: inline-block; width: 40px; height: 40px; margin: 2px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333; vertical-align: top; box-sizing: border-box; }
-        .sel { border: 2px solid #fff !important; transform: scale(0.9); }
-        #msg { position: fixed; top: 40%; width: 100%; background: rgba(0,0,0,0.9); color: gold; display: none; padding: 20px 0; font-size: 24px; z-index: 100; }
+        .sel { border: 2px solid #fff !important; transform: scale(0.85); box-shadow: 0 0 10px #fff; }
+        #msg { position: fixed; top: 40%; width: 100%; background: rgba(0,0,0,0.9); color: gold; display: none; padding: 20px 0; font-size: 26px; z-index: 100; font-weight: bold; border-top: 2px solid gold; border-bottom: 2px solid gold; }
     </style>
 </head>
 <body>
@@ -29,22 +37,25 @@
         <button class="adm-btn" onclick="changeLvl(-1)">-1 LVL</button>
         <button class="adm-btn" onclick="changeLvl(1)">+1 LVL</button>
         <button class="adm-btn" onclick="s.en=100;draw();">⚡ MAX</button>
-        <button class="adm-btn" onclick="localStorage.removeItem('v_ban');location.reload();">FIX BAN</button>
     </div>
 
     <div class="header" onclick="admOn()">
         <span id="best-txt">РЕКОРД: 1</span> | <span id="lvl-txt" style="color:gold">УРОВЕНЬ 1</span>
     </div>
 
-    <div class="arena">
+    <div class="arena" id="arena-bg">
         <div id="msg"></div>
-        <div class="hp-bar"><div id="ehp" class="fill" style="background: red;"></div></div>
-        <img id="mob-img" src="mob1.png">
-        <div class="hp-bar"><div id="php" class="fill" style="background: green;"></div></div>
+        <div class="hp-bar"><div id="ehp" class="fill" style="background: #e74c3c;"></div></div>
+        <div id="boss-en-bar"><div id="boss-en-fill" class="fill" style="background: #ff4500; width: 0%;"></div></div>
+        <img id="mob-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/90/red?text=MOB'">
+        <div class="hp-bar"><div id="php" class="fill" style="background: #2ecc71;"></div></div>
     </div>
 
     <div class="ui">
-        <div class="en-bar"><div id="en-f" class="fill" style="background: dodgerblue; width: 0%;"></div></div>
+        <div class="en-bar">
+            <div id="en-txt">МОЛОТ: 0%</div>
+            <div id="en-f" class="fill" style="background: #3498db; width: 0%;"></div>
+        </div>
         <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
     </div>
 
@@ -56,65 +67,91 @@
 
     let s = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
-        best: parseInt(localStorage.getItem('v_best')) || 1,
         en: parseInt(localStorage.getItem('v_en')) || 0,
-        hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null
+        hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null,
+        bossEn: 0
     };
 
-    // ВОЗВРАТ ТВОИХ ЗВУКОВЫХ ФАЙЛОВ
-    function play(file) {
-        const a = new Audio(file);
-        a.volume = 0.4;
-        a.play().catch(() => {}); // Игнорим ошибку если браузер блочит старт без клика
+    let audioCtx = null;
+    let bossMusicNode = null;
+
+    function play(f) { new Audio(f).play().catch(()=>{}); }
+
+    // 8-битный генератор страшной музыки
+    function startBossMusic() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (bossMusicNode) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            
+            // Грозная низкая последовательность
+            const notes = [73.42, 69.30, 65.41, 61.74]; // D2, C#2, C2, B1
+            let i = 0;
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.value = 0.05;
+            
+            osc.start();
+            bossMusicNode = { osc, gain };
+            
+            const loop = () => {
+                if(!bossMusicNode) return;
+                osc.frequency.setTargetAtTime(notes[i % notes.length], audioCtx.currentTime, 0.1);
+                i++;
+                setTimeout(loop, 600);
+            };
+            loop();
+        } catch(e) {}
+    }
+
+    function stopBossMusic() {
+        if (bossMusicNode) {
+            bossMusicNode.osc.stop();
+            bossMusicNode = null;
+        }
     }
 
     let hits = 0;
     function admOn() { if(++hits >= 5) { localStorage.setItem('v_adm','1'); document.getElementById('adm').style.display='block'; } }
     
-    function changeLvl(v) { 
-        s.lvl = Math.max(1, s.lvl + v); 
-        save(); 
-        init(); 
-    }
-
-    function save() { 
-        localStorage.setItem('v_lvl', s.lvl); 
-        localStorage.setItem('v_en', s.en); 
-        if(s.lvl > s.best) localStorage.setItem('v_best', s.lvl); 
-    }
+    function changeLvl(v) { s.lvl = Math.max(1, s.lvl + v); localStorage.setItem('v_lvl', s.lvl); init(); }
 
     function init() {
-        const ban = localStorage.getItem('v_ban');
-        if (ban && Date.now() < ban && !localStorage.getItem('v_adm')) {
-            document.body.innerHTML = "<h1 style='color:red;padding:50px;'>ВЫ РАНЕНЫ. ЖДИТЕ 1 ЧАС</h1>";
-            return;
-        }
-
+        stopBossMusic();
         if(localStorage.getItem('v_adm')) document.getElementById('adm').style.display='block';
 
-        // ЛОГИКА МОБОВ И БОССА
         const isBoss = s.lvl % 25 === 0;
-        let mobFile = 'mob1.png'; // По умолчанию скелет
+        let mobFile = 'mob1.png';
         
         if (isBoss) {
-            mobFile = 'boss.png';
+            mobFile = 'mob4.png';
+            document.getElementById('boss-en-bar').style.display = 'block';
+            document.getElementById('mob-img').classList.add('boss-glow');
+            document.getElementById('arena-bg').style.background = '#1a0000';
+            startBossMusic();
         } else {
+            document.getElementById('boss-en-bar').style.display = 'none';
+            document.getElementById('mob-img').classList.remove('boss-glow');
+            document.getElementById('arena-bg').style.background = '#050505';
             let cycle = s.lvl % 25;
             if (cycle > 8 && cycle <= 16) mobFile = 'mob2.png';
             else if (cycle > 16) mobFile = 'mob3.png';
         }
 
         document.getElementById('mob-img').src = mobFile;
-        document.getElementById('mob-img').style.transform = isBoss ? "scale(1.4)" : "scale(1)";
+        document.getElementById('mob-img').style.transform = isBoss ? "scale(1.7)" : "scale(1)";
 
-        let hpMult = isBoss ? 3 : 1;
-        s.maxEHP = (100 + (s.lvl * 25)) * hpMult;
+        s.maxEHP = (100 + (s.lvl * 25)) * (isBoss ? 3 : 1);
         s.ehp = s.maxEHP;
         s.hp = 100;
+        s.bossEn = 0;
 
         document.getElementById('lvl-txt').innerText = (isBoss ? "БОСС " : "УРОВЕНЬ ") + s.lvl;
-        document.getElementById('best-txt').innerText = "РЕКОРД: " + s.best;
-
+        
         const g = document.getElementById('grid');
         g.innerHTML = ''; s.board = [];
         for (let i = 0; i < 49; i++) {
@@ -137,9 +174,14 @@
         });
         document.getElementById('php').style.width = s.hp + '%';
         document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
+        
         document.getElementById('en-f').style.width = s.en + '%';
+        document.getElementById('en-txt').innerText = `МОЛОТ: ${s.en}% (${Math.ceil((100-s.en)/5)} плиток)`;
+        document.getElementById('boss-en-fill').style.width = s.bossEn + '%';
+        
         document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
-        save();
+        localStorage.setItem('v_lvl', s.lvl);
+        localStorage.setItem('v_en', s.en);
     }
 
     async function touch(i) {
@@ -180,10 +222,11 @@
         }
         if (found) {
             if (s.ehp <= 0) { 
+                stopBossMusic();
                 play('win.mp3');
                 document.getElementById('msg').style.display='block';
-                document.getElementById('msg').innerText = "ПОБЕДА!";
-                setTimeout(() => { s.lvl++; init(); document.getElementById('msg').style.display='none'; }, 1000);
+                document.getElementById('msg').innerText = "БОСС ПОВЕРЖЕН!";
+                setTimeout(() => { s.lvl++; init(); document.getElementById('msg').style.display='none'; }, 1500);
             } else enemy();
         }
         return found;
@@ -197,16 +240,25 @@
                 if (s.board[i] === -1) empty++;
                 else if (empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
             }
-            for (let r = 0; r < empty; r++) s.board[r*7+c] = Math.floor(Math.random()*5);
+            for (let r = 0; r < empty; r++) s.board[r*7+c] = Math.floor(Math.random() * 5);
         }
     }
 
     function enemy() {
-        let d = 5 + Math.floor(s.lvl/3);
-        if (s.lvl % 25 === 0) d *= 2;
-        s.hp -= d;
+        let dmg = 5 + Math.floor(s.lvl/3);
+        if (s.lvl % 25 === 0) {
+            s.bossEn += 25;
+            if (s.bossEn >= 100) {
+                dmg *= 3;
+                s.bossEn = 0;
+                play('super.mp3');
+                document.getElementById('arena-bg').style.background = 'red';
+                setTimeout(()=>document.getElementById('arena-bg').style.background='#1a0000', 100);
+            }
+        }
+        s.hp -= dmg;
         play('hit.mp3');
-        if (s.hp <= 0) { localStorage.setItem('v_ban', Date.now() + 3600000); location.reload(); }
+        if (s.hp <= 0) { stopBossMusic(); localStorage.setItem('v_ban', Date.now() + 3600000); location.reload(); }
         draw();
     }
 
