@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Hero Status</title>
+    <title>Viking Saga: Boss Rage</title>
     <style>
-        :root { --main-bg: #000; --panel-bg: #1a1a1a; --accent: #2ecc71; --gold: #ffd700; }
+        :root { --main-bg: #000; --panel-bg: #1a1a1a; --accent: #2ecc71; --gold: #ffd700; --rage: #ff4500; }
         body { background: var(--main-bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; user-select: none; }
         
-        /* КУРСОР ДЛЯ ПК */
         .cell, .btn, .up-btn, .info-btn, .adm-btn { cursor: pointer; }
 
         #adm { display: none; background: #300; padding: 10px; border-bottom: 2px solid red; position: relative; z-index: 2000; }
@@ -19,23 +18,23 @@
         @keyframes pulse-pts { 0% { transform: scale(1); } 50% { transform: scale(1.05); color: #fff; } 100% { transform: scale(1); } }
         .has-pts { animation: pulse-pts 1s infinite; color: var(--accent); font-weight: bold; }
 
-        .info-btn { background: #333; color: var(--gold); border: 1px solid var(--gold); border-radius: 50%; width: 32px; height: 32px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 18px; }
-        .info-btn:hover { background: var(--gold); color: #000; }
+        .info-btn { background: #333; color: var(--gold); border: 1px solid var(--gold); border-radius: 50%; width: 32px; height: 32px; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 
-        .arena { max-width: 500px; height: 220px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; margin: 0 auto; }
+        .arena { max-width: 500px; height: 230px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; margin: 0 auto; }
         .hp-bar { width: 92%; height: 16px; background: #222; border-radius: 8px; margin: 2px auto; overflow: hidden; border: 1px solid #555; position: relative; z-index: 100; }
         
+        /* ПОЛОСКА ЯРОСТИ БОССА */
+        #boss-rage-bar { width: 60%; height: 6px; background: #111; border-radius: 3px; border: 1px solid var(--rage); display: none; position: relative; z-index: 100; margin: 2px auto; }
+
         .fill { height: 100%; width: 100%; transition: 0.2s ease-out; }
         #mob-img { height: 120px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; transition: 0.1s; }
         
-        /* ОБЩИЙ СТИЛЬ ДЛЯ ОВЕРЛЕЕВ */
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         
-        /* СТИЛЬ КАРТОЧЕК ХАРАКТЕРИСТИК */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
         .stat-card { background: #222; border: 1px solid #444; padding: 10px; border-radius: 8px; text-align: left; }
         .stat-card b { color: var(--gold); display: block; font-size: 11px; text-transform: uppercase; }
-        .stat-card span { font-size: 18px; font-weight: bold; color: #fff; }
+        .stat-card span { font-size: 18px; font-weight: bold; }
 
         .up-row { margin-bottom: 12px; width: 100%; display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; }
         .up-btn { background: var(--accent); color: #fff; border: none; padding: 10px 25px; border-radius: 6px; font-weight: bold; font-size: 20px; }
@@ -51,12 +50,17 @@
         
         .dmg-num { position: absolute; color: #ff4d4d; font-weight: 900; font-size: 26px; z-index: 150; pointer-events: none; animation: fly-up 0.6s ease-out forwards; text-shadow: 2px 2px #000; }
         @keyframes fly-up { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
+        
+        .boss-rage { animation: rage-glow 0.5s infinite alternate; }
+        @keyframes rage-glow { from { filter: drop-shadow(0 0 5px red); } to { filter: drop-shadow(0 0 20px red) brightness(1.2); } }
+        .shake { animation: shake 0.2s infinite; }
+        @keyframes shake { 0% { transform: translate(3px,3px); } 50% { transform: translate(-3px,-3px); } 100% { transform: translate(0,0); } }
     </style>
 </head>
 <body onload="init()">
 
     <div id="adm">
-        <button class="adm-btn" onclick="s.lvl+=24; s.pts+=5; save(); init();">К БОССУ</button>
+        <button class="adm-btn" onclick="s.lvl=24; s.pts+=5; save(); init();">К БОССУ (25)</button>
         <button class="adm-btn" onclick="s.en=100; draw();">MAX УЛЬТА</button>
         <button class="adm-btn" onclick="localStorage.clear(); location.reload();">СБРОС</button>
     </div>
@@ -66,60 +70,41 @@
             <span id="lvl-txt" style="color:var(--gold); font-weight:bold;">LVL 1</span>
         </div>
         <span id="pts-txt">PTS: 0</span>
-        <div class="info-btn" id="i-btn" onclick="toggleInfo()">i</div>
+        <div class="info-btn" onclick="toggleInfo()">i</div>
     </div>
 
     <div class="arena" id="arena">
         <div id="upgrade-menu" class="overlay">
             <h2 style="color:var(--gold);">КУЗНИЦА</h2>
             <p id="up-pts-info">Очков: 0</p>
-            <div class="up-row">
-                <div><b>СИЛА (ATK)</b><div style="font-size:10px; color:#aaa;">+2 к урону</div></div>
-                <button class="up-btn" onclick="upgrade('atk')">+</button>
-            </div>
-            <div class="up-row">
-                <div><b>ЖИЗНЬ (HP)</b><div style="font-size:10px; color:#aaa;">+20 макс HP</div></div>
-                <button class="up-btn" onclick="upgrade('hp')">+</button>
-            </div>
-            <div class="up-row">
-                <div><b>ЛОВКОСТЬ (AGI)</b><div style="font-size:10px; color:#aaa;">Шанс уворота</div></div>
-                <button class="up-btn" onclick="upgrade('agi')">+</button>
-            </div>
-            <div class="up-row">
-                <div><b>УДАЧА (ULT)</b><div style="font-size:10px; color:#aaa;">Быстрее заряд</div></div>
-                <button class="up-btn" onclick="upgrade('luck')">+</button>
-            </div>
+            <div class="up-row"><div><b>СИЛА</b><div style="font-size:10px;">+2 ATK</div></div><button class="up-btn" onclick="upgrade('atk')">+</button></div>
+            <div class="up-row"><div><b>ЖИЗНЬ</b><div style="font-size:10px;">+20 HP</div></div><button class="up-btn" onclick="upgrade('hp')">+</button></div>
+            <div class="up-row"><div><b>ЛОВКОСТЬ</b><div style="font-size:10px;">+Уворот</div></div><button class="up-btn" onclick="upgrade('agi')">+</button></div>
+            <div class="up-row"><div><b>УДАЧА</b><div style="font-size:10px;">+Ульта</div></div><button class="up-btn" onclick="upgrade('luck')">+</button></div>
         </div>
 
         <div id="info-screen" class="overlay">
-            <h2 style="color:var(--gold); margin: 0;">ГЕРОЙ</h2>
-            
+            <h2 style="color:var(--gold);">ГЕРОЙ</h2>
             <div class="stat-grid">
-                <div class="stat-card"><b>Сила (ATK)</b><span id="stat-atk">0</span></div>
-                <div class="stat-card"><b>Жизнь (HP)</b><span id="stat-hp">0</span></div>
-                <div class="stat-card"><b>Ловкость</b><span id="stat-agi">0%</span></div>
-                <div class="stat-card"><b>Удача (ULT)</b><span id="stat-luck">x0</span></div>
+                <div class="stat-card"><b>Сила</b><span id="stat-atk">0</span></div>
+                <div class="stat-card"><b>Жизнь</b><span id="stat-hp">0</span></div>
+                <div class="stat-card"><b>Уворот</b><span id="stat-agi">0%</span></div>
+                <div class="stat-card"><b>Удача</b><span id="stat-luck">x0</span></div>
             </div>
-
-            <div style="text-align:left; font-size:12px; line-height:1.4; background:#222; padding:12px; border-radius:8px; border:1px solid #444;">
-                <p style="margin-top:0; color:var(--gold);"><b>СПОСОБНОСТИ:</b></p>
-                🔨 <b>Молот Тора:</b> Наносит 20-кратный урон и ломает камни на поле. Заряжается синими рунами.<br><br>
-                💨 <b>Ловкость:</b> Шанс полностью проигнорировать удар врага.
-            </div>
-            <button class="btn ready" style="margin-top:15px" onclick="toggleInfo()">ВЕРНУТЬСЯ В БОЙ</button>
+            <button class="btn ready" onclick="toggleInfo()">ВЕРНУТЬСЯ</button>
         </div>
 
         <div class="hp-bar"><div id="ehp" class="fill" style="background: #e74c3c;"></div></div>
+        <div id="boss-rage-bar"><div id="rage-fill" class="fill" style="background: var(--rage); width: 0%;"></div></div>
         <img id="mob-img" src="mob1.png">
         <div class="hp-bar"><div id="php" class="fill" style="background: #2ecc71;"></div></div>
     </div>
 
     <div class="ui">
         <div class="en-bar">
-            <div style="position:absolute; width:100%; line-height:24px; font-size:11px; font-weight:bold; z-index:11;">МОЛОТ ТОРА</div>
             <div id="en-f" class="fill" style="background: #3498db; width: 0%;"></div>
         </div>
-        <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
+        <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ (SPACE)</button>
     </div>
 
     <div id="grid"></div>
@@ -135,36 +120,35 @@
         luck: parseInt(localStorage.getItem('v_luck')) || 5,
         agi: parseInt(localStorage.getItem('v_agi')) || 0,
         pts: parseInt(localStorage.getItem('v_pts')) || 0,
-        en: 0, hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null
+        en: 0, hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null, rage: 0
     };
 
     function play(f) { new Audio(f + '.mp3').play().catch(()=>{}); }
 
     function toggleInfo() {
-        const el = document.getElementById('info-screen');
-        // Обновляем цифры перед показом
         document.getElementById('stat-atk').innerText = s.atk;
         document.getElementById('stat-hp').innerText = s.maxHP;
         document.getElementById('stat-luck').innerText = 'x' + s.luck;
         document.getElementById('stat-agi').innerText = Math.floor((1 - (100 / (100 + s.agi))) * 100) + '%';
-        
+        const el = document.getElementById('info-screen');
         el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
     }
 
-    // Универсальный триггер админки
     let admT;
     const trig = document.getElementById('admin-trigger');
     trig.addEventListener('mousedown', () => admT = setTimeout(() => document.getElementById('adm').style.display='block', 2000));
     trig.addEventListener('mouseup', () => clearTimeout(admT));
-    trig.addEventListener('touchstart', () => admT = setTimeout(() => document.getElementById('adm').style.display='block', 2000));
-    trig.addEventListener('touchend', () => clearTimeout(admT));
 
     window.addEventListener('keydown', (e) => { if(e.code === 'Space') useSuper(); });
 
     function init() {
         const isB = s.lvl % 25 === 0;
+        s.rage = 0;
+        document.getElementById('boss-rage-bar').style.display = isB ? 'block' : 'none';
         document.getElementById('mob-img').src = isB ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
-        s.maxEHP = (100 + (s.lvl * 30)) * (isB ? 4 : 1);
+        document.getElementById('mob-img').classList.toggle('boss-rage', isB);
+        
+        s.maxEHP = (100 + (s.lvl * 35)) * (isB ? 4 : 1);
         s.ehp = s.maxEHP; s.hp = s.maxHP;
         
         const g = document.getElementById('grid');
@@ -201,113 +185,4 @@
 
     function draw() {
         document.getElementById('lvl-txt').innerText = "LVL " + s.lvl;
-        document.getElementById('pts-txt').innerText = "PTS: " + s.pts;
-        document.getElementById('pts-txt').className = s.pts > 0 ? 'has-pts' : '';
-        
-        s.board.forEach((t, i) => {
-            const el = document.getElementById('c' + i);
-            el.style.backgroundColor = t === -1 ? '#000' : colors[t];
-            el.style.backgroundImage = t === -1 ? 'none' : `url(${runes[t]})`;
-            el.classList.toggle('sel', s.sel === i);
-        });
-        document.getElementById('php').style.width = (s.hp / s.maxHP * 100) + '%';
-        document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
-        document.getElementById('en-f').style.width = s.en + '%';
-        document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
-    }
-
-    function spawnDmg(val, isP) {
-        const d = document.createElement('div');
-        d.className = 'dmg-num'; d.innerText = (val === 0 ? 'DODGE' : '-' + Math.floor(val));
-        if(val === 0) d.style.color = '#3498db';
-        d.style.left = '50%'; d.style.top = isP ? '75%' : '35%';
-        document.getElementById('arena').appendChild(d);
-        setTimeout(() => d.remove(), 600);
-    }
-
-    async function touch(i) {
-        if (s.lock) return;
-        play('click');
-        if (s.sel === null) { s.sel = i; draw(); }
-        else {
-            let a = s.sel, b = i;
-            if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
-                s.lock = true;
-                [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
-                draw();
-                if (!await check()) [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
-            }
-            s.sel = null; s.lock = false; draw();
-        }
-    }
-
-    async function check() {
-        let found = false; let combo = 0;
-        while (true) {
-            let del = new Set();
-            for (let i = 0; i < 49; i++) {
-                if (s.board[i] === -1) continue;
-                if (i % 7 < 5 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) {
-                    for(let k=0; k<3; k++) del.add(i+k);
-                }
-                if (i < 35 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) {
-                    for(let k=0; k<3; k++) del.add(i+k*7);
-                }
-            }
-            if (del.size === 0) break;
-            found = true; combo++; play('match');
-            let d = del.size * s.atk * combo;
-            s.ehp -= d; spawnDmg(d, false);
-            del.forEach(idx => {
-                if (s.board[idx] === 1) s.en = Math.min(100, s.en + s.luck);
-                s.board[idx] = -1;
-            });
-            draw(); await new Promise(r => setTimeout(r, 200));
-            drop(); draw(); await new Promise(r => setTimeout(r, 200));
-        }
-        if (found) {
-            if (s.ehp <= 0) { 
-                play('win'); s.lvl++; s.pts += (s.lvl % 25 === 0 ? 5 : 1); save();
-                document.getElementById('upgrade-menu').style.display = 'flex';
-                draw();
-            } else enemy();
-        }
-        return found;
-    }
-
-    function drop() {
-        for (let c = 0; c < 7; c++) {
-            let empty = 0;
-            for (let r = 6; r >= 0; r--) {
-                let i = r * 7 + c;
-                if (s.board[i] === -1) empty++;
-                else if (empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
-            }
-            for (let r = 0; r < empty; r++) s.board[r*7+c] = Math.floor(Math.random() * 5);
-        }
-    }
-
-    function enemy() {
-        if (Math.random() < (1 - (100 / (100 + s.agi)))) {
-            spawnDmg(0, true); return; 
-        }
-        let dmg = 5 + Math.floor(s.lvl/5);
-        s.hp -= dmg; spawnDmg(dmg, true); play('hit');
-        const m = document.getElementById('mob-img');
-        m.style.transform = 'translate(-50%, -45%) scale(1.1)';
-        setTimeout(() => m.style.transform = 'translate(-50%, -50%) scale(1)', 100);
-        if (s.hp <= 0) { alert("Game Over"); location.reload(); }
-        draw();
-    }
-
-    async function useSuper() {
-        if (s.en < 100 || s.lock) return;
-        play('super'); s.lock = true; s.en = 0; 
-        s.ehp -= (s.atk * 20); spawnDmg(s.atk * 20, false);
-        for (let i = 0; i < 15; i++) s.board[Math.floor(Math.random()*49)] = -1;
-        draw(); await new Promise(r => setTimeout(r, 300));
-        drop(); await check(); s.lock = false;
-    }
-</script>
-</body>
-</html>
+        document.getElementById('pts-
