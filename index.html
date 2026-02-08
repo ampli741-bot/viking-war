@@ -3,61 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Audio Fix</title>
+    <title>Viking Saga: Classic Audio</title>
     <style>
-        /* Весь стиль оставляем прежним */
         :root { --main-bg: #000; --panel-bg: #1a1a1a; --accent: #2ecc71; --gold: #ffd700; --rage: #ff4500; }
-        body { background: var(--main-bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; user-select: none; }
-        .cell, .btn, .up-btn, .info-btn, .adm-btn, #pts-txt { cursor: pointer; }
-        .header { background: var(--panel-bg); padding: 8px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; height: 50px; box-sizing: border-box; }
-        .arena { max-width: 500px; height: 230px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; margin: 0 auto; }
-        .boss-bg { background: radial-gradient(circle, #400 0%, #000 100%) !important; }
-        .hp-bar { width: 92%; height: 16px; background: #222; border-radius: 8px; margin: 2px auto; overflow: hidden; border: 1px solid #555; position: relative; z-index: 100; }
-        .fill { height: 100%; width: 100%; transition: 0.2s ease-out; }
-        #mob-img { height: 130px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
-        #grid { width: 322px; margin: 10px auto; display: block; font-size: 0; background: #111; padding: 6px; border-radius: 12px; border: 2px solid #444; }
-        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-color: #222; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; }
-        .sel { border: 3px solid #fff !important; transform: scale(0.85); box-shadow: 0 0 15px #fff; }
-        .ui { padding: 10px 0; background: #111; }
-        .btn { width: 280px; padding: 14px; border: none; border-radius: 8px; background: #333; color: #fff; font-weight: bold; }
-        .ready { background: linear-gradient(135deg, #ff9900, #ff4400) !important; }
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
-        .dmg-num { position: absolute; font-weight: 900; font-size: 26px; z-index: 150; pointer-events: none; animation: fly-up 0.6s ease-out forwards; }
-        @keyframes fly-up { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
-        #boss-rage-bar { width: 60%; height: 6px; background: #111; border-radius: 3px; border: 1px solid var(--rage); display: none; margin: 2px auto; }
+        body { background: var(--main-bg); color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; user-select: none; }
+        
+        /* Панель управления */
+        .header { background: var(--panel-bg); padding: 5px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; height: 45px; }
+        #pts-txt { padding: 5px 10px; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .has-pts { background: #222; border: 1px solid var(--accent); color: var(--accent); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* Арена */
+        .arena { max-width: 500px; height: 220px; background: #050505; position: relative; margin: 0 auto; overflow: hidden; transition: 1s; }
+        .boss-bg { background: radial-gradient(circle, #400, #000) !important; }
+        #mob-img { height: 120px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; }
+        
+        /* Полоски HP */
+        .hp-bar { width: 90%; height: 14px; background: #222; border-radius: 7px; margin: 5px auto; overflow: hidden; border: 1px solid #444; position: relative; z-index: 10; }
+        .fill { height: 100%; width: 100%; transition: 0.3s; }
+        
+        /* Сетка */
+        #grid { width: 320px; margin: 10px auto; display: block; background: #111; padding: 5px; border-radius: 10px; border: 2px solid #333; }
+        .cell { display: inline-block; width: 40px; height: 40px; margin: 2px; background-size: cover; background-color: #222; border-radius: 5px; cursor: pointer; }
+        .sel { border: 2px solid #fff; box-shadow: 0 0 10px #fff; transform: scale(0.9); }
+
+        /* Окна */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .btn { width: 200px; padding: 10px; margin: 5px; border: none; border-radius: 5px; background: #444; color: #fff; font-weight: bold; cursor: pointer; }
+        .ready { background: var(--accent) !important; }
+        
+        /* Урон */
+        .dmg { position: absolute; font-weight: bold; font-size: 24px; pointer-events: none; animation: fly 0.6s forwards; z-index: 20; }
+        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
     </style>
 </head>
-<body onload="init()">
+<body onclick="unlockAudio()">
+
+    <audio id="m_norm" src="track_normal.mp3" loop></audio>
+    <audio id="m_boss" src="track_boss.mp3" loop></audio>
+    <audio id="s_click" src="click.mp3"></audio>
+    <audio id="s_match" src="match.mp3"></audio>
+    <audio id="s_hit" src="hit.mp3"></audio>
+    <audio id="s_win" src="win.mp3"></audio>
+    <audio id="s_super" src="super.mp3"></audio>
 
     <div class="header">
-        <div id="admin-trigger"><span id="lvl-txt" style="color:var(--gold); font-weight:bold;">LVL 1</span></div>
-        <span id="pts-txt" onclick="openForge()">PTS: 0</span>
-        <div class="info-btn" onclick="toggleInfo()">i</div>
+        <b id="lvl-txt" style="color:var(--gold)">LVL 1</b>
+        <div id="pts-txt" onclick="openForge()">PTS: 0</div>
+        <div onclick="toggleInfo()" style="cursor:pointer; color:var(--gold)">[ИНФО]</div>
     </div>
 
     <div class="arena" id="arena">
-        <div id="upgrade-menu" class="overlay">
-            <h2 style="color:var(--gold);">КУЗНИЦА</h2>
-            <button class="btn ready" onclick="upgrade('atk')">АТАКА (+2)</button><br>
-            <button class="btn ready" onclick="upgrade('hp')">ЖИЗНЬ (+20)</button><br>
-            <button class="btn ready" onclick="closeForge()">В БОЙ</button>
+        <div id="hp-e-bar" class="hp-bar"><div id="ehp" class="fill" style="background:#e74c3c"></div></div>
+        <img id="mob-img" src="mob1.png">
+        <div id="hp-p-bar" class="hp-bar"><div id="php" class="fill" style="background:#2ecc71"></div></div>
+
+        <div id="forge" class="overlay">
+            <h3 style="color:var(--gold)">КУЗНИЦА</h3>
+            <button class="btn ready" onclick="up('atk')">АТАКА (+2)</button>
+            <button class="btn ready" onclick="up('hp')">ЖИЗНЬ (+20)</button>
+            <button class="btn" onclick="closeForge()">В БОЙ</button>
         </div>
 
-        <div id="info-screen" class="overlay">
-            <h2 style="color:var(--gold);">СТАТУС</h2>
-            <div id="status-content"></div>
+        <div id="info" class="overlay">
+            <h3 style="color:var(--gold)">ГЕРОЙ</h3>
+            <div id="stats-list"></div>
             <button class="btn ready" onclick="toggleInfo()">ЗАКРЫТЬ</button>
         </div>
-
-        <div class="hp-bar"><div id="ehp" class="fill" style="background: #e74c3c;"></div></div>
-        <div id="boss-rage-bar"><div id="rage-fill" class="fill" style="background: var(--rage); width: 0%;"></div></div>
-        <img id="mob-img" src="mob1.png">
-        <div class="hp-bar"><div id="php" class="fill" style="background: #2ecc71;"></div></div>
     </div>
 
     <div class="ui">
-        <div style="width:280px; height:10px; background:#222; margin:5px auto; border-radius:5px; overflow:hidden;">
-            <div id="en-f" class="fill" style="background: #3498db; width: 0%;"></div>
+        <div style="width:300px; height:8px; background:#222; margin:5px auto; border-radius:4px; overflow:hidden;">
+            <div id="en-f" class="fill" style="background:#3498db; width:0%"></div>
         </div>
         <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
     </div>
@@ -65,74 +83,43 @@
     <div id="grid"></div>
 
 <script>
-    // --- МЕНЕДЖЕР ЗВУКОВ ---
-    const AudioEngine = {
-        sounds: {},
-        music: new Audio(),
-        unlocked: false,
-
-        init() {
-            // Список всех звуков
-            const sfx = ['click', 'match', 'hit', 'win', 'super'];
-            sfx.forEach(name => {
-                this.sounds[name] = new Audio(`${name}.mp3`);
-            });
-            this.music.loop = true;
-        },
-
-        unlock() {
-            if (this.unlocked) return;
-            // Проигрываем пустой звук для разблокировки в iOS/Chrome
-            Object.values(this.sounds).forEach(s => {
-                s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(()=>{});
-            });
-            this.unlocked = true;
-            console.log("Audio Unlocked");
-            this.playMusic();
-        },
-
-        playSFX(name) {
-            const s = this.sounds[name];
-            if (s) {
-                s.currentTime = 0;
-                s.play().catch(e => console.log("SFX Error:", e));
-            }
-        },
-
-        playMusic() {
-            const isB = s.lvl % 25 === 0;
-            const track = isB ? 'track_boss.mp3' : 'track_normal.mp3';
-            if (this.music.getAttribute('data-now') !== track) {
-                this.music.src = track;
-                this.music.setAttribute('data-now', track);
-                this.music.play().catch(e => console.log("Music Error:", e));
-            }
-        }
-    };
-
-    AudioEngine.init();
-
-    // --- ЛОГИКА ИГРЫ ---
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6'];
-
+    
     let s = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
         atk: parseInt(localStorage.getItem('v_atk')) || 10,
         maxHP: parseInt(localStorage.getItem('v_mhp')) || 100,
-        luck: parseInt(localStorage.getItem('v_luck')) || 5,
-        agi: parseInt(localStorage.getItem('v_agi')) || 0,
         pts: parseInt(localStorage.getItem('v_pts')) || 0,
-        en: 0, hp: 100, ehp: 100, maxEHP: 100, board: [], sel: null, rage: 0
+        hp: 100, ehp: 100, maxEHP: 100, en: 0, board: [], sel: null, audioStarted: false
     };
+
+    function snd(id) { 
+        const a = document.getElementById(id);
+        if(a) { a.currentTime = 0; a.play().catch(()=>{}); }
+    }
+
+    function unlockAudio() {
+        if (s.audioStarted) return;
+        s.audioStarted = true;
+        updateMusic();
+    }
+
+    function updateMusic() {
+        if (!s.audioStarted) return;
+        const isB = s.lvl % 25 === 0;
+        const norm = document.getElementById('m_norm');
+        const boss = document.getElementById('m_boss');
+        if (isB) { norm.pause(); boss.play(); } 
+        else { boss.pause(); norm.play(); }
+    }
 
     function init() {
         const isB = s.lvl % 25 === 0;
         document.getElementById('arena').classList.toggle('boss-bg', isB);
         document.getElementById('mob-img').src = isB ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
-        document.getElementById('boss-rage-bar').style.display = isB ? 'block' : 'none';
-
-        s.maxEHP = Math.floor((100 + (Math.pow(s.lvl, 1.5) * 10)) * (isB ? 4 : 1));
+        
+        s.maxEHP = Math.floor((100 + (Math.pow(s.lvl, 1.4) * 10)) * (isB ? 4 : 1));
         s.ehp = s.maxEHP; s.hp = s.maxHP;
         
         const g = document.getElementById('grid');
@@ -141,46 +128,69 @@
             s.board.push(Math.floor(Math.random() * 5));
             let d = document.createElement('div');
             d.className = 'cell'; d.id = 'c' + i;
-            // Клик по любой клетке разблокирует звук
-            d.onclick = () => { AudioEngine.unlock(); touch(i); };
+            d.onclick = () => touch(i);
             g.appendChild(d);
         }
+        updateMusic();
         draw();
     }
 
     function touch(i) {
-        AudioEngine.playSFX('click');
-        if (s.sel === null) { s.sel = i; draw(); }
+        snd('s_click');
+        if (s.sel === null) { s.sel = i; }
         else {
             let a = s.sel, b = i;
             if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
                 [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
-                check();
+                checkMatches();
             }
-            s.sel = null; draw();
+            s.sel = null;
         }
+        draw();
     }
 
-    async function check() {
-        let found = false;
+    async function checkMatches() {
+        let matched = false;
         let del = new Set();
-        // Упрощенная логика поиска совпадений
         for (let i = 0; i < 49; i++) {
             if (i % 7 < 5 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) { del.add(i); del.add(i+1); del.add(i+2); }
             if (i < 35 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) { del.add(i); del.add(i+7); del.add(i+14); }
         }
 
         if (del.size > 0) {
-            found = true;
-            AudioEngine.playSFX('match');
-            let dmg = del.size * s.atk;
-            s.ehp -= dmg; spawnDmg(dmg, false);
+            matched = true;
+            snd('s_match');
+            let d = del.size * s.atk;
+            s.ehp -= d; popDmg(d, false);
             del.forEach(idx => {
-                if (s.board[idx] === 1) s.en = Math.min(100, s.en + s.luck);
+                if (s.board[idx] === 1) s.en = Math.min(100, s.en + 5);
                 s.board[idx] = -1;
             });
             draw();
-            await new Promise(r => setTimeout(r, 200));
-            drop();
-            check();
+            await new Promise(r => setTimeout(r, 250));
+            fillBoard();
+            checkMatches();
         } else {
+            if (s.ehp <= 0) {
+                snd('s_win'); s.lvl++;
+                if (s.lvl % 3 === 0) s.pts++;
+                if ((s.lvl-1) % 25 === 0) s.pts += 3;
+                save(); init();
+            } else enemyTurn();
+        }
+    }
+
+    function enemyTurn() {
+        let d = 5 + Math.floor(s.lvl/4);
+        s.hp -= d; snd('s_hit'); popDmg(d, true);
+        if (s.hp <= 0) { alert("Game Over!"); location.reload(); }
+        draw();
+    }
+
+    function fillBoard() {
+        for (let c = 0; c < 7; c++) {
+            let empty = 0;
+            for (let r = 6; r >= 0; r--) {
+                let i = r * 7 + c;
+                if (s.board[i] === -1) empty++;
+                else if (empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
