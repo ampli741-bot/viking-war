@@ -3,38 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Boss Rage</title>
+    <title>Viking Saga: Boss Ritual</title>
     <style>
         :root { --main-bg: #000; --panel-bg: #1a1a1a; --accent: #2ecc71; --gold: #ffd700; --rage: #ff4500; }
         body { background: var(--main-bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; user-select: none; }
         
-        .cell, .btn, .up-btn, .info-btn, .adm-btn { cursor: pointer; }
+        .cell, .btn, .up-btn, .info-btn, .adm-btn, #pts-txt { cursor: pointer; }
 
         #adm { display: none; background: #300; padding: 10px; border-bottom: 2px solid red; position: relative; z-index: 2000; }
         .adm-btn { background: #fff; color: #000; border: none; padding: 5px 10px; margin: 2px; font-weight: bold; border-radius: 4px; }
 
         .header { background: var(--panel-bg); padding: 8px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; font-size: 14px; height: 50px; box-sizing: border-box; }
         
-        @keyframes pulse-pts { 0% { transform: scale(1); } 50% { transform: scale(1.05); color: #fff; } 100% { transform: scale(1); } }
-        .has-pts { animation: pulse-pts 1s infinite; color: var(--accent); font-weight: bold; }
+        @keyframes pulse-pts { 0% { transform: scale(1); box-shadow: 0 0 0px var(--accent); } 50% { transform: scale(1.1); color: #fff; text-shadow: 0 0 10px var(--accent); } 100% { transform: scale(1); } }
+        .has-pts { animation: pulse-pts 1s infinite; color: var(--accent) !important; font-weight: bold; border: 1px solid var(--accent); padding: 2px 8px; border-radius: 4px; }
 
-        .info-btn { background: #333; color: var(--gold); border: 1px solid var(--gold); border-radius: 50%; width: 32px; height: 32px; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .arena { max-width: 500px; height: 230px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; margin: 0 auto; transition: background 1s; }
+        .boss-bg { background: #200 !important; } /* Жуткий фон для босса */
 
-        .arena { max-width: 500px; height: 230px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; margin: 0 auto; }
         .hp-bar { width: 92%; height: 16px; background: #222; border-radius: 8px; margin: 2px auto; overflow: hidden; border: 1px solid #555; position: relative; z-index: 100; }
-        
-        /* ПОЛОСКА ЯРОСТИ БОССА */
         #boss-rage-bar { width: 60%; height: 6px; background: #111; border-radius: 3px; border: 1px solid var(--rage); display: none; position: relative; z-index: 100; margin: 2px auto; }
-
         .fill { height: 100%; width: 100%; transition: 0.2s ease-out; }
-        #mob-img { height: 120px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; transition: 0.1s; }
+        
+        #mob-img { height: 130px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; transition: 0.2s; }
         
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
         .stat-card { background: #222; border: 1px solid #444; padding: 10px; border-radius: 8px; text-align: left; }
-        .stat-card b { color: var(--gold); display: block; font-size: 11px; text-transform: uppercase; }
-        .stat-card span { font-size: 18px; font-weight: bold; }
+        .stat-card b { color: var(--gold); display: block; font-size: 11px; }
 
         .up-row { margin-bottom: 12px; width: 100%; display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; }
         .up-btn { background: var(--accent); color: #fff; border: none; padding: 10px 25px; border-radius: 6px; font-weight: bold; font-size: 20px; }
@@ -44,24 +41,20 @@
         .sel { border: 3px solid #fff !important; transform: scale(0.9); box-shadow: 0 0 12px #fff; z-index: 50; position: relative; }
 
         .ui { padding: 10px 0; background: #111; }
-        .en-bar { width: 280px; height: 24px; background: #222; margin: 0 auto 8px; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #3498db; }
         .btn { width: 280px; padding: 14px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; font-size: 16px; }
         .ready { background: linear-gradient(135deg, #ff9900, #ff4400) !important; color: #fff !important; }
         
-        .dmg-num { position: absolute; color: #ff4d4d; font-weight: 900; font-size: 26px; z-index: 150; pointer-events: none; animation: fly-up 0.6s ease-out forwards; text-shadow: 2px 2px #000; }
+        .dmg-num { position: absolute; font-weight: 900; font-size: 26px; z-index: 150; pointer-events: none; animation: fly-up 0.6s ease-out forwards; text-shadow: 2px 2px #000; }
         @keyframes fly-up { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
-        
-        .boss-rage { animation: rage-glow 0.5s infinite alternate; }
-        @keyframes rage-glow { from { filter: drop-shadow(0 0 5px red); } to { filter: drop-shadow(0 0 20px red) brightness(1.2); } }
-        .shake { animation: shake 0.2s infinite; }
-        @keyframes shake { 0% { transform: translate(3px,3px); } 50% { transform: translate(-3px,-3px); } 100% { transform: translate(0,0); } }
     </style>
 </head>
 <body onload="init()">
 
+    <audio id="bg-music" loop></audio>
+
     <div id="adm">
         <button class="adm-btn" onclick="s.lvl=24; s.pts+=5; save(); init();">К БОССУ (25)</button>
-        <button class="adm-btn" onclick="s.en=100; draw();">MAX УЛЬТА</button>
+        <button class="adm-btn" onclick="s.pts+=10; draw();">ДАТЬ +10 PTS</button>
         <button class="adm-btn" onclick="localStorage.clear(); location.reload();">СБРОС</button>
     </div>
 
@@ -69,8 +62,8 @@
         <div id="admin-trigger">
             <span id="lvl-txt" style="color:var(--gold); font-weight:bold;">LVL 1</span>
         </div>
-        <span id="pts-txt">PTS: 0</span>
-        <div class="info-btn" onclick="toggleInfo()">i</div>
+        <span id="pts-txt" onclick="openForge()">PTS: 0</span>
+        <div class="info-btn" onclick="toggleInfo()" style="background:#333; color:gold; border:1px solid gold; border-radius:50%; width:30px; line-height:30px; font-weight:bold;">i</div>
     </div>
 
     <div class="arena" id="arena">
@@ -79,8 +72,9 @@
             <p id="up-pts-info">Очков: 0</p>
             <div class="up-row"><div><b>СИЛА</b><div style="font-size:10px;">+2 ATK</div></div><button class="up-btn" onclick="upgrade('atk')">+</button></div>
             <div class="up-row"><div><b>ЖИЗНЬ</b><div style="font-size:10px;">+20 HP</div></div><button class="up-btn" onclick="upgrade('hp')">+</button></div>
-            <div class="up-row"><div><b>ЛОВКОСТЬ</b><div style="font-size:10px;">+Уворот</div></div><button class="up-btn" onclick="upgrade('agi')">+</button></div>
-            <div class="up-row"><div><b>УДАЧА</b><div style="font-size:10px;">+Ульта</div></div><button class="up-btn" onclick="upgrade('luck')">+</button></div>
+            <div class="up-row"><div><b>ЛОВКОСТЬ</b><div style="font-size:10px;">Уворот</div></div><button class="up-btn" onclick="upgrade('agi')">+</button></div>
+            <div class="up-row"><div><b>УДАЧА</b><div style="font-size:10px;">Ульта</div></div><button class="up-btn" onclick="upgrade('luck')">+</button></div>
+            <button class="btn ready" onclick="closeForge()" style="margin-top:10px;">ЗАКРЫТЬ</button>
         </div>
 
         <div id="info-screen" class="overlay">
@@ -101,7 +95,7 @@
     </div>
 
     <div class="ui">
-        <div class="en-bar">
+        <div class="en-bar" style="width:280px; height:20px; background:#222; margin:0 auto 5px; border-radius:10px; border:1px solid #3498db; overflow:hidden;">
             <div id="en-f" class="fill" style="background: #3498db; width: 0%;"></div>
         </div>
         <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ (SPACE)</button>
@@ -123,7 +117,20 @@
         en: 0, hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null, rage: 0
     };
 
-    function play(f) { new Audio(f + '.mp3').play().catch(()=>{}); }
+    function playMusic() {
+        const audio = document.getElementById('bg-music');
+        const isBoss = s.lvl % 25 === 0;
+        const targetSrc = isBoss ? 'track_boss.mp3' : 'track_normal.mp3';
+        
+        if (audio.getAttribute('data-playing') !== targetSrc) {
+            audio.src = targetSrc;
+            audio.setAttribute('data-playing', targetSrc);
+            audio.play().catch(() => {});
+        }
+    }
+
+    function openForge() { if (s.pts > 0) document.getElementById('upgrade-menu').style.display = 'flex'; }
+    function closeForge() { document.getElementById('upgrade-menu').style.display = 'none'; }
 
     function toggleInfo() {
         document.getElementById('stat-atk').innerText = s.atk;
@@ -135,18 +142,27 @@
     }
 
     let admT;
-    const trig = document.getElementById('admin-trigger');
-    trig.addEventListener('mousedown', () => admT = setTimeout(() => document.getElementById('adm').style.display='block', 2000));
-    trig.addEventListener('mouseup', () => clearTimeout(admT));
+    document.getElementById('admin-trigger').addEventListener('mousedown', () => admT = setTimeout(() => document.getElementById('adm').style.display='block', 2000));
 
     window.addEventListener('keydown', (e) => { if(e.code === 'Space') useSuper(); });
 
     function init() {
         const isB = s.lvl % 25 === 0;
         s.rage = 0;
-        document.getElementById('boss-rage-bar').style.display = isB ? 'block' : 'none';
-        document.getElementById('mob-img').src = isB ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
-        document.getElementById('mob-img').classList.toggle('boss-rage', isB);
+        
+        // Визуал босса
+        const arena = document.getElementById('arena');
+        const mob = document.getElementById('mob-img');
+        
+        if (isB) {
+            arena.classList.add('boss-bg');
+            mob.src = 'mob4.png';
+            document.getElementById('boss-rage-bar').style.display = 'block';
+        } else {
+            arena.classList.remove('boss-bg');
+            mob.src = (s.lvl % 5 === 0) ? 'mob2.png' : 'mob1.png';
+            document.getElementById('boss-rage-bar').style.display = 'none';
+        }
         
         s.maxEHP = (100 + (s.lvl * 35)) * (isB ? 4 : 1);
         s.ehp = s.maxEHP; s.hp = s.maxHP;
@@ -157,7 +173,7 @@
             s.board.push(Math.floor(Math.random() * 5));
             let d = document.createElement('div');
             d.className = 'cell'; d.id = 'c' + i;
-            d.addEventListener('click', () => touch(i));
+            d.addEventListener('click', () => { playMusic(); touch(i); });
             g.appendChild(d);
         }
         draw();
@@ -169,9 +185,8 @@
         if (type === 'hp') s.maxHP += 20;
         if (type === 'luck') s.luck += 1;
         if (type === 'agi') s.agi += 5;
-        s.pts--; save(); 
-        if (s.pts <= 0) { document.getElementById('upgrade-menu').style.display='none'; init(); } 
-        else draw();
+        s.pts--; save(); draw();
+        if (s.pts <= 0) closeForge();
     }
 
     function save() {
@@ -185,4 +200,123 @@
 
     function draw() {
         document.getElementById('lvl-txt').innerText = "LVL " + s.lvl;
-        document.getElementById('pts-
+        const pTxt = document.getElementById('pts-txt');
+        pTxt.innerText = "PTS: " + s.pts;
+        pTxt.className = s.pts > 0 ? 'has-pts' : '';
+        
+        document.getElementById('php').style.width = (s.hp / s.maxHP * 100) + '%';
+        document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
+        document.getElementById('en-f').style.width = s.en + '%';
+        document.getElementById('rage-fill').style.width = s.rage + '%';
+        document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
+        
+        s.board.forEach((t, i) => {
+            const el = document.getElementById('c' + i);
+            el.style.backgroundColor = t === -1 ? '#000' : colors[t];
+            el.style.backgroundImage = t === -1 ? 'none' : `url(${runes[t]})`;
+            el.classList.toggle('sel', s.sel === i);
+        });
+    }
+
+    function spawnDmg(val, isP, crit) {
+        const d = document.createElement('div');
+        d.className = 'dmg-num'; 
+        d.innerText = (val === 0 ? 'DODGE' : '-' + Math.floor(val));
+        d.style.color = val === 0 ? '#3498db' : (crit ? 'orange' : '#ff4d4d');
+        if(crit) d.style.fontSize = '35px';
+        d.style.left = (40 + Math.random() * 20) + '%'; 
+        d.style.top = isP ? '75%' : '35%';
+        document.getElementById('arena').appendChild(d);
+        setTimeout(() => d.remove(), 600);
+    }
+
+    async function touch(i) {
+        if (s.lock) return;
+        if (s.sel === null) { s.sel = i; draw(); }
+        else {
+            let a = s.sel, b = i;
+            if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
+                s.lock = true;
+                [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+                draw();
+                if (!await check()) [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+            }
+            s.sel = null; s.lock = false; draw();
+        }
+    }
+
+    async function check() {
+        let found = false; let combo = 0;
+        while (true) {
+            let del = new Set();
+            for (let i = 0; i < 49; i++) {
+                if (s.board[i] === -1) continue;
+                if (i % 7 < 5 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) {
+                    for(let k=0; k<3; k++) del.add(i+k);
+                }
+                if (i < 35 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) {
+                    for(let k=0; k<3; k++) del.add(i+k*7);
+                }
+            }
+            if (del.size === 0) break;
+            found = true; combo++;
+            let d = del.size * s.atk * combo;
+            s.ehp -= d; spawnDmg(d, false);
+            del.forEach(idx => {
+                if (s.board[idx] === 1) s.en = Math.min(100, s.en + s.luck);
+                s.board[idx] = -1;
+            });
+            draw(); await new Promise(r => setTimeout(r, 200));
+            drop(); draw(); await new Promise(r => setTimeout(r, 200));
+        }
+        if (found) {
+            if (s.ehp <= 0) { 
+                s.lvl++; s.pts += (s.lvl-1 % 25 === 0 ? 5 : 1); save();
+                init(); // Автоматический переход к следующему мобу
+            } else enemy();
+        }
+        return found;
+    }
+
+    function drop() {
+        for (let c = 0; c < 7; c++) {
+            let empty = 0;
+            for (let r = 6; r >= 0; r--) {
+                let i = r * 7 + c;
+                if (s.board[i] === -1) empty++;
+                else if (empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
+            }
+            for (let r = 0; r < empty; r++) s.board[r*7+c] = Math.floor(Math.random() * 5);
+        }
+    }
+
+    function enemy() {
+        if (Math.random() < (1 - (100 / (100 + s.agi)))) {
+            spawnDmg(0, true); return; 
+        }
+        
+        let isBoss = s.lvl % 25 === 0;
+        let dmg = 5 + Math.floor(s.lvl/5);
+        let isCrit = false;
+
+        if (isBoss) {
+            s.rage += 20;
+            if (s.rage >= 100) { dmg *= 3; s.rage = 0; isCrit = true; }
+        }
+
+        s.hp -= dmg; spawnDmg(dmg, true, isCrit);
+        if (s.hp <= 0) { alert("Game Over!"); location.reload(); }
+        draw();
+    }
+
+    async function useSuper() {
+        if (s.en < 100 || s.lock) return;
+        s.lock = true; s.en = 0; 
+        s.ehp -= (s.atk * 20); spawnDmg(s.atk * 20, false, true);
+        for (let i = 0; i < 15; i++) s.board[Math.floor(Math.random()*49)] = -1;
+        draw(); await new Promise(r => setTimeout(r, 300));
+        drop(); await check(); s.lock = false;
+    }
+</script>
+</body>
+</html>
