@@ -17,7 +17,7 @@
         /* Игровая зона */
         .arena { max-width: 500px; height: 250px; margin: 0 auto; position: relative; background: #080808; overflow: hidden; border-bottom: 2px solid #222; }
         .boss-active { background: radial-gradient(circle at center, #700 0%, #000 100%) !important; }
-        #mob-img { height: 150px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 5; filter: drop-shadow(0 0 10px #000); }
+        #mob-img { height: 160px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 5; filter: drop-shadow(0 0 15px #000); transition: all 0.5s; }
         
         .bar-wrap { width: 92%; height: 18px; background: #222; margin: 8px auto; border-radius: 9px; border: 1px solid #444; overflow: hidden; position: relative; z-index: 10; }
         .bar-fill { height: 100%; width: 100%; transition: 0.5s cubic-bezier(0.1, 0.9, 0.2, 1); }
@@ -31,12 +31,12 @@
         .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-position: center; background-color: #222; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; box-sizing: border-box; }
         .selected { border: 3px solid #fff; box-shadow: 0 0 20px #fff; transform: scale(0.8); z-index: 50; position: relative; }
 
-        /* Оверлеи (Меню) */
+        /* Оверлеи */
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 1000; display: none; flex-direction: column; justify-content: flex-start; align-items: center; backdrop-filter: blur(8px); overflow-y: auto; padding: 40px 0; box-sizing: border-box; }
         .menu-btn { width: 240px; padding: 18px; margin: 12px; border: none; border-radius: 10px; background: #252525; color: #fff; font-weight: bold; font-size: 18px; cursor: pointer; border: 1px solid #444; transition: 0.3s; flex-shrink: 0; }
         .buy-btn { background: var(--accent) !important; color: #000 !important; border: none; }
         
-        /* Всплывающий урон */
+        /* Эффекты урона */
         .dmg-text { position: absolute; font-size: 32px; font-weight: 900; pointer-events: none; animation: flyUp 0.8s ease-out forwards; z-index: 200; text-shadow: 3px 3px #000; }
         @keyframes flyUp { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -100px); } }
 
@@ -56,9 +56,7 @@
 
     <div class="arena" id="arena">
         <div class="bar-wrap"><div id="hp-e" class="bar-fill" style="background:var(--red)"></div></div>
-        
         <div id="boss-super-wrap"><div id="boss-en-fill"></div></div>
-
         <img id="mob-img" src="mob1.png">
         <div class="bar-wrap"><div id="hp-p" class="bar-fill" style="background:var(--accent)"></div></div>
 
@@ -80,8 +78,10 @@
         <div id="admin-menu" class="overlay">
             <h1 style="color:var(--red)">MODERATOR</h1>
             <button class="menu-btn" onclick="addCheatPts()">+100 PTS</button>
-            <button class="menu-btn" onclick="goToBoss()">УРОВЕНЬ 25 (BOSS)</button>
-            <button class="menu-btn" onclick="localStorage.clear(); location.reload();">СБРОСИТЬ СОХРАНЕНИЯ</button>
+            <button class="menu-btn" onclick="changeLvl(25)">BOSS Lvl 25</button>
+            <button class="menu-btn" onclick="changeLvl(50)">BOSS Lvl 50</button>
+            <button class="menu-btn" onclick="changeLvl(75)">BOSS Lvl 75</button>
+            <button class="menu-btn" onclick="localStorage.clear(); location.reload();">СБРОСИТЬ ВСЁ</button>
             <button class="menu-btn" onclick="closeMenus()">ЗАКРЫТЬ</button>
         </div>
     </div>
@@ -98,16 +98,12 @@
 <script>
     // --- ЗВУКИ ---
     const audio = {
-        click: new Audio('click.mp3'),
-        match: new Audio('match.mp3'),
-        hit: new Audio('hit.mp3'),
-        win: new Audio('win.mp3'),
-        super: new Audio('super.mp3'),
-        bg: new Audio('track_normal.mp3'),
+        click: new Audio('click.mp3'), match: new Audio('match.mp3'),
+        hit: new Audio('hit.mp3'), win: new Audio('win.mp3'),
+        super: new Audio('super.mp3'), bg: new Audio('track_normal.mp3'),
         bgBoss: new Audio('track_boss.mp3')
     };
-    audio.bg.loop = true;
-    audio.bgBoss.loop = true;
+    audio.bg.loop = true; audio.bgBoss.loop = true;
 
     // --- ДАННЫЕ ---
     let state = {
@@ -116,14 +112,8 @@
         mHP: parseInt(localStorage.getItem('v_mhp')) || 100,
         agi: parseInt(localStorage.getItem('v_agi')) || 5,
         pts: parseInt(localStorage.getItem('v_pts')) || 0,
-        hp: 100, ehp: 100, mehp: 100,
-        en: 0,
-        bossEn: 0, // Энергия ярости босса
-        board: [],
-        sel: null,
-        isA: false,
-        lock: false,
-        adminHits: 0
+        hp: 100, ehp: 100, mehp: 100, en: 0, bossEn: 0,
+        board: [], sel: null, isA: false, lock: false, adminHits: 0
     };
 
     function unlockAudioContext() {
@@ -135,13 +125,8 @@
     function updateMusic() {
         if (!state.isA) return;
         const isB = state.lvl % 25 === 0;
-        if (isB) { 
-            audio.bg.pause(); 
-            audio.bgBoss.play().catch(()=>{}); 
-        } else { 
-            audio.bgBoss.pause(); 
-            audio.bg.play().catch(()=>{}); 
-        }
+        if (isB) { audio.bg.pause(); audio.bgBoss.play().catch(()=>{}); } 
+        else { audio.bgBoss.pause(); audio.bg.play().catch(()=>{}); }
     }
 
     function init() {
@@ -151,20 +136,34 @@
         const bossBar = document.getElementById('boss-super-wrap');
 
         arena.classList.toggle('boss-active', isB);
-        mob.src = isB ? 'mob4.png' : (state.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
         
-        // Показ/скрытие шкалы ульты босса
+        // --- ЛОГИКА ГЕНЕРАЦИИ МОБОВ 1-75 ---
+        let mobName = "mob1.png"; // По умолчанию
+        
+        if (isB) {
+            // Боссы каждые 25 уровней
+            if (state.lvl === 25) mobName = "boss1.png";
+            else if (state.lvl === 50) mobName = "boss2.png";
+            else if (state.lvl === 75) mobName = "boss3.png";
+        } else {
+            // Обычные мобы и мини-боссы (каждые 5 уровней)
+            let step = Math.floor((state.lvl - 1) / 5); 
+            // Это даст нам индекс от 0 до 14 для уровней до 75
+            // Мобы: mob1, mob2 ... mob15
+            mobName = `mob${step + 1}.png`;
+        }
+        
+        mob.src = mobName;
         bossBar.style.display = isB ? 'block' : 'none';
         state.bossEn = 0;
 
-        state.mehp = (100 + (state.lvl * 40)) * (isB ? 4 : 1);
+        state.mehp = (100 + (state.lvl * 45)) * (isB ? 5 : 1);
         state.ehp = state.mehp;
         state.hp = state.mHP;
 
         const g = document.getElementById('grid');
         g.innerHTML = '';
         state.board = [];
-
         for (let i = 0; i < 49; i++) {
             const type = Math.floor(Math.random() * 5);
             state.board.push(type);
@@ -182,12 +181,8 @@
     function handleInput(i) {
         if (state.lock) return;
         if (state.isA) { audio.click.currentTime = 0; audio.click.play(); }
-
-        if (state.sel === null) {
-            state.sel = i;
-        } else {
-            const a = state.sel;
-            const b = i;
+        if (state.sel === null) { state.sel = i; } else {
+            const a = state.sel; const b = i;
             if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
                 [state.board[a], state.board[b]] = [state.board[b], state.board[a]];
                 processMatches();
@@ -200,7 +195,6 @@
     async function processMatches() {
         state.lock = true;
         let del = new Set();
-
         for (let i = 0; i < 49; i++) {
             if (i % 7 < 5 && state.board[i] !== -1 && state.board[i] === state.board[i+1] && state.board[i] === state.board[i+2]) {
                 del.add(i); del.add(i+1); del.add(i+2);
@@ -209,18 +203,15 @@
                 del.add(i); del.add(i+7); del.add(i+14);
             }
         }
-
         if (del.size > 0) {
             if (state.isA) { audio.match.currentTime = 0; audio.match.play(); }
             let dmg = del.size * state.atk;
             state.ehp -= dmg;
             popDmg(dmg, false);
-
             del.forEach(idx => {
                 if (state.board[idx] === 1) state.en = Math.min(100, state.en + 7);
                 state.board[idx] = -1;
             });
-
             draw();
             await new Promise(r => setTimeout(r, 300));
             gravity();
@@ -229,11 +220,7 @@
             processMatches();
         } else {
             state.lock = false;
-            if (state.ehp <= 0) {
-                win();
-            } else {
-                enemyTurn();
-            }
+            if (state.ehp <= 0) win(); else enemyTurn();
         }
     }
 
@@ -243,45 +230,31 @@
             for (let r = 6; r >= 0; r--) {
                 let i = r * 7 + c;
                 if (state.board[i] === -1) empty++;
-                else if (empty > 0) {
-                    state.board[i + empty * 7] = state.board[i];
-                    state.board[i] = -1;
-                }
+                else if (empty > 0) { state.board[i + empty * 7] = state.board[i]; state.board[i] = -1; }
             }
-            for (let r = 0; r < empty; r++) {
-                state.board[r * 7 + c] = Math.floor(Math.random() * 5);
-            }
+            for (let r = 0; r < empty; r++) state.board[r * 7 + c] = Math.floor(Math.random() * 5);
         }
     }
 
     function enemyTurn() {
         const isB = state.lvl % 25 === 0;
         let evade = Math.random() * 100 < Math.min(state.agi, 45);
-        
         if (evade) {
             popDmg("MISS", true);
-            // Даже если промах, босс злится (+10 энергии)
-            if (isB) state.bossEn = Math.min(100, state.bossEn + 10);
+            if (isB) state.bossEn = Math.min(100, state.bossEn + 15);
         } else {
-            let dmg = 5 + Math.floor(state.lvl / 3.5);
-            
-            // Если босс на 25 уровне и накопил ульту
+            let dmg = 5 + Math.floor(state.lvl / 3);
             if (isB && state.bossEn >= 100) {
-                dmg *= 2.5; 
-                state.bossEn = 0;
-                popDmg("БОСС КРИТ!", true);
+                dmg *= 2.5; state.bossEn = 0; popDmg("БОСС CRIT!", true);
             } else if (isB) {
                 state.bossEn = Math.min(100, state.bossEn + 20);
             }
-
             state.hp -= Math.floor(dmg);
             if (state.isA) { audio.hit.currentTime = 0; audio.hit.play(); }
             popDmg(Math.floor(dmg), true);
-            
             if (state.hp <= 0) {
-                alert("Твоё путешествие окончено. Уровень: " + state.lvl);
-                localStorage.clear();
-                location.reload();
+                alert("Поражение! Уровень: " + state.lvl);
+                localStorage.clear(); location.reload();
             }
         }
         draw();
@@ -291,7 +264,7 @@
         if (state.isA) audio.win.play();
         state.lvl++;
         if (state.lvl % 3 === 0) state.pts++;
-        if ((state.lvl - 1) % 25 === 0) state.pts += 3;
+        if ((state.lvl - 1) % 25 === 0) state.pts += 5;
         save();
         init();
     }
@@ -300,18 +273,12 @@
         document.getElementById('lvl-val').innerText = state.lvl;
         document.getElementById('pts-val').innerText = state.pts;
         document.getElementById('pts-txt').className = state.pts > 0 ? 'has-pts' : '';
-        
         document.getElementById('hp-e').style.width = Math.max(0, (state.ehp / state.mehp * 100)) + '%';
         document.getElementById('hp-p').style.width = Math.max(0, (state.hp / state.mHP * 100)) + '%';
         document.getElementById('en-fill').style.width = state.en + '%';
-        
-        // Отрисовка шкалы босса
         document.getElementById('boss-en-fill').style.width = state.bossEn + '%';
-
         const sBtn = document.getElementById('super-btn');
-        if (state.en >= 100) sBtn.classList.add('ready');
-        else sBtn.classList.remove('ready');
-
+        if (state.en >= 100) sBtn.classList.add('ready'); else sBtn.classList.remove('ready');
         state.board.forEach((type, i) => {
             const cell = document.getElementById('c-' + i);
             cell.style.backgroundImage = type === -1 ? 'none' : `url(rune${type + 1}.png)`;
@@ -325,44 +292,32 @@
         d.className = 'dmg-text';
         d.innerText = (typeof v === 'number' ? '-' : '') + v;
         d.style.color = p ? 'var(--red)' : 'var(--gold)';
-        d.style.left = '50%';
-        d.style.top = p ? '70%' : '30%';
+        d.style.left = '50%'; d.style.top = p ? '70%' : '30%';
         document.getElementById('arena').appendChild(d);
         setTimeout(() => d.remove(), 800);
     }
 
-    function openForge() {
-        document.getElementById('forge-menu').style.display = 'flex';
-    }
-
+    function openForge() { document.getElementById('forge-menu').style.display = 'flex'; }
     function openInfo() {
-        document.getElementById('hero-stats').innerHTML = `АТАКА: ${state.atk}<br>ЗДОРОВЬЕ: ${state.mHP}<br>ЛОВКОСТЬ: ${state.agi}<br>УРОВЕНЬ: ${state.lvl}<br>PTS: ${state.pts}`;
+        document.getElementById('hero-stats').innerHTML = `АТАКА: ${state.atk}<br>ЗДОРОВЬЕ: ${state.mHP}<br>ЛОВКОСТЬ: ${state.agi}%<br>УРОВЕНЬ: ${state.lvl}<br>PTS: ${state.pts}`;
         document.getElementById('info-menu').style.display = 'flex';
     }
-
-    function closeMenus() {
-        document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none');
-    }
+    function closeMenus() { document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); }
 
     function buyStat(t) {
         if (state.pts <= 0) return;
         if (t === 'atk') state.atk += 2;
         if (t === 'hp') { state.mHP += 20; state.hp += 20; }
         if (t === 'agi') state.agi += 1;
-        state.pts--;
-        save();
-        draw();
+        state.pts--; save(); draw();
     }
 
     function adminClick() {
         state.adminHits++;
-        if(state.adminHits >= 5) {
-            state.adminHits = 0;
-            document.getElementById('admin-menu').style.display = 'flex';
-        }
+        if(state.adminHits >= 5) { state.adminHits = 0; document.getElementById('admin-menu').style.display = 'flex'; }
     }
     function addCheatPts() { state.pts += 100; save(); draw(); }
-    function goToBoss() { state.lvl = 25; save(); init(); closeMenus(); }
+    function changeLvl(l) { state.lvl = l; save(); init(); closeMenus(); }
 
     function activateSuper() {
         if (state.en < 100) return;
