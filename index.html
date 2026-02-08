@@ -19,12 +19,11 @@
         .boss-active { background: radial-gradient(circle at center, #700 0%, #000 100%) !important; }
         #mob-img { height: 150px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 5; filter: drop-shadow(0 0 10px #000); }
         
-        /* Шкалы здоровья */
         .bar-wrap { width: 92%; height: 18px; background: #222; margin: 8px auto; border-radius: 9px; border: 1px solid #444; overflow: hidden; position: relative; z-index: 10; }
         .bar-fill { height: 100%; width: 100%; transition: 0.5s cubic-bezier(0.1, 0.9, 0.2, 1); }
 
-        /* Шкала ульты БОССА */
-        #boss-super-wrap { width: 70%; height: 8px; background: #111; margin: -5px auto 5px; border-radius: 4px; border: 1px solid #444; overflow: hidden; display: none; }
+        /* Шкала ярости босса */
+        #boss-super-wrap { width: 70%; height: 8px; background: #111; margin: -5px auto 5px; border-radius: 4px; border: 1px solid #444; overflow: hidden; display: none; position: relative; z-index: 11; }
         #boss-en-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.3s; }
 
         /* Поле боя */
@@ -41,5 +40,6 @@
         .dmg-text { position: absolute; font-size: 32px; font-weight: 900; pointer-events: none; animation: flyUp 0.8s ease-out forwards; z-index: 200; text-shadow: 3px 3px #000; }
         @keyframes flyUp { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -100px); } }
 
-        /* Ульта Игрока */
+        /* Ульта */
         .super-container { width: 310px; margin: 10px auto; }
+        #super-btn { width: 100%; padding: 15px; background: #222; color: #666; border: 2px solid #333; border-
