@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Hardcore Edition</title>
+    <title>Viking Saga: Hardcore & Recovery</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
-        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 12px; }
+        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 12px; position: relative; z-index: 1001; }
         #exp-bar { width: 100%; height: 3px; background: #222; }
         #exp-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.3s; }
 
@@ -28,8 +28,6 @@
         .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; }
         .selected { outline: 3px solid #fff; z-index: 20; background-color: #333; }
         
-        .frozen { border: 2px solid var(--blue); filter: brightness(0.6) grayscale(0.5); }
-        .light { border: 2px solid var(--gold); box-shadow: inset 0 0 10px var(--gold); }
         .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: #fff; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #fff; font-weight: bold; }
 
         #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; }
@@ -39,7 +37,7 @@
         .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 80%; }
         .menu-btn { width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; background: var(--accent); color: #000; cursor: pointer; }
         
-        #death-screen { background: radial-gradient(circle, #200, #000); text-align: center; }
+        #death-screen { background: rgba(20, 0, 0, 0.98); z-index: 999; }
         .dmg-text { position: absolute; font-size: 24px; font-weight: bold; animation: fly 1s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; color: var(--gold); }
         @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
     </style>
@@ -47,14 +45,13 @@
 <body>
 
     <div id="death-screen" class="overlay">
-        <h1 style="color:var(--red); font-size: 40px;">ВЫ ПАЛИ В БОЮ</h1>
-        <p>Вальхалла закрыта. Возвращение через:</p>
+        <h1 style="color:var(--red); font-size: 30px; margin-bottom: 10px;">ВЫ ПАЛИ В БОЮ</h1>
+        <p>Вальхалла закрыта на:</p>
         <h2 id="ban-timer" style="font-size: 32px; color:var(--gold)">60:00</h2>
-        <p style="font-size: 12px; color: #666;">(Вы потеряли 10% опыта текущего уровня)</p>
     </div>
 
     <div class="header">
-        <div style="color:var(--gold)" onclick="admTrig()">STG: <span id="lvl">1</span></div>
+        <div style="color:var(--gold); padding: 5px;" onclick="admTrig()">STG: <span id="lvl">1</span></div>
         <div style="color:var(--purple)">HERO: <span id="h-lvl">1</span></div>
         <div onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: <span id="pts-val">0</span></div>
     </div>
@@ -78,9 +75,9 @@
         <button id="thor-btn" onclick="useThor()">МОЛОТ ТОРА</button>
     </div>
 
-    <div id="admin-overlay" class="overlay">
+    <div id="admin-overlay" class="overlay" style="z-index: 2000;">
         <div class="card">
-            <h3 style="margin:0 0 10px 0">АДМИН-ПАНЕЛЬ</h3>
+            <h3 style="margin:0 0 10px 0">ОДИН ПОМОЖЕТ</h3>
             <input type="number" id="jump-lvl" placeholder="Этап" style="width:90%; padding:10px; margin-bottom:10px;">
             <button class="menu-btn" onclick="jumpTo()">ПЕРЕЙТИ</button>
             <button class="menu-btn" onclick="resurrect()" style="background:var(--blue); color:#fff">ВОСКРЕСИТЬ (СНЯТЬ БАН)</button>
@@ -88,7 +85,7 @@
         </div>
     </div>
 
-    <div id="f-menu" class="overlay"><div class="card"><h2 style="color:var(--gold)">КУЗНИЦА</h2><button class="menu-btn" onclick="buy('atk')">УРОН +2</button><button class="menu-btn" onclick="buy('hp')">ОЗ +20</button><button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ +1%</button><button class="menu-btn" onclick="closeO()" style="background:#444; color:#fff">ЗАКРЫТЬ</button></div></div>
+    <div id="f-menu" class="overlay"><div class="card"><h2>КУЗНИЦА</h2><button class="menu-btn" onclick="buy('atk')">УРОН +2</button><button class="menu-btn" onclick="buy('hp')">ОЗ +20</button><button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ +1%</button><button class="menu-btn" onclick="closeO()">ЗАКРЫТЬ</button></div></div>
 
 <script>
     let st = {
@@ -125,7 +122,7 @@
         if (checkBan()) return;
         const isB = st.lvl % 25 === 0;
         st.mehp = isB ? (100 + st.lvl * 75) * 6 : 100 + st.lvl * 75;
-        st.ehp = st.mehp; st.hp = st.mHP; st.eSkill = 0; st.mExp = st.hLvl * 600;
+        st.ehp = st.mehp; st.eSkill = 0; st.mExp = st.hLvl * 600;
         document.getElementById('m-icon').src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
         document.getElementById('e-skill-wrap').style.visibility = isB ? 'visible' : 'hidden';
         
@@ -293,6 +290,7 @@
 
     function resurrect() {
         st.banUntil = 0;
+        st.hp = st.mHP;
         save();
         document.getElementById('death-screen').style.display = 'none';
         init();
@@ -316,16 +314,33 @@
         document.body.appendChild(p); setTimeout(() => p.remove(), 1000);
     }
 
-    function win() { st.lvl++; st.pts++; save(); init(); }
+    function win() {
+        st.lvl++;
+        st.pts++;
+        // Восстановление 15% ХП после победы
+        let heal = Math.floor(st.mHP * 0.15);
+        st.hp = Math.min(st.mHP, st.hp + heal);
+        pop("+"+heal+" HP");
+        save(); init();
+    }
+
     function save() { 
         localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_hlvl', st.hLvl); localStorage.setItem('v_exp', st.exp);
         localStorage.setItem('v_atk', st.atk); localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi); 
         localStorage.setItem('v_pts', st.pts); localStorage.setItem('v_ban', st.banUntil);
     }
-    function admTrig() { st.adm++; if(st.adm>=5) { st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
+
+    function admTrig() { 
+        st.adm++; 
+        if(st.adm>=5) { 
+            st.adm=0; 
+            document.getElementById('admin-overlay').style.display='flex'; 
+        } 
+    }
+
     function jumpTo() { let l = parseInt(document.getElementById('jump-lvl').value); if(l>0){ st.lvl=l; save(); init(); closeO(); } }
     function openF() { document.getElementById('f-menu').style.display='flex'; }
-    function closeO() { document.querySelectorAll('.overlay').forEach(e => e.style.display='none'); }
+    function closeO() { document.querySelectorAll('.overlay').forEach(e => { if(e.id !== 'death-screen') e.style.display='none'; }); }
     function buy(t) { if(st.pts>0){ if(t==='atk')st.atk+=2; if(t==='hp'){st.mHP+=20;st.hp+=20} if(t==='agi')st.agi++; st.pts--; draw(); save(); } }
 
     init();
