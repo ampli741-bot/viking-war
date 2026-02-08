@@ -3,41 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Back to Basics</title>
+    <title>Viking Saga: Fixed</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; user-select: none; touch-action: manipulation; }
         
-        .header { background: #1a1a1a; padding: 10px; display: flex; justify-content: space-around; border-bottom: 2px solid #333; }
-        #pts-txt { color: var(--accent); cursor: pointer; font-weight: bold; border: 1px solid transparent; padding: 2px 5px; }
-        .has-pts { border-color: var(--accent) !important; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
+        .header { background: #1a1a1a; padding: 10px; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #333; }
+        #pts-txt { color: var(--accent); cursor: pointer; font-weight: bold; padding: 5px; border: 1px solid transparent; border-radius: 4px; }
+        .has-pts { border-color: var(--accent); animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.4; } }
 
-        .arena { height: 220px; position: relative; background: #050505; overflow: hidden; }
-        .boss-bg { background: radial-gradient(circle, #500, #000) !important; }
-        #mob-img { height: 130px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; }
+        .arena { height: 230px; position: relative; background: #050505; overflow: hidden; transition: background 0.5s; }
+        .boss-bg { background: radial-gradient(circle, #600, #000) !important; }
+        #mob-img { height: 130px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; }
         
-        .hp-bar { width: 90%; height: 12px; background: #222; margin: 5px auto; border-radius: 6px; overflow: hidden; border: 1px solid #444; }
-        .fill { height: 100%; width: 100%; transition: 0.2s; }
+        .hp-bar { width: 90%; height: 14px; background: #222; margin: 5px auto; border-radius: 7px; overflow: hidden; border: 1px solid #444; position: relative; z-index: 10; }
+        .fill { height: 100%; width: 100%; transition: 0.3s; }
 
-        #grid { width: 322px; margin: 10px auto; line-height: 0; background: #111; padding: 5px; border-radius: 8px; }
-        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-color: #222; border-radius: 4px; cursor: pointer; box-sizing: border-box; }
-        .sel { border: 3px solid #fff; transform: scale(0.9); }
+        #grid { width: 322px; margin: 10px auto; display: block; background: #111; padding: 5px; border-radius: 10px; border: 2px solid #444; font-size: 0; }
+        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #222; border-radius: 6px; cursor: pointer; box-sizing: border-box; }
+        .sel { border: 3px solid #fff; transform: scale(0.9); box-shadow: 0 0 10px #fff; }
 
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .btn { width: 180px; padding: 12px; margin: 5px; border: none; border-radius: 5px; background: #444; color: #fff; font-weight: bold; cursor: pointer; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .btn { width: 220px; padding: 12px; margin: 8px; border: none; border-radius: 6px; background: #444; color: #fff; font-weight: bold; cursor: pointer; }
         .ready { background: var(--accent) !important; }
 
-        .dmg { position: absolute; font-weight: bold; font-size: 22px; color: #ff4d4d; animation: fly 0.6s forwards; z-index: 50; }
-        @keyframes fly { 100% { transform: translateY(-50px); opacity: 0; } }
+        .dmg { position: absolute; font-weight: 900; font-size: 26px; color: #ff4d4d; animation: fly 0.7s forwards; z-index: 50; text-shadow: 2px 2px #000; }
+        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-70px); } }
     </style>
 </head>
-<body onclick="startAudio()">
+<body onclick="initAudio()">
 
     <div class="header">
-        <span id="lvl-txt">LVL 1</span>
-        <span id="pts-txt" onclick="showForge()">PTS: 0</span>
-        <span onclick="showInfo()" style="cursor:pointer; color:var(--gold)">[ГЕРОЙ]</span>
+        <span id="lvl-txt" style="color:var(--gold)">LVL 1</span>
+        <span id="pts-txt" onclick="openForge()">PTS: 0</span>
+        <span onclick="openInfo()" style="cursor:pointer; color:var(--gold)">ГЕРОЙ</span>
     </div>
 
     <div class="arena" id="arena">
@@ -45,29 +45,31 @@
         <img id="mob-img" src="mob1.png">
         <div class="hp-bar"><div id="php" class="fill" style="background:#2ecc71"></div></div>
 
-        <div id="forge" class="overlay">
+        <div id="forge-menu" class="overlay">
             <h2 style="color:var(--gold)">КУЗНИЦА</h2>
-            <button class="btn ready" onclick="upgrade('atk')">АТАКА +2</button>
-            <button class="btn ready" onclick="upgrade('hp')">ЖИЗНЬ +20</button>
-            <button class="btn" onclick="hideOverlays()">В БОЙ</button>
+            <button class="btn ready" onclick="buy('atk')">СИЛА АТАКИ (+2)</button>
+            <button class="btn ready" onclick="buy('hp')">МАКС. ЖИЗНЬ (+20)</button>
+            <button class="btn" onclick="closeAll()">ЗАКРЫТЬ</button>
         </div>
 
-        <div id="info" class="overlay">
-            <h2 style="color:var(--gold)">СТАТЫ</h2>
-            <div id="stats-box"></div>
-            <button class="btn ready" onclick="hideOverlays()">ЗАКРЫТЬ</button>
+        <div id="info-menu" class="overlay">
+            <h2 style="color:var(--gold)">ВАШ ГЕРОЙ</h2>
+            <p id="stats-text"></p>
+            <button class="btn ready" onclick="closeAll()">В БОЙ</button>
         </div>
     </div>
 
     <div id="grid"></div>
     
     <div style="padding: 10px;">
-        <button id="s-btn" class="btn" style="width:310px" onclick="superAttack()">МОЛОТ ТОРА</button>
+        <button id="s-btn" class="btn" style="width:310px; background:#3498db" onclick="useSuper()">УДАР МОЛОТОМ</button>
     </div>
 
 <script>
-    // Настройки звуков из ТВОИХ файлов
-    const sounds = {
+    // Массив путей к картинкам
+    const runeImages = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
+    
+    const sfx = {
         click: new Audio('click.mp3'),
         match: new Audio('match.mp3'),
         hit: new Audio('hit.mp3'),
@@ -76,8 +78,6 @@
         m_norm: new Audio('track_normal.mp3'),
         m_boss: new Audio('track_boss.mp3')
     };
-    sounds.m_norm.loop = true;
-    sounds.m_boss.loop = true;
 
     let s = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
@@ -87,17 +87,19 @@
         hp: 100, ehp: 100, mEHP: 100, board: [], sel: null, en: 0, audio: false
     };
 
-    function startAudio() {
+    function initAudio() {
         if(s.audio) return;
         s.audio = true;
-        playMusic();
+        sfx.m_norm.loop = true;
+        sfx.m_boss.loop = true;
+        playBGM();
     }
 
-    function playMusic() {
+    function playBGM() {
         if(!s.audio) return;
         const isB = s.lvl % 25 === 0;
-        if(isB) { sounds.m_norm.pause(); sounds.m_boss.play().catch(()=>{}); }
-        else { sounds.m_boss.pause(); sounds.m_norm.play().catch(()=>{}); }
+        if(isB) { sfx.m_norm.pause(); sfx.m_boss.play().catch(()=>{}); }
+        else { sfx.m_boss.pause(); sfx.m_norm.play().catch(()=>{}); }
     }
 
     function init() {
@@ -105,7 +107,7 @@
         document.getElementById('arena').classList.toggle('boss-bg', isB);
         document.getElementById('mob-img').src = isB ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
         
-        s.mEHP = (100 + (s.lvl * 25)) * (isB ? 4 : 1);
+        s.mEHP = (100 + (s.lvl * 30)) * (isB ? 4 : 1);
         s.ehp = s.mEHP; s.hp = s.mHP;
         
         const g = document.getElementById('grid');
@@ -113,78 +115,17 @@
         for (let i = 0; i < 49; i++) {
             s.board.push(Math.floor(Math.random() * 5));
             let d = document.createElement('div');
-            d.className = 'cell'; d.id = 'c'+i;
-            d.onclick = () => { if(s.audio) sounds.click.play(); clickCell(i); };
+            d.className = 'cell'; d.id = 'c' + i;
+            d.onclick = () => { if(s.audio) sfx.click.play(); touch(i); };
             g.appendChild(d);
         }
-        playMusic();
+        playBGM();
         draw();
     }
 
-    function clickCell(i) {
+    function touch(i) {
         if (s.sel === null) { s.sel = i; } 
         else {
             let a = s.sel, b = i;
             if (Math.abs(a-b) === 1 || Math.abs(a-b) === 7) {
                 [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
-                match();
-            }
-            s.sel = null;
-        }
-        draw();
-    }
-
-    async function match() {
-        let find = false;
-        let del = new Set();
-        for(let i=0; i<49; i++) {
-            if(i%7 < 5 && s.board[i]===s.board[i+1] && s.board[i]===s.board[i+2]) { del.add(i); del.add(i+1); del.add(i+2); }
-            if(i < 35 && s.board[i]===s.board[i+7] && s.board[i]===s.board[i+14]) { del.add(i); del.add(i+7); del.add(i+14); }
-        }
-        if(del.size > 0) {
-            find = true;
-            if(s.audio) sounds.match.play();
-            let d = del.size * s.atk;
-            s.ehp -= d; showDmg(d, false);
-            del.forEach(idx => { if(s.board[idx]===1) s.en = Math.min(100, s.en+5); s.board[idx] = -1; });
-            draw();
-            await new Promise(r => setTimeout(r, 250));
-            drop();
-            match();
-        } else {
-            if(s.ehp <= 0) {
-                if(s.audio) sounds.win.play();
-                s.lvl++;
-                if(s.lvl % 3 === 0) s.pts++;
-                if((s.lvl-1)%25 === 0) s.pts += 3;
-                save(); init();
-            } else enemy();
-        }
-    }
-
-    function enemy() {
-        let d = 5 + Math.floor(s.lvl/5);
-        s.hp -= d; if(s.audio) sounds.hit.play(); showDmg(d, true);
-        if(s.hp <= 0) { alert("Game Over!"); location.reload(); }
-        draw();
-    }
-
-    function drop() {
-        for(let c=0; c<7; c++) {
-            let empty = 0;
-            for(let r=6; r>=0; r--) {
-                let i = r*7+c;
-                if(s.board[i] === -1) empty++;
-                else if(empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
-            }
-            for(let r=0; r<empty; r++) s.board[r*7+c] = Math.floor(Math.random()*5);
-        }
-        draw();
-    }
-
-    function draw() {
-        document.getElementById('lvl-txt').innerText = "LVL " + s.lvl;
-        document.getElementById('pts-txt').innerText = "PTS: " + s.pts;
-        document.getElementById('pts-txt').className = s.pts > 0 ? 'has-pts' : '';
-        document.getElementById('ehp').style.width = (s.ehp/s.mEHP*100)+'%';
-        document.getElementById('php').style.width = (s.hp/s
