@@ -3,142 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: RPG Stats Edition</title>
+    <title>Viking Saga: Master Strategy</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; }
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
-        /* Шапка */
-        .header { background: #111; height: 40px; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #333; flex-shrink: 0; }
+        /* Компактная шапка */
+        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; flex-shrink: 0; }
         
-        /* АРЕНА (Верхняя часть) */
+        /* АРЕНА (Минимум пустоты, максимум иконок) */
         .arena { 
-            height: 35vh; position: relative; 
-            background: linear-gradient(to bottom, #000 0%, #1a1a1a 100%);
-            border-bottom: 2px solid #444; overflow: hidden; flex-shrink: 0;
-            display: flex; flex-direction: column; justify-content: space-between;
+            height: 25vh; position: relative; 
+            background: #0a0a0a; border-bottom: 2px solid #444; overflow: hidden; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
         }
 
-        .duel-ui { display: flex; justify-content: space-between; padding: 10px; z-index: 10; }
+        .char-box { width: 45%; cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 10; }
+        .p-icon { width: 90px; height: 90px; border-radius: 10px; border: 3px solid #555; background: #111; object-fit: cover; }
         
-        /* Блоки персонажей */
-        .char-box { width: 140px; cursor: pointer; transition: transform 0.2s; }
-        .char-box:active { transform: scale(0.95); }
-        
-        .p-icon { width: 75px; height: 75px; border-radius: 12px; border: 3px solid #555; background: #111; object-fit: cover; }
-        
-        /* Крупные полоски жизни */
-        .hp-bar-bg { width: 100%; height: 22px; background: #222; border-radius: 11px; margin-top: 5px; border: 2px solid #444; overflow: hidden; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .hp-bar-fill { height: 100%; width: 100%; transition: 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67); box-shadow: inset 0 0 10px rgba(255,255,255,0.3); }
-        .hp-text { position: absolute; width: 100%; left: 0; top: 0; font-size: 12px; line-height: 22px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+        .hp-bar-bg { width: 100%; height: 20px; background: #222; border-radius: 4px; margin-top: 4px; border: 1px solid #444; position: relative; overflow: hidden; }
+        .hp-bar-fill { height: 100%; width: 100%; transition: 0.3s; }
+        .hp-text { position: absolute; width: 100%; left: 0; top: 0; font-size: 11px; line-height: 20px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
 
-        /* Центр арены */
-        #main-mob { height: 130px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 5; filter: drop-shadow(0 0 15px #000); }
+        /* Опыт под героем */
+        .xp-bar-bg { width: 100%; height: 4px; background: #111; margin-top: 2px; border-radius: 2px; overflow: hidden; }
+        .xp-bar-fill { height: 100%; background: var(--blue); width: 0%; transition: 0.3s; }
 
-        /* ГЕЙМПЛЕЙ (Нижняя часть 60%) */
-        .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; padding: 10px 0; }
+        #main-mob { height: 110px; position: absolute; left: 50%; transform: translateX(-50%); z-index: 5; filter: drop-shadow(0 0 10px #000); opacity: 0.8; }
+
+        /* ГЕЙМПЛЕЙ (Нижняя часть 65%+) */
+        .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
         
         #grid-container { 
-            width: 95vw; max-width: 350px; aspect-ratio: 1/1;
-            background: #111; padding: 5px; border-radius: 10px; border: 3px solid #333;
+            width: 98vw; max-width: 360px; aspect-ratio: 1/1;
+            background: #111; padding: 4px; border-radius: 8px; border: 2px solid #333;
             display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
         }
 
-        .cell { background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; border-radius: 5px; border: 1px solid #222; }
-        .selected { background-color: #333 !important; box-shadow: inset 0 0 10px #fff; }
+        .cell { background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; border-radius: 4px; border: 1px solid #222; }
+        .selected { background-color: #444 !important; box-shadow: inset 0 0 10px #fff; }
 
-        /* Окна характеристик */
-        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .stats-card { background: #222; border: 2px solid var(--gold); border-radius: 15px; padding: 20px; width: 80%; max-width: 300px; box-shadow: 0 0 30px rgba(255,215,0,0.2); }
-        .stats-card h2 { margin-top: 0; color: var(--gold); }
-        .stat-line { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 10px 0; }
+        /* Окна */
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .stats-card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 15px; width: 85%; max-width: 300px; }
+        .stat-line { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding: 8px 0; font-size: 14px; }
         
-        .dmg-text { position: absolute; font-size: 34px; font-weight: 900; animation: slowFly 1.5s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
-        @keyframes slowFly { 0% { opacity: 0; transform: translate(-50%, 0); } 20% { opacity: 1; transform: translate(-50%, -40px) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -160px); } }
+        .dmg-text { position: absolute; font-size: 32px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
+        @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-120px); } }
 
-        .menu-btn { width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); }
+        .menu-btn { width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); }
     </style>
 </head>
 <body onclick="startAudio()">
 
     <div class="header">
-        <div style="color:var(--gold); font-weight:bold" onclick="adm()">УРОВЕНЬ <span id="lvl">1</span></div>
+        <div style="color:var(--gold)" onclick="adm()">УР. МИРА: <span id="lvl">1</span></div>
+        <div style="color:var(--blue)">ГЕРОЙ: <span id="p-lvl">1</span> УР.</div>
         <div id="pts" onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: 0</div>
     </div>
 
     <div class="arena">
-        <div class="duel-ui">
-            <div class="char-box" onclick="showStats('p')">
-                <img src="hero1.png" class="p-icon" style="border-color:var(--accent)">
-                <div class="hp-bar-bg">
-                    <div id="hp-p-fill" class="hp-bar-fill" style="background:var(--accent)"></div>
-                    <div id="hp-p-txt" class="hp-text">100/100</div>
-                </div>
-                <div style="font-size:12px; font-weight:bold; margin-top:3px;">ГЕРОЙ</div>
+        <div class="char-box" onclick="showStats('p')">
+            <img src="hero1.png" class="p-icon" style="border-color:var(--accent)">
+            <div class="hp-bar-bg">
+                <div id="hp-p-fill" class="hp-bar-fill" style="background:var(--accent)"></div>
+                <div id="hp-p-txt" class="hp-text">100/100</div>
             </div>
-
-            <div class="char-box" onclick="showStats('e')">
-                <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
-                <div class="hp-bar-bg">
-                    <div id="hp-e-fill" class="hp-bar-fill" style="background:var(--red)"></div>
-                    <div id="hp-e-txt" class="hp-text">100/100</div>
-                </div>
-                <div id="m-name" style="font-size:12px; font-weight:bold; margin-top:3px; color:var(--red)">МОБ</div>
-            </div>
+            <div class="xp-bar-bg"><div id="xp-fill" class="xp-bar-fill"></div></div>
         </div>
-        
+
         <img id="main-mob" src="mob1.png">
+
+        <div class="char-box" onclick="showStats('e')">
+            <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
+            <div class="hp-bar-bg">
+                <div id="hp-e-fill" class="hp-bar-fill" style="background:var(--red)"></div>
+                <div id="hp-e-txt" class="hp-text">100/100</div>
+            </div>
+            <div id="m-name" style="font-size:11px; font-weight:bold; color:var(--red); margin-top:2px;">МОБ</div>
+        </div>
     </div>
 
     <div class="game-space">
-        <div id="combo-txt" style="color:var(--gold); font-weight:bold; height:30px; font-size:24px;"></div>
+        <div id="combo-txt" style="color:var(--gold); font-weight:bold; height:25px; font-size:20px;"></div>
         <div id="grid-container"></div>
-        <button id="tor-btn" style="margin-top:10px; width:90%; max-width:350px; padding:12px; background:#222; border:1px solid #444; color:#666; border-radius:8px; font-weight:bold;">МОЛОТ ТОРА</button>
+        <div style="height: 10px;"></div>
     </div>
 
     <div id="stats-overlay" class="overlay" onclick="closeM()">
         <div class="stats-card" onclick="event.stopPropagation()">
-            <h2 id="st-name">ГЕРОЙ</h2>
+            <h2 id="st-name" style="color:var(--gold); margin:0 0 10px 0;">СТАТЫ</h2>
             <div class="stat-line"><span>Урон:</span> <span id="st-atk" style="color:var(--red)"></span></div>
             <div class="stat-line"><span>Здоровье:</span> <span id="st-hp" style="color:var(--accent)"></span></div>
-            <div class="stat-line"><span>Описание:</span> <span id="st-desc" style="font-size:11px; text-align:right; width:60%"></span></div>
-            <button class="menu-btn" onclick="closeM()">В БОЙ!</button>
+            <div class="stat-line"><span>Ловкость (Уворот):</span> <span id="st-agi" style="color:var(--blue)"></span></div>
+            <div class="stat-line"><span id="st-desc" style="font-size:12px; color:#aaa"></span></div>
+            <button class="menu-btn" onclick="closeM()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
     <div id="f-menu" class="overlay">
         <div class="stats-card">
-            <h2>КУЗНИЦА ГНОМОВ</h2>
-            <p>Очки PTS: <span id="pts-count">0</span></p>
-            <button class="menu-btn" onclick="buy('atk')">Улучшить Урон (+2) - 1 PTS</button>
-            <button class="menu-btn" onclick="buy('hp')">Улучшить Жизнь (+20) - 1 PTS</button>
-            <button class="menu-btn" style="background:#444" onclick="closeM()">ЗАКРЫТЬ</button>
+            <h2 style="color:var(--gold)">ПОВЫШЕНИЕ</h2>
+            <p>Доступно очков: <span id="pts-count" style="color:var(--accent)">0</span></p>
+            <button class="menu-btn" onclick="buy('atk')">УРОН (+2)</button>
+            <button class="menu-btn" onclick="buy('hp')">ЖИЗНЬ (+20)</button>
+            <button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ (+1)</button>
+            <button class="menu-btn" style="background:#444" onclick="closeM()">ВЕРНУТЬСЯ</button>
         </div>
     </div>
 
 <script>
     const audio = { match: new Audio('match.mp3'), bg: new Audio('track_normal.mp3') };
     let st = {
-        lvl: parseInt(localStorage.getItem('v_lvl')) || 1, atk: 10, mHP: 100, hp: 100, ehp: 100, mehp: 100,
-        pts: parseInt(localStorage.getItem('v_pts')) || 0, bossEn: 0, board: [], 
-        sel: null, lock: false, combo: 0, isA: false, adm: 0
+        lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
+        pLvl: parseInt(localStorage.getItem('v_plvl')) || 1,
+        xp: parseInt(localStorage.getItem('v_xp')) || 0,
+        atk: parseInt(localStorage.getItem('v_atk')) || 10,
+        mHP: parseInt(localStorage.getItem('v_mhp')) || 100,
+        agi: parseInt(localStorage.getItem('v_agi')) || 5,
+        pts: parseInt(localStorage.getItem('v_pts')) || 0,
+        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 0, isA: false, adm: 0
     };
 
     function startAudio() { if(!st.isA){ st.isA=true; audio.bg.loop=true; audio.bg.play().catch(()=>{}); } }
+
+    function getNextXp() { return st.pLvl * 150; }
 
     function init() {
         const isB = st.lvl % 25 === 0;
         let src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
         document.getElementById('main-mob').src = document.getElementById('m-icon').src = src;
         
-        st.mehp = isB ? (100 + st.lvl * 50) * 5 : 100 + st.lvl * 50;
+        st.mehp = isB ? (100 + st.lvl * 60) * 5 : 100 + st.lvl * 60;
         st.ehp = st.mehp; st.hp = st.mHP;
-        document.getElementById('m-name').innerText = isB ? (st.lvl===75 ? "ВАЛЬКИРИЯ" : "БОСС") : "МОБ " + st.lvl;
+        document.getElementById('m-name').innerText = isB ? "БОСС" : "МОБ " + st.lvl;
 
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
         for (let i = 0; i < 49; i++) {
-            let t = Math.floor(Math.random() * 5);
-            st.board.push({type: t, special: 'none'});
+            st.board.push({type: Math.floor(Math.random() * 5)});
             let c = document.createElement('div');
             c.className = 'cell'; c.id = 'c-' + i;
             c.onclick = () => handle(i);
@@ -149,43 +151,21 @@
 
     function draw() {
         document.getElementById('lvl').innerText = st.lvl;
+        document.getElementById('p-lvl').innerText = st.pLvl;
         document.getElementById('pts').innerText = "PTS: " + st.pts;
         document.getElementById('pts-count').innerText = st.pts;
         
-        // Обновление полосок и текста внутри них
         document.getElementById('hp-e-fill').style.width = (st.ehp/st.mehp*100)+'%';
         document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
         document.getElementById('hp-p-txt').innerText = Math.floor(st.hp) + "/" + st.mHP;
+        document.getElementById('xp-fill').style.width = (st.xp/getNextXp()*100)+'%';
 
         st.board.forEach((o, i) => {
             const c = document.getElementById('c-' + i);
             c.style.backgroundImage = o.type===-1 ? 'none' : `url(rune${o.type+1}.png)`;
             c.className = 'cell' + (st.sel===i?' selected':'');
         });
-    }
-
-    function showStats(type) {
-        const over = document.getElementById('stats-overlay');
-        const name = document.getElementById('st-name');
-        const atk = document.getElementById('st-atk');
-        const hp = document.getElementById('st-hp');
-        const desc = document.getElementById('st-desc');
-
-        if(type === 'p') {
-            name.innerText = "ВИКИНГ (ГЕРОЙ)";
-            atk.innerText = st.atk;
-            hp.innerText = st.mHP;
-            desc.innerText = "Могучий воин севера. Использует магические руны для нанесения сокрушительных ударов.";
-        } else {
-            const isB = st.lvl % 25 === 0;
-            name.innerText = isB ? "БОСС УРОВНЯ" : "ДИКИЙ МОБ";
-            atk.innerText = 5 + st.lvl;
-            hp.innerText = st.mehp;
-            desc.innerText = isB ? "Обладает уникальными способностями и огромным запасом здоровья." : "Обычный обитатель этих земель. Слаб, но берет числом.";
-            if(st.lvl === 75) desc.innerText = "ВАЛЬКИРИЯ: Каждые 4 хода исцеляется, если на поле остались святые руны.";
-        }
-        over.style.display = 'flex';
     }
 
     function handle(i) {
@@ -204,45 +184,50 @@
 
     async function match() {
         st.lock = true;
-        let found = findM();
-        if (found.length > 0) {
+        let res = findM();
+        if (res.length > 0) {
             st.combo++;
-            document.getElementById('combo-txt').innerText = st.combo > 1 ? "COMBO X" + st.combo : "";
             audio.match.currentTime = 0; audio.match.play().catch(()=>{});
             
             let del = new Set();
-            found.forEach(s => s.forEach(idx => del.add(idx)));
+            res.forEach(s => s.forEach(idx => del.add(idx)));
+
+            // Начисление опыта за плитки
+            st.xp += del.size * 5;
+            if(st.xp >= getNextXp()) {
+                st.xp -= getNextXp(); st.pLvl++; st.pts++; pop("LEVEL UP!", false);
+            }
 
             let dmg = del.size * st.atk * (1 + st.combo*0.1);
             st.ehp -= Math.floor(dmg); pop(Math.floor(dmg), false);
             del.forEach(idx => st.board[idx].type = -1);
 
-            draw(); await new Promise(r => setTimeout(r, 400));
-            gravity(); draw(); await new Promise(r => setTimeout(r, 400));
+            draw(); await new Promise(r => setTimeout(r, 300));
+            gravity(); draw(); await new Promise(r => setTimeout(r, 300));
             match();
         } else {
-            st.lock = false; document.getElementById('combo-txt').innerText = "";
+            st.lock = false;
             if (st.ehp <= 0) win(); else enemy();
         }
     }
 
     function findM() {
-        let res = [];
+        let m = [];
         for(let r=0; r<7; r++) {
             let c=1; for(let j=0; j<7; j++){
                 let idx = r*7+j;
                 if(j<6 && st.board[idx].type!==-1 && st.board[idx].type===st.board[idx+1].type) c++;
-                else { if(c>=3){ let s=[]; for(let k=0; k<c; k++) s.push(idx-k); res.push(s); } c=1; }
+                else { if(c>=3){ let s=[]; for(let k=0; k<c; k++) s.push(idx-k); m.push(s); } c=1; }
             }
         }
         for(let j=0; j<7; j++) {
             let c=1; for(let r=0; r<7; r++){
                 let idx = r*7+j;
                 if(r<6 && st.board[idx].type!==-1 && st.board[idx].type===st.board[idx+7].type) c++;
-                else { if(c>=3){ let s=[]; for(let k=0; k<c; k++) s.push(idx-k*7); res.push(s); } c=1; }
+                else { if(c>=3){ let s=[]; for(let k=0; k<c; k++) s.push(idx-k*7); m.push(s); } c=1; }
             }
         }
-        return res;
+        return m;
     }
 
     function gravity() {
@@ -251,30 +236,70 @@
                 let i=r*7+c; if(st.board[i].type===-1) e++;
                 else if(e>0){ st.board[i+e*7]={...st.board[i]}; st.board[i].type=-1; }
             }
-            for(let r=0; r<e; r++) st.board[r*7+c]={type:Math.floor(Math.random()*5), special:'none'};
+            for(let r=0; r<e; r++) st.board[r*7+c]={type:Math.floor(Math.random()*5)};
         }
     }
 
     function enemy() {
-        let d = 5 + st.lvl;
-        st.hp -= d; pop(d, true);
-        if(st.hp <= 0) { alert("Вальгалла ждет тебя!"); location.reload(); }
+        // Уворот на основе ловкости
+        if(Math.random() * 100 < st.agi) {
+            pop("MISS!", true);
+        } else {
+            let d = Math.floor(5 + st.lvl * 1.2);
+            st.hp -= d; pop(d, true);
+        }
+        if(st.hp <= 0) { alert("Вы погибли, но опыт сохранен!"); save(); location.reload(); }
         draw();
     }
 
     function pop(v, p) {
         const d = document.createElement('div'); d.className = 'dmg-text';
-        d.innerText = "-" + v; d.style.color = p ? 'var(--red)' : 'var(--gold)';
-        d.style.left = '50%'; d.style.top = '40%';
-        document.body.appendChild(d); setTimeout(()=>d.remove(), 1500);
+        d.innerText = p ? (isNaN(v) ? v : "-" + v) : "+" + v;
+        d.style.color = p ? (v==="MISS!"?'var(--blue)':'var(--red)') : 'var(--gold)';
+        d.style.left = '50%'; d.style.top = '30%';
+        document.body.appendChild(d); setTimeout(()=>d.remove(), 1200);
     }
 
     function win() { st.lvl++; st.pts++; save(); init(); }
-    function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_pts', st.pts); }
+    
+    function save() {
+        localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_plvl', st.pLvl);
+        localStorage.setItem('v_xp', st.xp); localStorage.setItem('v_atk', st.atk);
+        localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi);
+        localStorage.setItem('v_pts', st.pts);
+    }
+
+    function showStats(type) {
+        const over = document.getElementById('stats-overlay');
+        if(type === 'p') {
+            document.getElementById('st-name').innerText = "ГЕРОЙ";
+            document.getElementById('st-atk').innerText = st.atk;
+            document.getElementById('st-hp').innerText = st.mHP;
+            document.getElementById('st-agi').innerText = st.agi + "%";
+            document.getElementById('st-desc').innerText = "Каждый уровень дает +1 очко PTS. Ловкость дает шанс уклониться от удара.";
+        } else {
+            document.getElementById('st-name').innerText = "ВРАГ";
+            document.getElementById('st-atk').innerText = Math.floor(5 + st.lvl * 1.2);
+            document.getElementById('st-hp').innerText = st.mehp;
+            document.getElementById('st-agi').innerText = "0%";
+            document.getElementById('st-desc').innerText = "Враги становятся сильнее с каждым уровнем мира.";
+        }
+        over.style.display = 'flex';
+    }
+
     function openF() { document.getElementById('f-menu').style.display='flex'; }
     function closeM() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
-    function buy(t) { if(st.pts>0){ if(t==='atk') st.atk+=2; else {st.mHP+=20; st.hp+=20;} st.pts--; save(); draw(); } }
-    function adm() { st.adm++; if(st.adm>=5){ st.lvl=75; save(); init(); } }
+    
+    function buy(t) {
+        if(st.pts > 0) {
+            if(t==='atk') st.atk+=2; 
+            else if(t==='hp') { st.mHP+=20; st.hp+=20; }
+            else if(t==='agi') st.agi+=1;
+            st.pts--; save(); draw();
+        }
+    }
+    
+    function adm() { st.adm++; if(st.adm>=5){ st.pts += 50; save(); draw(); } }
 
     init();
 </script>
