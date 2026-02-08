@@ -3,129 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Fixed</title>
+    <title>Viking Saga: Full Edition</title>
     <style>
-        :root { --gold: #ffd700; --accent: #2ecc71; }
-        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; user-select: none; touch-action: manipulation; }
+        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; }
         
-        .header { background: #1a1a1a; padding: 10px; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #333; }
-        #pts-txt { color: var(--accent); cursor: pointer; font-weight: bold; padding: 5px; border: 1px solid transparent; border-radius: 4px; }
-        .has-pts { border-color: var(--accent); animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.4; } }
+        /* Шапка */
+        .header { background: #1a1a1a; height: 50px; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #333; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        #pts-txt { font-weight: bold; padding: 5px 12px; border-radius: 4px; transition: 0.3s; cursor: pointer; }
+        .has-pts { color: var(--accent); border: 1px solid var(--accent); animation: pulse-green 1.5s infinite; }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0px var(--accent); } 50% { box-shadow: 0 0 10px var(--accent); } 100% { box-shadow: 0 0 0px var(--accent); } }
 
-        .arena { height: 230px; position: relative; background: #050505; overflow: hidden; transition: background 0.5s; }
-        .boss-bg { background: radial-gradient(circle, #600, #000) !important; }
-        #mob-img { height: 130px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; }
+        /* Арена */
+        .arena { max-width: 500px; height: 240px; margin: 0 auto; position: relative; background: #0a0a0a; overflow: hidden; border-bottom: 2px solid #222; }
+        .boss-mode { background: radial-gradient(circle, #500 0%, #000 100%) !important; }
+        #mob-img { height: 140px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 5; transition: transform 0.2s; }
         
-        .hp-bar { width: 90%; height: 14px; background: #222; margin: 5px auto; border-radius: 7px; overflow: hidden; border: 1px solid #444; position: relative; z-index: 10; }
-        .fill { height: 100%; width: 100%; transition: 0.3s; }
+        .hp-container { width: 92%; height: 16px; background: #222; margin: 6px auto; border-radius: 8px; border: 1px solid #444; overflow: hidden; position: relative; z-index: 10; }
+        .hp-fill { height: 100%; width: 100%; transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
 
-        #grid { width: 322px; margin: 10px auto; display: block; background: #111; padding: 5px; border-radius: 10px; border: 2px solid #444; font-size: 0; }
-        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #222; border-radius: 6px; cursor: pointer; box-sizing: border-box; }
-        .sel { border: 3px solid #fff; transform: scale(0.9); box-shadow: 0 0 10px #fff; }
+        /* Сетка игры */
+        #grid { width: 322px; margin: 15px auto; line-height: 0; background: #111; padding: 6px; border-radius: 12px; border: 2px solid #333; box-shadow: inset 0 0 20px #000; }
+        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-position: center; background-color: #222; border-radius: 6px; cursor: pointer; transition: transform 0.1s; box-sizing: border-box; }
+        .cell:active { transform: scale(0.9); }
+        .selected { border: 3px solid #fff; box-shadow: 0 0 15px #fff; transform: scale(0.85); z-index: 20; position: relative; }
 
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .btn { width: 220px; padding: 12px; margin: 8px; border: none; border-radius: 6px; background: #444; color: #fff; font-weight: bold; cursor: pointer; }
-        .ready { background: var(--accent) !important; }
+        /* Меню / Оверлеи */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .stat-btn { width: 220px; padding: 15px; margin: 10px; border: none; border-radius: 8px; background: #333; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .stat-btn:hover { background: #444; }
+        .buy-active { background: var(--accent) !important; color: #000 !important; }
 
-        .dmg { position: absolute; font-weight: 900; font-size: 26px; color: #ff4d4d; animation: fly 0.7s forwards; z-index: 50; text-shadow: 2px 2px #000; }
-        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-70px); } }
+        /* Эффекты урона */
+        .dmg-popup { position: absolute; font-size: 28px; font-weight: 900; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; text-shadow: 2px 2px #000; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
+
+        /* Супер-удар */
+        .super-bar { width: 300px; height: 10px; background: #222; margin: 10px auto; border-radius: 5px; overflow: hidden; border: 1px solid var(--blue); }
+        #super-btn { width: 310px; background: #222; color: #555; border: 2px solid #333; padding: 12px; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        #super-btn.charged { background: var(--blue) !important; color: #fff !important; border-color: #fff; cursor: pointer; box-shadow: 0 0 15px var(--blue); }
     </style>
 </head>
-<body onclick="initAudio()">
+<body onclick="enableAudio()">
 
     <div class="header">
-        <span id="lvl-txt" style="color:var(--gold)">LVL 1</span>
-        <span id="pts-txt" onclick="openForge()">PTS: 0</span>
-        <span onclick="openInfo()" style="cursor:pointer; color:var(--gold)">ГЕРОЙ</span>
+        <div style="color:var(--gold); font-weight:bold;">LVL <span id="lvl-val">1</span></div>
+        <div id="pts-txt" onclick="toggleForge()">PTS: <span id="pts-val">0</span></div>
+        <div onclick="toggleInfo()" style="cursor:pointer;">🛡️ ГЕРОЙ</div>
     </div>
 
     <div class="arena" id="arena">
-        <div class="hp-bar"><div id="ehp" class="fill" style="background:#e74c3c"></div></div>
+        <div class="hp-container"><div id="hp-enemy" class="hp-fill" style="background:var(--red)"></div></div>
         <img id="mob-img" src="mob1.png">
-        <div class="hp-bar"><div id="php" class="fill" style="background:#2ecc71"></div></div>
+        <div class="hp-container"><div id="hp-player" class="hp-fill" style="background:var(--accent)"></div></div>
 
-        <div id="forge-menu" class="overlay">
-            <h2 style="color:var(--gold)">КУЗНИЦА</h2>
-            <button class="btn ready" onclick="buy('atk')">СИЛА АТАКИ (+2)</button>
-            <button class="btn ready" onclick="buy('hp')">МАКС. ЖИЗНЬ (+20)</button>
-            <button class="btn" onclick="closeAll()">ЗАКРЫТЬ</button>
+        <div id="forge-overlay" class="overlay">
+            <h2 style="color:var(--gold)">КУЗНИЦА ВИКИНГА</h2>
+            <button class="stat-btn buy-active" onclick="upgradeStat('atk')">СИЛА АТАКИ (+2)</button>
+            <button class="stat-btn buy-active" onclick="upgradeStat('hp')">ЗДОРОВЬЕ (+20)</button>
+            <button class="stat-btn" onclick="toggleForge()">ВЕРНУТЬСЯ В БОЙ</button>
         </div>
 
-        <div id="info-menu" class="overlay">
-            <h2 style="color:var(--gold)">ВАШ ГЕРОЙ</h2>
-            <p id="stats-text"></p>
-            <button class="btn ready" onclick="closeAll()">В БОЙ</button>
+        <div id="info-overlay" class="overlay">
+            <h2 style="color:var(--gold)">ЛЕГЕНДА</h2>
+            <div id="stats-display" style="line-height: 2; font-size: 18px;"></div>
+            <button class="stat-btn buy-active" onclick="toggleInfo()">ЗАКРЫТЬ</button>
         </div>
     </div>
+
+    <div class="super-bar"><div id="en-fill" class="hp-fill" style="background:var(--blue); width:0%;"></div></div>
+    <button id="super-btn" onclick="triggerSuper()">УДАР МОЛОТОМ ТОРА</button>
 
     <div id="grid"></div>
-    
-    <div style="padding: 10px;">
-        <button id="s-btn" class="btn" style="width:310px; background:#3498db" onclick="useSuper()">УДАР МОЛОТОМ</button>
-    </div>
 
 <script>
-    // Массив путей к картинкам
-    const runeImages = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
-    
-    const sfx = {
+    // --- ЗВУКОВАЯ СИСТЕМА ---
+    const sounds = {
         click: new Audio('click.mp3'),
         match: new Audio('match.mp3'),
         hit: new Audio('hit.mp3'),
         win: new Audio('win.mp3'),
         super: new Audio('super.mp3'),
-        m_norm: new Audio('track_normal.mp3'),
-        m_boss: new Audio('track_boss.mp3')
-    };
-
-    let s = {
-        lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
-        atk: parseInt(localStorage.getItem('v_atk')) || 10,
-        mHP: parseInt(localStorage.getItem('v_mhp')) || 100,
-        pts: parseInt(localStorage.getItem('v_pts')) || 0,
-        hp: 100, ehp: 100, mEHP: 100, board: [], sel: null, en: 0, audio: false
-    };
-
-    function initAudio() {
-        if(s.audio) return;
-        s.audio = true;
-        sfx.m_norm.loop = true;
-        sfx.m_boss.loop = true;
-        playBGM();
-    }
-
-    function playBGM() {
-        if(!s.audio) return;
-        const isB = s.lvl % 25 === 0;
-        if(isB) { sfx.m_norm.pause(); sfx.m_boss.play().catch(()=>{}); }
-        else { sfx.m_boss.pause(); sfx.m_norm.play().catch(()=>{}); }
-    }
-
-    function init() {
-        const isB = s.lvl % 25 === 0;
-        document.getElementById('arena').classList.toggle('boss-bg', isB);
-        document.getElementById('mob-img').src = isB ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
-        
-        s.mEHP = (100 + (s.lvl * 30)) * (isB ? 4 : 1);
-        s.ehp = s.mEHP; s.hp = s.mHP;
-        
-        const g = document.getElementById('grid');
-        g.innerHTML = ''; s.board = [];
-        for (let i = 0; i < 49; i++) {
-            s.board.push(Math.floor(Math.random() * 5));
-            let d = document.createElement('div');
-            d.className = 'cell'; d.id = 'c' + i;
-            d.onclick = () => { if(s.audio) sfx.click.play(); touch(i); };
-            g.appendChild(d);
-        }
-        playBGM();
-        draw();
-    }
-
-    function touch(i) {
-        if (s.sel === null) { s.sel = i; } 
-        else {
-            let a = s.sel, b = i;
-            if (Math.abs(a-b) === 1 || Math.abs(a-b) === 7) {
-                [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+        bgNorm: new Audio('track_normal.mp3'),
