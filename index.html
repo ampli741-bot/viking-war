@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Physics Fix</title>
+    <title>Viking Saga: Hardcore Edition</title>
     <style>
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
-        .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; font-weight: bold; color: var(--gold); font-size: 18px; }
+        .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; font-weight: bold; color: var(--gold); font-size: 18px; display: flex; justify-content: space-around; }
         .arena { height: 160px; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
-        .hp-bar { width: 90%; height: 12px; background: #333; margin: 4px; border-radius: 6px; overflow: hidden; border: 1px solid #444; }
+        .hp-bar { width: 90%; height: 12px; background: #333; margin: 4px; border-radius: 6px; overflow: hidden; border: 1px solid #444; position: relative; }
         .fill { height: 100%; transition: 0.4s; width: 100%; }
         #mob { width: 100px; height: 100px; z-index: 2; transition: 0.3s; }
         #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; width: 320px; margin: 0 auto; background: #000; }
@@ -18,19 +18,38 @@
         .btn { width: 90%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
         .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; cursor: pointer; }
         #msg { position: absolute; top: 40%; width: 100%; font-weight: bold; background: rgba(0,0,0,0.9); display: none; padding: 20px 0; z-index: 100; }
+        
+        /* Экран смерти (бан) */
+        #ban-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        #timer { font-size: 48px; color: var(--gold); margin: 20px; }
+        
         @keyframes shake { 0% { transform: translate(2px, 2px); } 100% { transform: translate(0,0); } }
         .shaking { animation: shake 0.1s infinite; }
     </style>
 </head>
 <body>
-    <div class="header" id="lvl-display">УРОВЕНЬ 1</div>
+
+    <div id="ban-screen">
+        <h1 style="color: var(--red);">ВЫ ПАЛИ В БОЮ</h1>
+        <p>Вальхалла закрыта на 1 час для восстановления сил.</p>
+        <div id="timer">60:00</div>
+        <p style="color: #666;">Отдыхайте, воин...</p>
+    </div>
+
+    <div class="header">
+        <div id="lvl-display">УРОВЕНЬ 1</div>
+        <div id="best-display" style="font-size: 14px; opacity: 0.7;">ЛУЧШИЙ: 1</div>
+    </div>
+
     <div id="battle-screen" class="arena">
         <div id="msg"></div>
         <div class="hp-bar"><div id="ehp" class="fill" style="background: var(--red);"></div></div>
         <img id="mob" src="mob1.png" onerror="this.src='https://via.placeholder.com/100/red?text=MOB'">
         <div class="hp-bar"><div id="php" class="fill" style="background: var(--green);"></div></div>
     </div>
+
     <div id="grid"></div>
+
     <div style="height: 6px; width: 90%; background: #222; margin: 10px auto; border-radius: 3px;">
         <div id="en-fill" style="width: 0%; height: 100%; background: gold; transition: 0.3s;"></div>
     </div>
@@ -39,12 +58,55 @@
 <script>
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#95a5a6'];
-    let s = { board: [], sel: null, hp: 100, ehp: 100, en: 0, lock: false, lvl: 1, stunTurns: 0 };
+    
+    // Загрузка сохраненных данных или дефолтные значения
+    let s = {
+        lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
+        hp: 100,
+        ehp: 100,
+        en: 0,
+        lock: false,
+        stunTurns: 0
+    };
 
     function sfx(n) { try { new Audio(n + '.mp3').play().catch(()=>{}); } catch(e){} }
 
+    // Проверка на штраф по времени
+    function checkBan() {
+        const banUntil = localStorage.getItem('v_ban_time');
+        if (banUntil && Date.now() < banUntil) {
+            document.getElementById('ban-screen').style.display = 'flex';
+            const updateTimer = () => {
+                let diff = banUntil - Date.now();
+                if (diff <= 0) {
+                    localStorage.removeItem('v_ban_time');
+                    location.reload();
+                    return;
+                }
+                let m = Math.floor(diff / 60000);
+                let sc = Math.floor((diff % 60000) / 1000);
+                document.getElementById('timer').innerText = `${m}:${sc < 10 ? '0' : ''}${sc}`;
+            };
+            updateTimer();
+            setInterval(updateTimer, 1000);
+            return true;
+        }
+        return false;
+    }
+
+    function saveProgress() {
+        localStorage.setItem('v_lvl', s.lvl);
+        let best = localStorage.getItem('v_best') || 1;
+        if (s.lvl > best) localStorage.setItem('v_best', s.lvl);
+    }
+
     function init() {
+        if (checkBan()) return;
+
+        saveProgress();
         document.getElementById('lvl-display').innerText = "УРОВЕНЬ " + s.lvl;
+        document.getElementById('best-display').innerText = "ЛУЧШИЙ: " + (localStorage.getItem('v_best') || 1);
+        
         const g = document.getElementById('grid');
         g.innerHTML = '';
         s.board = [];
@@ -58,9 +120,13 @@
             c.onclick = () => touch(i);
             g.appendChild(c);
         }
-        let maxEHP = (s.lvl === 25) ? 500 : 100 + (s.lvl * 15);
-        s.ehp = maxEHP;
-        document.getElementById('mob').src = (s.lvl === 25) ? 'boss.png' : 'mob' + (Math.min(4, Math.floor(s.lvl/3)+1)) + '.png';
+
+        // Логика HP моба: до 10 уровня +20, после 10-го +50 за уровень
+        let bonusHP = s.lvl > 10 ? (s.lvl - 10) * 50 + 200 : s.lvl * 20;
+        s.maxEHP = 100 + bonusHP;
+        s.ehp = s.maxEHP;
+        
+        document.getElementById('mob').src = 'mob' + (Math.min(4, Math.floor(s.lvl/3)+1)) + '.png';
         s.lock = false;
         draw();
     }
@@ -80,8 +146,7 @@
             }
         });
         document.getElementById('php').style.width = s.hp + '%';
-        let maxEHP = (s.lvl === 25) ? 500 : 100 + (s.lvl * 15);
-        document.getElementById('ehp').style.width = Math.max(0, (s.ehp / maxEHP * 100)) + '%';
+        document.getElementById('ehp').style.width = Math.max(0, (s.ehp / s.maxEHP * 100)) + '%';
         document.getElementById('en-fill').style.width = s.en + '%';
         document.getElementById('s-btn').classList.toggle('ready', s.en >= 100);
     }
@@ -127,7 +192,6 @@
             });
             sfx('match'); draw();
             await new Promise(r => setTimeout(r, 250));
-            // Механика падения плиток
             for (let i = 0; i < 49; i++) if (s.board[i] === -1) s.board[i] = Math.floor(Math.random() * 5);
             draw();
             await new Promise(r => setTimeout(r, 150));
@@ -141,21 +205,28 @@
     function enemyTurn() {
         if (s.ehp <= 0) return;
         if (s.stunTurns > 0) { s.stunTurns--; s.lock = false; return; }
-        let i1 = Math.floor(Math.random() * 48);
-        let i2 = i1 + 1;
-        let t = s.board[i1]; s.board[i1] = s.board[i2]; s.board[i2] = t;
-        s.hp -= (6 + Math.floor(s.lvl/2));
+        
+        let dmg = (6 + Math.floor(s.lvl/2));
+        s.hp -= dmg;
+        
         shake(); sfx('player_hit');
         processMatches(false);
-        if (s.hp <= 0) { alert("Game Over"); location.reload(); }
+        
+        if (s.hp <= 0) {
+            // ШТРАФ: 1 час (3600000 мс)
+            localStorage.setItem('v_ban_time', Date.now() + 3600000);
+            location.reload();
+        }
         s.lock = false; draw();
     }
 
     function win() {
-        s.lvl++; s.hp = Math.min(100, s.hp + 15);
         sfx('win');
+        s.lvl++; 
+        s.hp = Math.min(100, s.hp + 20);
+        saveProgress();
         let m = document.getElementById('msg');
-        m.innerText = "ПОБЕДА! +15% HP"; m.style.display = 'block';
+        m.innerText = "ПОБЕДА! +20% HP"; m.style.display = 'block';
         setTimeout(() => { m.style.display = 'none'; init(); }, 1500);
     }
 
@@ -167,27 +238,18 @@
     async function useSuper() {
         if (s.en < 100 || s.lock) return;
         s.lock = true; s.en = 0; sfx('super');
-        s.ehp -= 100;
-        s.stunTurns = (s.lvl === 25) ? 1 : 2;
+        s.ehp -= 120;
+        s.stunTurns = (s.lvl % 5 === 0) ? 1 : 2; // Боссы оглушаются меньше
 
-        // Взрываем случайные плитки
         for (let i = 0; i < 15; i++) {
             let r = Math.floor(Math.random() * 49);
             s.board[r] = -1;
         }
-        draw(); 
-        
-        await new Promise(r => setTimeout(r, 400));
-        
-        // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: принудительное заполнение пустых мест перед проверкой матчей
-        for (let i = 0; i < 49; i++) {
-            if (s.board[i] === -1) s.board[i] = Math.floor(Math.random() * 5);
-        }
         draw();
-
-        // Теперь проверяем, не создались ли новые ряды после падения
+        await new Promise(r => setTimeout(r, 400));
+        for (let i = 0; i < 49; i++) if (s.board[i] === -1) s.board[i] = Math.floor(Math.random() * 5);
+        draw();
         await processMatches(true);
-        
         s.lock = false;
         draw();
     }
