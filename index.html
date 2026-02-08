@@ -3,28 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking War Final</title>
+    <title>Viking Saga: Hardcore</title>
     <style>
-        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
+        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --gray: #7f8c8d; }
         body { background: #0a0a0a; color: white; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; touch-action: manipulation; }
-        
-        .arena { width: 100%; height: 220px; position: relative; background: #111; border-bottom: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
-        #enemy-img { width: 140px; height: 140px; margin-bottom: 10px; transition: 0.2s; z-index: 2; }
-        .hit { filter: brightness(2) drop-shadow(0 0 10px red); transform: scale(1.1); }
-        
+        .arena { width: 100%; height: 200px; position: relative; background: #111; border-bottom: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+        #enemy-img { width: 130px; height: 130px; margin-bottom: 10px; transition: 0.2s; }
+        .hit { filter: brightness(2) sepia(1) hue-rotate(-50deg); transform: scale(1.1); }
         .bars { position: absolute; top: 10px; width: 90%; display: flex; flex-direction: column; gap: 6px; }
-        .bar-wrap { height: 14px; background: #222; border-radius: 7px; overflow: hidden; border: 1px solid #444; }
-        .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
-
-        #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 10px; background: #000; border-radius: 10px; border: 1px solid #222; margin-top: 10px; }
-        .cell { width: 44px; height: 44px; border-radius: 6px; background-size: cover; background-color: #1a1a1a; cursor: pointer; transition: 0.1s; }
-        .selected { outline: 3px solid var(--gold); transform: scale(0.95); }
-
+        .bar-wrap { height: 14px; background: #222; border-radius: 7px; overflow: hidden; border: 1px solid #444; position: relative; }
+        .bar-fill { height: 100%; width: 100%; transition: 0.4s; }
+        .label { position: absolute; width: 100%; text-align: center; font-size: 9px; line-height: 14px; font-weight: bold; text-shadow: 1px 1px 1px black; }
+        #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; background: #000; margin-top: 10px; }
+        .cell { width: 44px; height: 44px; border-radius: 4px; background-size: cover; background-color: #1a1a1a; }
+        .selected { outline: 3px solid var(--gold); transform: scale(0.9); }
         .controls { width: 90%; margin-top: 15px; }
-        #super-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; background: #333; color: #777; font-weight: bold; font-size: 16px; }
-        #super-btn.ready { background: linear-gradient(#e67e22, #d35400); color: white; box-shadow: 0 0 15px orange; animation: pulse 1s infinite; }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        #super-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; }
+        #super-btn.ready { background: linear-gradient(orange, darkorange); color: white; box-shadow: 0 0 15px gold; }
         @keyframes shake { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(0,0); } }
         .shaking { animation: shake 0.15s infinite; }
     </style>
@@ -33,38 +28,41 @@
 
 <div class="arena" id="arena">
     <div class="bars">
-        <div class="bar-wrap"><div id="enemy-hp" class="bar-fill" style="background:var(--red)"></div></div>
-        <div class="bar-wrap"><div id="player-hp" class="bar-fill" style="background:var(--green)"></div></div>
+        <div class="bar-wrap"><div id="enemy-hp" class="bar-fill" style="background:var(--red)"></div><div class="label">ВРАГ</div></div>
+        <div class="bar-wrap"><div id="player-hp" class="bar-fill" style="background:var(--green)"></div><div class="label">ВАШЕ HP</div></div>
     </div>
-    <img id="enemy-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/140?text=MOB'">
+    <img id="enemy-img" src="mob1.png">
 </div>
 
 <div id="grid"></div>
 
 <div class="controls">
-    <div class="bar-wrap" style="height:8px; margin-bottom:8px; border-color: var(--gold);"><div id="energy-fill" class="bar-fill" style="background:var(--gold); width:0%;"></div></div>
+    <div style="font-size: 10px; color: var(--gold); margin-bottom: 4px; text-align: center;">УЛЬТА: СОБИРАЙ КРАСНЫЕ РУНЫ</div>
+    <div class="bar-wrap" style="height:8px; border-color: var(--gold);"><div id="energy-fill" class="bar-fill" style="background:var(--gold); width:0%;"></div></div>
     <button id="super-btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
 </div>
 
 <script>
-    let state = { pHP: 100, eHP: 100, lvl: 1, energy: 0, board: [], selected: null };
+    let state = { pHP: 100, eHP: 100, maxEHP: 100, lvl: 1, energy: 0, board: [], selected: null };
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
-    const colors = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#7f8c8d']; // Запасные цвета
 
     function sfx(name) {
-        try {
-            let a = new Audio(name + '.mp3');
-            a.volume = 0.4;
-            a.play().catch(()=>{});
-        } catch(e) {}
+        try { let a = new Audio(name + '.mp3'); a.volume = 0.4; a.play().catch(()=>{}); } catch(e) {}
     }
 
     function init() {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
         state.board = [];
+        // Генерируем поле без начальных совпадений
         for (let i = 0; i < 49; i++) {
-            let type = Math.floor(Math.random() * 5);
+            let type;
+            do {
+                type = Math.floor(Math.random() * 5);
+            } while (
+                (i % 7 >= 2 && type === state.board[i-1] && type === state.board[i-2]) ||
+                (i >= 14 && type === state.board[i-7] && type === state.board[i-14])
+            );
             state.board.push(type);
             let cell = document.createElement('div');
             cell.className = 'cell';
@@ -79,10 +77,7 @@
     function render() {
         for (let i = 0; i < 49; i++) {
             const cell = document.getElementById('c' + i);
-            const type = state.board[i];
-            cell.style.backgroundImage = `url(${runes[type]})`;
-            // Если картинка не загрузится, будет виден цветной блок
-            cell.style.backgroundColor = colors[type]; 
+            cell.style.backgroundImage = `url(${runes[state.board[i]]})`;
             cell.classList.toggle('selected', state.selected === i);
         }
     }
@@ -93,16 +88,10 @@
         } else {
             let diff = Math.abs(state.selected - id);
             if (diff === 1 || diff === 7) {
-                let t = state.board[state.selected];
-                state.board[state.selected] = state.board[id];
-                state.board[id] = t;
+                swap(state.selected, id);
                 if (!checkMatches()) {
-                    // Если хода нет, возвращаем назад через 200мс
-                    setTimeout(() => {
-                        state.board[id] = state.board[state.selected];
-                        state.board[state.selected] = t;
-                        render();
-                    }, 200);
+                    let s = state.selected, currentId = id;
+                    setTimeout(() => { swap(s, currentId); render(); }, 300);
                 }
             }
             state.selected = null;
@@ -110,9 +99,14 @@
         render();
     }
 
+    function swap(i1, i2) {
+        let t = state.board[i1];
+        state.board[i1] = state.board[i2];
+        state.board[i2] = t;
+    }
+
     function checkMatches() {
         let matched = new Set();
-        // Ряды
         for (let i = 0; i < 49; i++) {
             if (i % 7 < 5 && state.board[i] === state.board[i+1] && state.board[i] === state.board[i+2]) {
                 matched.add(i); matched.add(i+1); matched.add(i+2);
@@ -123,17 +117,22 @@
         }
 
         if (matched.size > 0) {
-            let hasRed = false;
             let dmg = 0;
+            let redCount = 0;
+            let grayCount = 0;
+
             matched.forEach(idx => {
-                if (state.board[idx] === 0) hasRed = true;
-                dmg += (state.board[idx] === 4) ? 1 : 5;
+                let type = state.board[idx];
+                if (type === 0) redCount++; // Красная
+                if (type === 4) grayCount++; // Серая
+                dmg += (type === 4) ? 1 : 5;
                 state.board[idx] = Math.floor(Math.random() * 5);
             });
-            
+
             state.eHP -= dmg;
-            if (hasRed) state.energy = Math.min(100, state.energy + 25);
-            
+            if (redCount > 0) state.energy = Math.min(100, state.energy + 20);
+            if (grayCount > 0) state.pHP = Math.min(100, state.pHP + grayCount); // Реген от серых
+
             sfx('match');
             sfx('hit');
             animateHit();
@@ -146,13 +145,13 @@
 
     function enemyTurn() {
         if (state.eHP <= 0) return;
-        state.pHP -= (5 + state.lvl);
+        state.pHP -= (4 + state.lvl);
         sfx('player_hit');
         document.getElementById('arena').classList.add('shaking');
         setTimeout(() => document.getElementById('arena').classList.remove('shaking'), 300);
         if (state.pHP <= 0) {
             sfx('lose');
-            alert("Поражение! Начнем сначала.");
+            alert("Вальхалла зовет... Вы погибли.");
             location.reload();
         }
         updateUI();
@@ -165,23 +164,21 @@
     }
 
     function updateUI() {
-        let maxE = 100 + (state.lvl * 10);
-        document.getElementById('enemy-hp').style.width = Math.max(0, (state.eHP/maxE)*100) + '%';
+        document.getElementById('enemy-hp').style.width = Math.max(0, (state.eHP/state.maxEHP)*100) + '%';
         document.getElementById('player-hp').style.width = Math.max(0, state.pHP) + '%';
         document.getElementById('energy-fill').style.width = state.energy + '%';
-        
-        const btn = document.getElementById('super-btn');
-        btn.classList.toggle('ready', state.energy >= 100);
+        document.getElementById('super-btn').classList.toggle('ready', state.energy >= 100);
 
         if (state.eHP <= 0) {
             sfx('win');
+            alert("Враг повержен! +10% HP");
             state.lvl++;
-            state.eHP = 100 + (state.lvl * 10);
-            state.pHP = 100;
+            state.pHP = Math.min(100, state.pHP + 10); // Восстановление только 10%
+            state.maxEHP = 100 + (state.lvl * 15);
+            state.eHP = state.maxEHP;
             state.energy = 0;
             document.getElementById('enemy-img').src = `mob${Math.min(4, Math.floor(state.lvl/2)+1)}.png`;
-            alert("Победа! Уровень " + state.lvl);
-            init();
+            init(); // Пересобираем поле
         }
     }
 
