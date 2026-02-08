@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Storm of Thor</title>
+    <title>Viking Saga: Thunder God</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #ffffff; }
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
         .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; flex-shrink: 0; }
         
-        /* АРЕНА */
         .arena { 
             height: 25vh; position: relative; background: #0a0a0a; border-bottom: 2px solid #444; 
             display: flex; align-items: center; justify-content: space-between; padding: 0 10px; flex-shrink: 0;
@@ -27,23 +26,27 @@
         
         #main-mob { height: 100px; position: absolute; left: 50%; transform: translateX(-50%); z-index: 5; opacity: 0.8; }
 
-        /* ВСПЫШКА */
         #flash { position: fixed; inset: 0; background: var(--white); opacity: 0; pointer-events: none; z-index: 2000; }
-        .lightning { animation: flash-anim 0.4s ease-out; }
-        @keyframes flash-anim { 0% { opacity: 0; } 50% { opacity: 0.8; } 100% { opacity: 0; } }
+        .lightning { animation: flash-anim 0.5s ease-out; }
+        @keyframes flash-anim { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
 
-        /* ГЕЙМПЛЕЙ */
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
         #grid-container { width: 98vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: #111; padding: 4px; border-radius: 8px; border: 2px solid #333; }
         .cell { background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; border: 1px solid #222; border-radius: 4px; }
         .selected { background-color: #444 !important; box-shadow: inset 0 0 10px #fff; }
 
+        /* Кнопка Молота */
         #thor-btn { 
-            width: 90%; max-width: 350px; padding: 12px; margin-top: 10px; border-radius: 8px; 
-            border: 2px solid #333; background: #222; color: #555; font-weight: bold; 
-            transition: 0.3s; text-transform: uppercase;
+            width: 90%; max-width: 350px; padding: 14px; margin-top: 10px; border-radius: 8px; 
+            border: 2px solid #333; background: #222; color: #666; font-weight: bold; 
+            transition: 0.4s; text-transform: uppercase; cursor: default;
         }
-        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 15px var(--blue); cursor: pointer; }
+        #thor-btn.ready { 
+            background: var(--blue); color: #fff; border-color: #fff; 
+            box-shadow: 0 0 20px var(--blue); cursor: pointer;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
 
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 15px; width: 85%; max-width: 300px; }
@@ -69,8 +72,8 @@
                 <div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div>
                 <div id="hp-p-txt" class="bar-txt">100/100</div>
             </div>
-            <div class="skill-bar"><div id="thor-progress" style="height:100%; background:var(--blue); width:0%;"></div></div>
-            <div style="font-size:9px; color:var(--blue); font-weight:bold;">МОЛОТ ТОРА</div>
+            <div class="skill-bar"><div id="thor-progress" style="height:100%; background:var(--blue); width:0%; transition: 0.3s;"></div></div>
+            <div style="font-size:9px; color:var(--blue); font-weight:bold; margin-top:2px;">ЗАРЯД МОЛОТА</div>
         </div>
 
         <img id="main-mob" src="mob1.png">
@@ -96,8 +99,7 @@
     <div id="stats-overlay" class="overlay" onclick="closeM()">
         <div class="card" onclick="event.stopPropagation()">
             <h2 id="st-name" style="color:var(--gold); margin:0;">СТАТЫ</h2>
-            <hr border="0" height="1px" background="#333">
-            <div id="st-content" style="text-align:left; font-size:14px; line-height:1.5;"></div>
+            <div id="st-content" style="text-align:left; font-size:14px; margin-top:10px;"></div>
             <button class="menu-btn" onclick="closeM()">ЗАКРЫТЬ</button>
         </div>
     </div>
@@ -115,7 +117,7 @@
     <div id="admin-overlay" class="overlay">
         <div class="card">
             <h2 style="color:var(--gold)">АДМИНКА</h2>
-            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:80%; padding:10px; margin-bottom:10px; background:#222; color:#fff; border:1px solid #444;">
+            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:80%; padding:10px; background:#222; color:#fff; border:1px solid #444; text-align:center;">
             <button class="menu-btn" onclick="jumpToLvl()">ПЕРЕЙТИ</button>
             <button class="menu-btn" style="background:var(--blue)" onclick="addPts()">+10 PTS</button>
             <button class="menu-btn" style="background:#444" onclick="closeM()">ЗАКРЫТЬ</button>
@@ -123,12 +125,20 @@
     </div>
 
 <script>
-    const audio = { match: new Audio('match.mp3'), bg: new Audio('track_normal.mp3') };
+    const audio = { 
+        match: new Audio('match.mp3'), 
+        bg: new Audio('track_normal.mp3'),
+        thunder: new Audio('thunder.mp3') 
+    };
+    
     let st = {
-        lvl: parseInt(localStorage.getItem('v_lvl')) || 1, atk: parseInt(localStorage.getItem('v_atk')) || 10,
-        mHP: parseInt(localStorage.getItem('v_mhp')) || 100, agi: parseInt(localStorage.getItem('v_agi')) || 5,
-        pts: parseInt(localStorage.getItem('v_pts')) || 0, thorCharge: 0, bSkill: 0,
-        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, isA: false, adm: 0
+        lvl: parseInt(localStorage.getItem('v_lvl')) || 1, 
+        atk: parseInt(localStorage.getItem('v_atk')) || 10,
+        mHP: parseInt(localStorage.getItem('v_mhp')) || 100, 
+        agi: parseInt(localStorage.getItem('v_agi')) || 5,
+        pts: parseInt(localStorage.getItem('v_pts')) || 0, 
+        thor: parseInt(localStorage.getItem('v_thor')) || 0, // Сохраняем заряд
+        bSkill: 0, hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, isA: false, adm: 0
     };
 
     function startAudio() { if(!st.isA){ st.isA=true; audio.bg.loop=true; audio.bg.play().catch(()=>{}); } }
@@ -160,11 +170,18 @@
         document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
         document.getElementById('hp-p-txt').innerText = Math.floor(st.hp) + "/" + st.mHP;
-        document.getElementById('thor-progress').style.width = st.thorCharge + "%";
-        document.getElementById('e-skill-fill').style.width = st.bSkill + "%";
         
+        // Обновление шкалы молота
+        document.getElementById('thor-progress').style.width = st.thor + "%";
         const btn = document.getElementById('thor-btn');
-        if(st.thorCharge >= 100) btn.classList.add('ready'); else btn.classList.remove('ready');
+        if(st.thor >= 100) {
+            btn.classList.add('ready');
+            btn.innerText = "МОЛОТ ГОТОВ!";
+        } else {
+            btn.classList.remove('ready');
+            btn.innerText = "МОЛОТ ТОРА";
+        }
+        document.getElementById('e-skill-fill').style.width = st.bSkill + "%";
 
         st.board.forEach((o, i) => {
             const c = document.getElementById('c-' + i);
@@ -194,11 +211,12 @@
             audio.match.currentTime = 0; audio.match.play().catch(()=>{});
             let del = new Set();
             res.forEach(s => {
-                if(st.board[s[0]].type === 3) st.thorCharge = Math.min(100, st.thorCharge + s.length * 5);
+                if(st.board[s[0]].type === 3) st.thor = Math.min(100, st.thor + s.length * 6);
                 s.forEach(idx => del.add(idx));
             });
             st.ehp -= del.size * st.atk; pop(del.size * st.atk, false);
             del.forEach(idx => st.board[idx].type = -1);
+            save(); // Сохраняем заряд молота
             draw(); await new Promise(r => setTimeout(r, 300));
             gravity(); draw(); await new Promise(r => setTimeout(r, 300));
             match();
@@ -209,17 +227,18 @@
     }
 
     async function useThor() {
-        if(st.thorCharge < 100 || st.lock) return;
-        st.lock = true; st.thorCharge = 0;
+        if(st.thor < 100 || st.lock) return;
+        st.lock = true; st.thor = 0; save();
         
+        audio.thunder.play().catch(()=>{});
         const f = document.getElementById('flash');
-        f.classList.add('lightning'); setTimeout(()=>f.classList.remove('lightning'), 400);
+        f.classList.add('lightning'); setTimeout(()=>f.classList.remove('lightning'), 500);
 
-        for(let i=0; i<10; i++) {
+        for(let i=0; i<12; i++) {
             let rIdx = Math.floor(Math.random()*49);
-            st.ehp -= st.atk; pop(st.atk, false);
+            st.ehp -= st.atk * 1.5; pop(Math.floor(st.atk * 1.5), false);
             st.board[rIdx].type = -1;
-            draw(); await new Promise(r => setTimeout(r, 50));
+            draw(); await new Promise(r => setTimeout(r, 60));
         }
         gravity(); draw();
         setTimeout(() => { st.lock = false; if(st.ehp <= 0) win(); else enemy(); }, 400);
@@ -261,14 +280,14 @@
             st.bSkill += 25;
             if (st.bSkill >= 100) {
                 st.bSkill = 0;
-                if(st.lvl===25) pop("ЗАМОРОЗКА!", true);
-                else if(st.lvl===50) { d *= 3; pop("ВЗРЫВ!", true); }
-                else if(st.lvl===75) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.15); pop("ЛЕЧЕНИЕ!", false); }
+                if(st.lvl===25) pop("FREEZE!", true);
+                else if(st.lvl===50) { d *= 3; pop("FIRE!", true); }
+                else if(st.lvl===75) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.15); pop("HEAL!", false); }
                 else d *= 2;
             }
         }
         if(Math.random()*100 < st.agi) pop("MISS!", true); else st.hp -= d;
-        if(st.hp <= 0) { alert("Game Over"); location.reload(); }
+        if(st.hp <= 0) { alert("Вальхалла зовет..."); location.reload(); }
         draw();
     }
 
@@ -278,15 +297,15 @@
         const c = document.getElementById('st-content');
         if(t==='p') {
             n.innerText = "ГЕРОЙ";
-            c.innerHTML = `<p>Урон: ${st.atk}</p><p>Здоровье: ${st.mHP}</p><p>Ловкость: ${st.agi}%</p><p style="color:var(--blue)">Умение: Собирай СИНИЕ руны, чтобы зарядить Молот Тора.</p>`;
+            c.innerHTML = `<p>Урон: <b>${st.atk}</b></p><p>Жизнь: <b>${st.mHP}</b></p><p>Ловкость: <b>${st.agi}%</b></p><p style="color:var(--blue)">Умение: Собирай СИНИЕ плитки. При 100% нажми кнопку для вызова молний.</p>`;
         } else {
             const isB = st.lvl % 25 === 0;
             n.innerText = isB ? "БОСС" : "МОБ";
-            let skillDesc = "Нет особых умений.";
-            if(st.lvl===25) skillDesc = "ЗАМОРОЗКА: Блокирует твои ходы на 1 ход.";
-            if(st.lvl===50) skillDesc = "ОГНЕННЫЙ ВЗРЫВ: Наносит тройной урон.";
-            if(st.lvl===75) skillDesc = "МИЛОСТЬ ВАЛЬКИРИИ: Исцеляет себя на 15% HP.";
-            c.innerHTML = `<p>Урон: ${Math.floor(5+st.lvl*1.2)}</p><p>Здоровье: ${st.mehp}</p><p style="color:var(--purple)">Умение: ${skillDesc}</p>`;
+            let sk = "Нет умений.";
+            if(st.lvl===25) sk = "ЗАМОРОЗКА: Пропуск хода.";
+            if(st.lvl===50) sk = "ВЗРЫВ: Тройной урон.";
+            if(st.lvl===75) sk = "ЛЕЧЕНИЕ: +15% здоровья.";
+            c.innerHTML = `<p>Урон: <b>${Math.floor(5+st.lvl*1.2)}</b></p><p>Жизнь: <b>${st.mehp}</b></p><p style="color:var(--purple)">Особенность: ${sk}</p>`;
         }
         o.style.display = 'flex';
     }
@@ -295,12 +314,19 @@
         const d = document.createElement('div'); d.className = 'dmg-text';
         d.innerText = isNaN(v) ? v : "-" + v;
         d.style.color = p ? (v==="MISS!"?'var(--blue)':'var(--red)') : 'var(--gold)';
-        d.style.left = '50%'; d.style.top = '30%';
+        d.style.left = '50%'; d.style.top = '35%';
         document.body.appendChild(d); setTimeout(()=>d.remove(), 1200);
     }
 
     function win() { st.lvl++; st.pts++; save(); init(); }
-    function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_atk', st.atk); localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi); localStorage.setItem('v_pts', st.pts); }
+    function save() { 
+        localStorage.setItem('v_lvl', st.lvl); 
+        localStorage.setItem('v_atk', st.atk); 
+        localStorage.setItem('v_mhp', st.mHP); 
+        localStorage.setItem('v_agi', st.agi); 
+        localStorage.setItem('v_pts', st.pts); 
+        localStorage.setItem('v_thor', st.thor); 
+    }
     function admTrigger() { st.adm++; if(st.adm>=5){ st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
     function jumpToLvl() { let nl = parseInt(document.getElementById('jump-lvl').value); if(nl > 0) { st.lvl = nl; save(); init(); closeM(); } }
     function addPts() { st.pts += 10; draw(); }
