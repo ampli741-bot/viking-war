@@ -3,80 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking War: Rune Master</title>
+    <title>Viking War</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
-        body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
-        
-        .arena { width: 100%; height: 220px; position: relative; background: #1a1a1a; border-bottom: 3px solid #333; }
-        #enemy-img { width: 150px; height: 150px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); transition: 0.3s; }
-        
-        .bars { position: absolute; top: 10px; width: 90%; left: 5%; display: flex; flex-direction: column; gap: 8px; }
-        .bar-wrap { height: 16px; background: #222; border: 1px solid #444; border-radius: 8px; overflow: hidden; position: relative; }
-        .bar-fill { height: 100%; width: 100%; transition: 0.4s; }
-        .bar-label { position: absolute; width: 100%; text-align: center; font-size: 10px; font-weight: bold; line-height: 16px; text-shadow: 1px 1px 2px black; }
-        
-        #enemy-hp { background: var(--red); }
-        #player-hp { background: var(--green); }
-
-        #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; background: #111; border-radius: 8px; margin-top: 10px; }
-        .cell { width: 45px; height: 45px; border-radius: 6px; background-size: cover; cursor: pointer; transition: 0.2s; }
-        .selected { outline: 3px solid var(--gold); transform: scale(1.1); z-index: 5; }
-        
-        .controls { width: 90%; margin-top: 15px; }
-        #super-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; text-transform: uppercase; }
-        #super-btn.ready { background: linear-gradient(#e67e22, #d35400); color: white; box-shadow: 0 0 15px gold; cursor: pointer; }
-
-        @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-5px)} 75% {transform:translateX(5px)} }
-        .shaking { animation: shake 0.2s infinite; }
+        body { background: #0a0a0a; color: white; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        .arena { width: 100%; height: 200px; position: relative; background: #111; border-bottom: 2px solid #333; }
+        #enemy-img { width: 140px; height: 140px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); transition: 0.2s; }
+        .hit { filter: brightness(2) red; transform: translateX(-50%) scale(1.1) !important; }
+        .bars { position: absolute; top: 10px; width: 90%; left: 5%; display: flex; flex-direction: column; gap: 5px; }
+        .bar-wrap { height: 12px; background: #222; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid #444; }
+        .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
+        #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; background: #000; margin-top: 10px; }
+        .cell { width: 42px; height: 42px; border-radius: 4px; background-size: cover; cursor: pointer; }
+        .selected { outline: 3px solid var(--gold); }
+        .controls { width: 90%; margin-top: 10px; }
+        #super-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333; color: #777; font-weight: bold; }
+        #super-btn.ready { background: orange; color: white; box-shadow: 0 0 10px gold; }
+        @keyframes shake { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(0,0); } }
+        .shaking { animation: shake 0.1s linear infinite; }
     </style>
 </head>
 <body>
 
-    <div class="arena" id="arena">
-        <div class="bars">
-            <div class="bar-wrap"><div id="enemy-hp" class="bar-fill"></div><div class="bar-label">ВРАГ</div></div>
-            <div class="bar-wrap"><div id="player-hp" class="bar-fill"></div><div class="bar-label">ВАШЕ ЗДОРОВЬЕ</div></div>
-        </div>
-        <img id="enemy-img" src="mob1.png">
+<div class="arena" id="arena">
+    <div class="bars">
+        <div class="bar-wrap"><div id="enemy-hp" class="bar-fill" style="background:var(--red)"></div></div>
+        <div class="bar-wrap"><div id="player-hp" class="bar-fill" style="background:var(--green)"></div></div>
     </div>
+    <img id="enemy-img" src="mob1.png">
+</div>
 
-    <div id="grid"></div>
+<div id="grid"></div>
 
-    <div class="controls">
-        <div style="font-size:10px; margin-bottom:5px; color: var(--gold);">ЭНЕРГИЯ (ТОЛЬКО КРАСНЫЕ РУНЫ)</div>
-        <div class="bar-wrap" style="height:12px; border-color: var(--gold);"><div id="energy-fill" class="bar-fill" style="background:var(--gold); width:0%;"></div></div>
-        <button id="super-btn" onclick="useSuper()">УДАР МОЛОТОМ ТОРА</button>
-    </div>
+<div class="controls">
+    <div class="bar-wrap" style="height:8px; margin-bottom:5px;"><div id="energy-fill" class="bar-fill" style="background:var(--gold); width:0%;"></div></div>
+    <button id="super-btn" onclick="useSuper()">УЛЬТА</button>
+</div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    let state = { pHP: 100, eHP: 100, lvl: 1, energy: 0, selected: null, board: [] };
+    let state = { pHP: 100, eHP: 100, lvl: 1, energy: 0, board: [], selected: null };
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
+
+    // Функция безопасного звука
+    function sfx(file) {
+        let a = new Audio(file);
+        a.volume = 0.5;
+        a.play().catch(() => {}); // Игнорируем ошибки, если звука нет
+    }
 
     function init() {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
         state.board = [];
         for (let i = 0; i < 49; i++) {
-            let r = Math.floor(Math.random() * 5);
+            let type = Math.floor(Math.random() * 5);
+            state.board.push(type);
             let cell = document.createElement('div');
             cell.className = 'cell';
-            cell.style.backgroundImage = `url(${runes[r]})`;
             cell.dataset.id = i;
-            cell.dataset.type = r;
-            cell.onclick = () => select(cell);
+            cell.onclick = () => select(i);
             grid.appendChild(cell);
-            state.board.push(r);
+        }
+        render();
+    }
+
+    function render() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach((c, i) => {
+            c.style.backgroundImage = `url(${runes[state.board[i]]})`;
+            c.classList.toggle('selected', state.selected === i);
+        });
+    }
+
+    function select(id) {
+        if (state.selected === null) {
+            state.selected = id;
+        } else {
+            let diff = Math.abs(state.selected - id);
+            if (diff === 1 || diff === 7) {
+                let t = state.board[state.selected];
+                state.board[state.selected] = state.board[id];
+                state.board[id] = t;
+                checkMatches();
+            }
+            state.selected = null;
+        }
+        render();
+    }
+
+    function checkMatches() {
+        let matches = new Set();
+        // Горизонталь
+        for (let i = 0; i < 49; i++) {
+            if (i % 7 < 5 && state.board[i] === state.board[i+1] && state.board[i] === state.board[i+2]) {
+                matches.add(i); matches.add(i+1); matches.add(i+2);
+            }
+        }
+        // Вертикаль
+        for (let i = 0; i < 35; i++) {
+            if (state.board[i] === state.board[i+7] && state.board[i] === state.board[i+14]) {
+                matches.add(i); matches.add(i+7); matches.add(i+14);
+            }
+        }
+
+        if (matches.size > 0) {
+            sfx('match.mp3');
+            let hasRed = false;
+            matches.forEach(idx => {
+                if (state.board[idx] === 0) hasRed = true;
+                state.eHP -= (state.board[idx] === 4) ? 1 : 5;
+                state.board[idx] = Math.floor(Math.random() * 5);
+            });
+            if (hasRed) state.energy = Math.min(100, state.energy + 20);
+            sfx('hit.mp3');
+            animateHit();
+            setTimeout(enemyTurn, 500);
+        }
+        updateUI();
+    }
+
+    function enemyTurn() {
+        if (state.eHP <= 0) return;
+        state.pHP -= (5 + state.lvl);
+        sfx('player_hit.mp3');
+        document.body.classList.add('shaking');
+        setTimeout(() => document.body.classList.remove('shaking'), 200);
+        if (state.pHP <= 0) {
+            sfx('lose.mp3');
+            alert("Поражение!");
+            location.reload();
+        }
+        updateUI();
+    }
+
+    function animateHit() {
+        const img = document.getElementById('enemy-img');
+        img.classList.add('hit');
+        setTimeout(() => img.classList.remove('hit'), 200);
+    }
+
+    function updateUI() {
+        document.getElementById('enemy-hp').style.width = state.eHP + '%';
+        document.getElementById('player-hp').style.width = state.pHP + '%';
+        document.getElementById('energy-fill').style.width = state.energy + '%';
+        const btn = document.getElementById('super-btn');
+        btn.classList.toggle('ready', state.energy >= 100);
+
+        if (state.eHP <= 0) {
+            sfx('win.mp3');
+            alert("Победа!");
+            state.lvl++;
+            state.eHP = 100;
+            state.pHP = 100;
+            state.energy = 0;
+            document.getElementById('enemy-img').src = `mob${Math.min(4, Math.floor(state.lvl/2)+1)}.png`;
         }
     }
 
-    function select(cell) {
-        if (!state.selected) {
-            state.selected = cell;
-            cell.classList.add('selected');
-        } else {
-            let id1 = parseInt(state.selected.dataset.id);
-            let id2 = parseInt(cell.dataset.id);
-            if (
+    function useSuper() {
+        if (state.energy < 100) return;
+        state.eHP -= 50;
+        state.energy = 0;
+        sfx('super.mp3');
+        animateHit();
+        updateUI();
+    }
+
+    init();
+</script>
+</body>
+</html>
