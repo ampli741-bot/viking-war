@@ -3,75 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Boss Edition</title>
+    <title>Viking Saga: Final Fix</title>
     <style>
-        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --blue: #3498db; }
-        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; }
         
-        #admin-info { display: none; background: #600; font-size: 10px; padding: 5px; position: sticky; top: 0; z-index: 1000; }
-        .admin-btn { background: #fff; color: #000; border: none; padding: 2px 5px; margin: 0 2px; font-weight: bold; }
-
-        .header { background: #1a1a1a; padding: 8px; border-bottom: 1px solid #333; display: flex; justify-content: space-around; font-size: 14px; }
+        /* Админка в самом верху, не мешает */
+        #adm { display: none; background: #400; padding: 5px; font-size: 10px; }
         
-        .arena { height: 110px; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .hp-bar { width: 90%; height: 8px; background: #333; margin: 3px; border-radius: 4px; overflow: hidden; border: 1px solid #444; }
-        .fill { height: 100%; transition: 0.3s; width: 100%; }
-        #mob-img { height: 60px; transition: transform 0.2s; }
-        .boss-warn { color: red; font-weight: bold; font-size: 12px; position: absolute; top: 5px; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
+        .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; display: flex; justify-content: space-around; }
+        
+        /* Арена */
+        .arena { height: 140px; background: #111; position: relative; padding-top: 10px; }
+        .hp-bar { width: 90%; height: 10px; background: #333; margin: 5px auto; border-radius: 5px; overflow: hidden; border: 1px solid #444; }
+        .fill { height: 100%; width: 100%; transition: 0.3s; }
+        #mob-img { height: 80px; width: auto; }
 
-        /* Панель управления (над плитками) */
-        .controls { padding: 10px 0; background: #111; }
-        .super-bar { width: 280px; height: 10px; background: #222; margin: 0 auto 8px; border-radius: 5px; border: 1px solid #3498db; overflow: hidden; }
-        .s-btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; font-size: 14px; }
-        .ready { background: linear-gradient(to bottom, #f39c12, #e67e22) !important; color: #fff !important; box-shadow: 0 0 15px #e67e22; }
+        /* Контейнер управления */
+        .ui { padding: 10px 0; }
+        .en-bar { width: 280px; height: 6px; background: #222; margin: 0 auto 5px; border-radius: 3px; overflow: hidden; }
+        .btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
+        .ready { background: orange !important; color: #fff !important; box-shadow: 0 0 10px gold; }
 
-        /* СЕТКА (Grid) */
+        /* Игровое поле — старый добрый метод без наворотов */
         #grid { 
-            display: grid; 
-            grid-template-columns: repeat(7, 42px); 
-            grid-template-rows: repeat(7, 42px); 
-            gap: 4px; 
-            justify-content: center; 
-            margin: 10px auto;
-            width: fit-content;
+            width: 315px; 
+            margin: 0 auto; 
+            display: block; 
+            font-size: 0; /* Убирает зазоры между inline-block */
         }
         .cell { 
-            width: 42px; height: 42px; 
-            background-size: cover; border-radius: 4px; 
-            background-color: #1a1a1a; border: 1px solid #222;
+            display: inline-block;
+            width: 40px; 
+            height: 40px; 
+            margin: 2px;
+            background-size: cover;
+            background-color: #222;
+            border-radius: 4px;
+            border: 1px solid #333;
+            vertical-align: top;
             box-sizing: border-box;
         }
-        .sel { outline: 3px solid #fff; transform: scale(0.9); z-index: 10; box-shadow: 0 0 10px gold; }
+        .sel { border: 2px solid #fff !important; transform: scale(0.9); }
 
-        #msg { position: fixed; top: 40%; width: 100%; background: rgba(0,0,0,0.9); color: gold; display: none; padding: 20px 0; z-index: 2000; font-size: 24px; font-weight: bold; }
+        #msg { position: fixed; top: 40%; width: 100%; background: rgba(0,0,0,0.9); color: gold; display: none; padding: 20px 0; font-size: 24px; z-index: 100; }
     </style>
 </head>
 <body>
 
-    <div id="admin-info">
-        ADM: <button class="admin-btn" onclick="changeLvl(-1)">-1</button>
-        <button class="admin-btn" onclick="changeLvl(1)">+1</button>
-        <button class="admin-btn" onclick="state.en=100;render();">MAX ⚡</button>
-        <button class="admin-btn" onclick="skipBan()">SKIP BAN</button>
+    <div id="adm">
+        <button onclick="changeLvl(1)">+1 LVL</button> | 
+        <button onclick="s.en=100;draw();">⚡ MAX</button> | 
+        <button onclick="localStorage.removeItem('v_ban');location.reload();">FIX BAN</button>
     </div>
 
-    <div class="header" onclick="adminTouch()">
-        <span id="best-txt" style="opacity:0.5">РЕКОРД: 1</span>
-        <span id="lvl-txt" style="color:var(--gold)">УРОВЕНЬ 1</span>
+    <div class="header" onclick="admOn()">
+        <span id="best-txt">РЕКОРД: 1</span> | <span id="lvl-txt" style="color:gold">УРОВЕНЬ 1</span>
     </div>
 
     <div class="arena">
-        <div id="boss-tag" class="boss-warn" style="display:none">⚠️ БОСС ПРИБЛИЖАЕТСЯ ⚠️</div>
         <div id="msg"></div>
-        <div class="hp-bar"><div id="ehp" class="fill" style="background: var(--red);"></div></div>
-        <img id="mob-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/60/red?text=MOB'">
-        <div class="hp-bar"><div id="php" class="fill" style="background: var(--green);"></div></div>
+        <div class="hp-bar"><div id="ehp" class="fill" style="background: red;"></div></div>
+        <img id="mob-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/80/red?text=MOB'">
+        <div class="hp-bar"><div id="php" class="fill" style="background: green;"></div></div>
     </div>
 
-    <div class="controls">
-        <div class="super-bar"><div id="en-fill" class="fill" style="background: var(--blue); width: 0%;"></div></div>
-        <button id="s-btn" class="s-btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
+    <div class="ui">
+        <div class="en-bar"><div id="en-f" class="fill" style="background: dodgerblue; width: 0%;"></div></div>
+        <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
     </div>
 
     <div id="grid"></div>
@@ -79,47 +77,139 @@
 <script>
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6'];
-    
-    let state = {
+
+    let s = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
         best: parseInt(localStorage.getItem('v_best')) || 1,
         en: parseInt(localStorage.getItem('v_en')) || 0,
         hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null
     };
 
-    let admHits = 0;
-    function adminTouch() { if(++admHits >= 5) { localStorage.setItem('v_adm','true'); document.getElementById('admin-info').style.display='block'; } }
-    function changeLvl(v) { state.lvl += v; save(); init(); }
-    function skipBan() { localStorage.removeItem('v_ban'); location.reload(); }
-    function save() { localStorage.setItem('v_lvl', state.lvl); localStorage.setItem('v_en', state.en); if(state.lvl > state.best) localStorage.setItem('v_best', state.lvl); }
+    let hits = 0;
+    function admOn() { if(++hits >= 5) { localStorage.setItem('v_adm','1'); document.getElementById('adm').style.display='block'; } }
+    function changeLvl(v) { s.lvl += v; save(); init(); }
+    function save() { localStorage.setItem('v_lvl', s.lvl); localStorage.setItem('v_en', s.en); if(s.lvl > s.best) localStorage.setItem('v_best', s.lvl); }
 
     function init() {
         const ban = localStorage.getItem('v_ban');
-        if (ban && Date.now() < ban) {
-            document.body.innerHTML = `<div style="padding:50px; color:red"><h1>ВЫ РАНЕНЫ</h1><button onclick="skipBan()">АДМИН: СНЯТЬ</button></div>`;
+        if (ban && Date.now() < ban && !localStorage.getItem('v_adm')) {
+            document.body.innerHTML = "<h1 style='color:red;padding:50px;'>ВЫ РАНЕНЫ. ЖДИТЕ 1 ЧАС</h1>";
             return;
         }
-        if (localStorage.getItem('v_adm') === 'true') document.getElementById('admin-info').style.display = 'block';
 
-        // Логика Босса
-        const isBoss = state.lvl % 25 === 0;
-        document.getElementById('boss-tag').style.display = isBoss ? 'block' : 'none';
-        
-        let baseEHP = 100 + (state.lvl * 25);
-        state.ehp = isBoss ? baseEHP * 3 : baseEHP;
-        state.maxEHP = state.ehp;
-        state.hp = 100;
+        if(localStorage.getItem('v_adm')) document.getElementById('adm').style.display='block';
 
-        document.getElementById('lvl-txt').innerText = (isBoss ? "БОСС " : "УРОВЕНЬ ") + state.lvl;
-        document.getElementById('best-txt').innerText = "РЕКОРД: " + state.best;
-        document.getElementById('mob-img').style.transform = isBoss ? 'scale(1.5)' : 'scale(1)';
+        // Логика босса (каждые 25 уровней)
+        const isBoss = s.lvl % 25 === 0;
+        let hpMult = isBoss ? 3 : 1;
+        s.maxEHP = (100 + (s.lvl * 25)) * hpMult;
+        s.ehp = s.maxEHP;
+        s.hp = 100;
+
+        document.getElementById('lvl-txt').innerText = (isBoss ? "БОСС " : "УРОВЕНЬ ") + s.lvl;
+        document.getElementById('mob-img').style.transform = isBoss ? "scale(1.3)" : "scale(1)";
 
         const g = document.getElementById('grid');
-        g.innerHTML = ''; state.board = [];
+        g.innerHTML = ''; s.board = [];
         for (let i = 0; i < 49; i++) {
-            state.board.push(Math.floor(Math.random() * 5));
+            s.board.push(Math.floor(Math.random() * 5));
             let d = document.createElement('div');
             d.className = 'cell'; d.id = 'c'+i;
-            d.onclick = () => handleTouch(i);
+            d.onclick = () => touch(i);
             g.appendChild(d);
         }
+        draw();
+    }
+
+    function draw() {
+        s.board.forEach((t, i) => {
+            const el = document.getElementById('c'+i);
+            if (!el) return;
+            el.style.backgroundColor = t === -1 ? '#000' : colors[t];
+            el.style.backgroundImage = t === -1 ? 'none' : `url(${runes[t]})`;
+            el.classList.toggle('sel', s.sel === i);
+        });
+        document.getElementById('php').style.width = s.hp + '%';
+        document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
+        document.getElementById('en-f').style.width = s.en + '%';
+        document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
+        save();
+    }
+
+    async function touch(i) {
+        if (s.lock) return;
+        if (s.sel === null) { s.sel = i; draw(); }
+        else {
+            let a = s.sel, b = i;
+            if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
+                s.lock = true;
+                [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+                draw();
+                if (!await check()) [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+            }
+            s.sel = null; s.lock = false; draw();
+        }
+    }
+
+    async function check() {
+        let found = false;
+        while (true) {
+            let del = new Set();
+            for (let i = 0; i < 49; i++) {
+                if (i % 7 < 5 && s.board[i] !== -1 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) [i,i+1,i+2].forEach(x => del.add(x));
+                if (i < 35 && s.board[i] !== -1 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) [i,i+7,i+14].forEach(x => del.add(x));
+            }
+            if (del.size === 0) break;
+            found = true;
+            del.forEach(idx => {
+                if (s.board[idx] === 1) s.en = Math.min(100, s.en + 5);
+                if (s.board[idx] === 0) s.hp = Math.min(100, s.hp + 2);
+                s.ehp -= 10;
+                s.board[idx] = -1;
+            });
+            draw(); await new Promise(r => setTimeout(r, 200));
+            drop(); draw(); await new Promise(r => setTimeout(r, 200));
+        }
+        if (found) {
+            if (s.ehp <= 0) { 
+                document.getElementById('msg').style.display='block';
+                document.getElementById('msg').innerText = "ПОБЕДА!";
+                setTimeout(() => { s.lvl++; init(); document.getElementById('msg').style.display='none'; }, 1000);
+            } else enemy();
+        }
+        return found;
+    }
+
+    function drop() {
+        for (let c = 0; c < 7; c++) {
+            let empty = 0;
+            for (let r = 6; r >= 0; r--) {
+                let i = r * 7 + c;
+                if (s.board[i] === -1) empty++;
+                else if (empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
+            }
+            for (let r = 0; r < empty; r++) s.board[r*7+c] = Math.floor(Math.random()*5);
+        }
+    }
+
+    function enemy() {
+        let d = 5 + Math.floor(s.lvl/3);
+        if (s.lvl % 25 === 0) d *= 2;
+        s.hp -= d;
+        if (s.hp <= 0) { localStorage.setItem('v_ban', Date.now() + 3600000); location.reload(); }
+        draw();
+    }
+
+    async function useSuper() {
+        if (s.en < 100 || s.lock) return;
+        s.lock = true; s.en = 0; s.ehp -= 150;
+        for (let i = 0; i < 15; i++) s.board[Math.floor(Math.random()*49)] = -1;
+        draw(); await new Promise(r => setTimeout(r, 300));
+        drop(); await check();
+        s.lock = false;
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
