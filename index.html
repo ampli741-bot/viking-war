@@ -1,88 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Viking Debug</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Viking Saga: Restoration</title>
     <style>
-        body { background: #001a33; color: white; text-align: center; font-family: sans-serif; }
+        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
+        
+        .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; font-weight: bold; color: var(--gold); font-size: 18px; }
+        .arena { height: 160px; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
+        
+        .hp-bar { width: 90%; height: 12px; background: #333; margin: 4px; border-radius: 6px; overflow: hidden; border: 1px solid #444; position: relative; }
+        .fill { height: 100%; transition: 0.4s; width: 100%; }
+        
+        #mob-view { height: 100px; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        #mob-img { height: 100%; }
+
         #grid { 
-            display: grid; 
-            grid-template-columns: repeat(7, 40px); 
-            gap: 5px; 
-            width: 310px; 
-            margin: 20px auto; 
-            background: #444; 
-            padding: 10px;
-            min-height: 310px;
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; 
+            padding: 10px; width: 320px; margin: 0 auto; background: #000; 
         }
+        
         .cell { 
-            width: 40px; height: 40px; 
-            background: #666; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 20px; border-radius: 4px;
+            width: 42px; height: 42px; background-size: cover; background-position: center; 
+            border-radius: 4px; border: 1px solid #333; transition: transform 0.2s;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
         }
-        .hp { width: 300px; height: 10px; background: red; margin: 10px auto; }
-        .btn { padding: 10px 20px; background: orange; border: none; font-weight: bold; }
+        
+        .sel { outline: 3px solid #fff; transform: scale(0.85); z-index: 5; box-shadow: 0 0 10px var(--gold); }
+        .btn { width: 90%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
+        .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; cursor: pointer; }
+        
+        #ban-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        #msg { position: absolute; top: 40%; width: 100%; font-weight: bold; background: rgba(0,0,0,0.9); display: none; padding: 20px 0; z-index: 100; color: var(--gold); }
+        
+        @keyframes shake { 0% { transform: translate(2px, 2px); } 100% { transform: translate(0,0); } }
+        .shaking { animation: shake 0.1s infinite; }
     </style>
 </head>
 <body>
 
-    <h2>УРОВЕНЬ <span id="lvl">1</span></h2>
-    <div class="hp" id="hp-bar"></div>
-    <div id="mob" style="font-size: 50px;">👹</div>
-    
-    <div id="grid">
-        </div>
+<div id="ban-screen">
+    <h1 style="color: var(--red);">ВЫ ПАЛИ В БОЮ</h1>
+    <p>Вальхалла закрыта для вас на час.</p>
+    <h2 id="timer" style="color: var(--gold);">60:00</h2>
+</div>
 
-    <button class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
+<div class="header" id="lvl-display">УРОВЕНЬ 1</div>
+<div id="battle-screen" class="arena">
+    <div id="msg"></div>
+    <div class="hp-bar"><div id="ehp" class="fill" style="background: var(--red);"></div></div>
+    <div id="mob-view">
+        <img id="mob-img" src="mob1.png" onerror="this.style.display='none'; this.parentElement.innerText='👹'">
+    </div>
+    <div class="hp-bar"><div id="php" class="fill" style="background: var(--green);"></div></div>
+</div>
+
+<div id="grid"></div>
+
+<div style="height: 6px; width: 90%; background: #222; margin: 10px auto; border-radius: 3px;">
+    <div id="en-fill" style="width: 0%; height: 100%; background: gold; transition: 0.3s;"></div>
+</div>
+<button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
 
 <script>
-    // Если ты видишь синий фон, значит CSS загрузился.
-    // Если увидишь квадраты ниже - значит JS работает.
-    
+    const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
+    const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#95a5a6'];
     const icons = ['🔥', '💧', '🌿', '⭐', '🛡️'];
-    let board = [];
-    let hp = 100;
+    
+    let s = { board: [], sel: null, hp: 100, ehp: 100, en: 0, lock: false, lvl: 1, stun: 0 };
 
-    function start() {
-        console.log("Игра запускается...");
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        board = [];
+    function playSfx(n) {
+        try { let a = new Audio(n + '.mp3'); a.volume = 0.4; a.play().catch(()=>{}); } catch(e){}
+    }
 
-        for (let i = 0; i < 49; i++) {
-            let type = Math.floor(Math.random() * 5);
-            board.push(type);
-
-            let div = document.createElement('div');
-            div.className = 'cell';
-            div.id = 'tile-' + i;
-            div.innerText = icons[type];
-            div.onclick = () => clickTile(i);
-            grid.appendChild(div);
+    function checkBan() {
+        const ban = localStorage.getItem('viking_ban');
+        if (ban && ban > Date.now()) {
+            document.getElementById('ban-screen').style.display = 'flex';
+            const updateT = () => {
+                let diff = ban - Date.now();
+                if (diff <= 0) { localStorage.removeItem('viking_ban'); location.reload(); }
+                let m = Math.floor(diff/60000), sec = Math.floor((diff%60000)/1000);
+                document.getElementById('timer').innerText = `${m}:${sec < 10 ? '0' : ''}${sec}`;
+            };
+            updateT(); setInterval(updateT, 1000);
+            return true;
         }
-        console.log("Сетка создана");
+        return false;
     }
 
-    function clickTile(i) {
-        // Упрощенное удаление при клике для теста
-        document.getElementById('tile-' + i).style.background = 'white';
-        setTimeout(() => {
-            board[i] = Math.floor(Math.random() * 5);
-            document.getElementById('tile-' + i).innerText = icons[board[i]];
-            document.getElementById('tile-' + i).style.background = '#666';
-        }, 200);
+    function init() {
+        if (checkBan()) return;
+        const g = document.getElementById('grid');
+        g.innerHTML = ''; s.board = [];
+        
+        for (let i = 0; i < 49; i++) {
+            let t;
+            do { t = Math.floor(Math.random() * 5); } 
+            while ((i%7>=2 && t===s.board[i-1] && t===s.board[i-2]) || (i>=14 && t===s.board[i-7] && t===s.board[i-14]));
+            s.board.push(t);
+            let c = document.createElement('div');
+            c.className = 'cell'; c.id = 'c' + i;
+            c.onclick = () => touch(i);
+            g.appendChild(c);
+        }
+        s.ehp = 100 + (s.lvl * 20);
+        document.getElementById('lvl-display').innerText = "УРОВЕНЬ " + s.lvl;
+        document.getElementById('mob-img').src = 'mob' + (Math.min(4, Math.floor(s.lvl/3)+1)) + '.png';
+        document.getElementById('mob-img').style.display = 'block';
+        draw();
     }
 
-    function useSuper() {
-        hp -= 20;
-        document.getElementById('hp-bar').style.width = hp + '%';
-        alert("БУМ! Супер удар сработал.");
-        if(hp <= 0) location.reload();
+    function draw() {
+        s.board.forEach((t, i) => {
+            const c = document.getElementById('c' + i);
+            if (t === -1) {
+                c.style.backgroundImage = 'none'; c.style.backgroundColor = '#fff'; c.innerText = '';
+            } else {
+                c.style.backgroundColor = colors[t];
+                c.style.backgroundImage = `url(${runes[t]})`;
+                // Если картинка не прогрузится, будет виден эмодзи ( icons[t] )
+                c.innerText = (c.style.backgroundImage.includes('rune')) ? '' : icons[t];
+            }
+            c.classList.toggle('sel', s.sel === i);
+        });
+        document.getElementById('php').style.width = s.hp + '%';
+        let maxE = 100 + (s.lvl * 20);
+        document.getElementById('ehp').style.width = (s.ehp / maxE * 100) + '%';
+        document.getElementById('en-fill').style.width = s.en + '%';
+        document.getElementById('s-btn').classList.toggle('ready', s.en >= 100);
     }
 
-    // Запуск немедленно
-    start();
-</script>
-</body>
-</html>
+    async function touch(i) {
+        if (s.lock) return;
+        if (s.sel === null) { s.sel = i; draw(); }
+        else {
+            let a = s.sel, b = i;
+            if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
+                s.lock = true;
+                [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+                if (!await checkMatches(true)) {
+                    [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+                }
+            }
+            s.sel = null; s.lock = false; draw();
+        }
+    }
+
+    async function checkMatches(isPlayer) {
+        let matched = false;
+        while (
