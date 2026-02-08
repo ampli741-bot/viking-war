@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking War: Battle Saga</title>
+    <title>Viking War: Rune Master</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --gold: #f1c40f; --red: #e74c3c; --blue: #3498db; --green: #2ecc71; }
+        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
         body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
         
-        /* Арена и HP */
         .arena { width: 100%; height: 220px; position: relative; background: #1a1a1a; border-bottom: 3px solid #333; }
         #enemy-img { width: 150px; height: 150px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); transition: 0.3s; }
         
@@ -21,15 +20,13 @@
         #enemy-hp { background: var(--red); }
         #player-hp { background: var(--green); }
 
-        /* Сетка */
         #grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px; background: #111; border-radius: 8px; margin-top: 10px; }
-        .cell { width: 45px; height: 45px; border-radius: 6px; background-size: cover; cursor: pointer; transition: 0.2s; position: relative; }
+        .cell { width: 45px; height: 45px; border-radius: 6px; background-size: cover; cursor: pointer; transition: 0.2s; }
         .selected { outline: 3px solid var(--gold); transform: scale(1.1); z-index: 5; }
         
-        /* Ульта */
         .controls { width: 90%; margin-top: 15px; }
-        #super-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; }
-        #super-btn.ready { background: linear-gradient(orange, darkorange); color: white; box-shadow: 0 0 15px gold; }
+        #super-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; text-transform: uppercase; }
+        #super-btn.ready { background: linear-gradient(#e67e22, #d35400); color: white; box-shadow: 0 0 15px gold; cursor: pointer; }
 
         @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-5px)} 75% {transform:translateX(5px)} }
         .shaking { animation: shake 0.2s infinite; }
@@ -48,9 +45,9 @@
     <div id="grid"></div>
 
     <div class="controls">
-        <div style="font-size:10px; margin-bottom:5px;">ЭНЕРГИЯ МОЛНИИ</div>
-        <div class="bar-wrap" style="height:10px;"><div id="energy-fill" class="bar-fill" style="background:var(--gold); width:0%;"></div></div>
-        <button id="super-btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
+        <div style="font-size:10px; margin-bottom:5px; color: var(--gold);">ЭНЕРГИЯ (ТОЛЬКО КРАСНЫЕ РУНЫ)</div>
+        <div class="bar-wrap" style="height:12px; border-color: var(--gold);"><div id="energy-fill" class="bar-fill" style="background:var(--gold); width:0%;"></div></div>
+        <button id="super-btn" onclick="useSuper()">УДАР МОЛОТОМ ТОРА</button>
     </div>
 
 <script>
@@ -82,35 +79,4 @@
         } else {
             let id1 = parseInt(state.selected.dataset.id);
             let id2 = parseInt(cell.dataset.id);
-            if ([1, -1, 7, -7].includes(id1 - id2)) {
-                swap(id1, id2);
-                checkMatches();
-            }
-            state.selected.classList.remove('selected');
-            state.selected = null;
-        }
-    }
-
-    function swap(i1, i2) {
-        let t = state.board[i1];
-        state.board[i1] = state.board[i2];
-        state.board[i2] = t;
-        render();
-    }
-
-    function render() {
-        const cells = document.querySelectorAll('.cell');
-        cells.forEach((c, i) => {
-            c.style.backgroundImage = `url(${runes[state.board[i]]})`;
-            c.dataset.type = state.board[i];
-        });
-    }
-
-    function checkMatches() {
-        let toClear = new Set();
-        // Горизонтали
-        for (let r = 0; r < 7; r++) {
-            for (let c = 0; c < 5; c++) {
-                let idx = r * 7 + c;
-                if (state.board[idx] === state.board[idx+1] && state.board[idx] === state.board[idx+2]) {
-                    toClear.add(idx); to
+            if (
