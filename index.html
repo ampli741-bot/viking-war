@@ -3,72 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Fixed Bars</title>
+    <title>Viking RPG: Resurrection</title>
     <style>
-        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; }
+        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --gray: #95a5a6; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
-        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 12px; position: relative; z-index: 1001; }
+        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 11px; z-index: 1001; }
         #exp-bar { width: 100%; height: 3px; background: #222; }
         #exp-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.3s; }
 
-        .arena { height: 26vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+        .arena { height: 26vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
         .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; }
-        .p-icon { width: 75px; height: 75px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; cursor: pointer; }
+        .p-icon { width: 70px; height: 70px; border-radius: 12px; border: 3px solid #444; background: #111; cursor: pointer; object-fit: cover; }
         
-        .bar-bg { width: 100%; height: 16px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
+        .bar-bg { width: 100%; height: 14px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
-        .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 9px; line-height: 16px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
-
-        .skill-bar { width: 100%; height: 6px; background: #111; margin-top: 3px; border-radius: 3px; overflow: hidden; border: 1px solid #333; }
-        .skill-fill { height: 100%; width: 0%; transition: 0.3s; }
+        .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 9px; line-height: 14px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
 
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
         #grid-container { width: 92vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
-        .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; transition: 0.2s; }
-        
+        .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; }
         .thor-charge { box-shadow: inset 0 0 15px var(--gold); border: 2px solid var(--gold); filter: brightness(1.5); transform: scale(1.05); z-index: 50; }
 
         #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; }
         #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 10px var(--blue); cursor: pointer; }
 
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 85%; max-width: 400px; }
-        .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; background: var(--accent); color: #000; cursor: pointer; }
+        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 15px; width: 85%; max-width: 350px; box-sizing: border-box; }
+        .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; text-align: left; font-size: 14px; }
-        .skill-desc { text-align: left; font-size: 13px; background: #222; padding: 8px; border-radius: 6px; border-left: 3px solid var(--blue); margin-top: 8px; }
+        .loot-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; font-size: 12px; }
+        .item-box { padding: 10px; border-radius: 6px; border: 1px solid #444; background: #000; min-height: 60px; }
+        .rarity-0 { border-color: var(--gray); color: #fff; }
+        .rarity-1 { border-color: var(--blue); color: var(--blue); }
+        .rarity-2 { border-color: var(--gold); color: var(--gold); }
 
-        #death-screen { background: rgba(20, 0, 0, 0.98); z-index: 999; }
-        .dmg-text { position: absolute; font-size: 24px; font-weight: bold; animation: fly 1s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; color: var(--gold); }
-        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
+        #death-screen { background: rgba(30, 0, 0, 0.98); z-index: 999; }
+        .dmg-text { position: absolute; font-size: 22px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
+        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
 
     <div id="death-screen" class="overlay">
-        <h1 style="color:var(--red); font-size: 30px;">ВЫ ПАЛИ В БОЮ</h1>
-        <p>Возвращение через:</p>
-        <h2 id="ban-timer" style="font-size: 32px; color:var(--gold)">60:00</h2>
+        <h1 style="color:var(--red); font-size: 32px; margin-bottom: 5px;">ВЫ ПАЛИ В БОЮ</h1>
+        <p id="death-timer-label">Вас ждут в Вальхалле через:</p>
+        <h2 id="ban-timer" style="font-size: 40px; color:var(--gold); margin: 10px 0;">60:00</h2>
+        <div id="res-action-box" style="width: 80%;">
+            </div>
     </div>
 
     <div class="header">
-        <div style="color:var(--gold); padding: 5px;" onclick="admTrig()">STG: <span id="lvl">1</span></div>
-        <div style="color:var(--purple)">HERO: <span id="h-lvl">1</span></div>
-        <div onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: <span id="pts-val">0</span></div>
+        <div onclick="admTrig()" style="cursor:pointer">STG: <span id="lvl">1</span></div>
+        <div style="color:var(--accent)">HP: <span id="hp-val">100</span></div>
+        <div style="color:var(--purple); font-weight: bold;">🧴 <span id="bottles-val">0</span></div>
+        <div onclick="openF()" style="color:var(--gold); cursor:pointer">PTS: <span id="pts-val">0</span></div>
     </div>
     <div id="exp-bar"><div id="exp-fill"></div></div>
 
     <div class="arena">
         <div class="char-box">
             <img src="hero1.png" class="p-icon" style="border-color:var(--accent)" onclick="showInfo('hero')">
-            <div class="bar-bg"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div><div id="hp-p-txt" class="bar-txt">100/100</div></div>
-            <div class="skill-bar"><div id="p-skill-fill" class="skill-fill" style="background:var(--blue)"></div></div>
+            <div class="bar-bg"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div></div>
+            <div style="width:100%; height:4px; background:#111; margin-top:3px;"><div id="p-skill-fill" style="height:100%; width:0%; background:var(--blue); transition:0.3s;"></div></div>
         </div>
         <div class="char-box">
             <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)" onclick="showInfo('enemy')">
-            <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div id="hp-e-txt" class="bar-txt">100/100</div></div>
-            <div class="skill-bar" id="e-skill-wrap"><div id="e-skill-fill" class="skill-fill" style="background:var(--purple)"></div></div>
+            <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div></div>
+            <div id="e-skill-wrap" style="width:100%; height:4px; background:#111; margin-top:3px;"><div id="e-skill-fill" style="height:100%; width:0%; background:var(--purple); transition:0.3s;"></div></div>
         </div>
     </div>
 
@@ -77,78 +79,103 @@
         <button id="thor-btn" onclick="useThor()">МОЛОТ ТОРА</button>
     </div>
 
+    <div id="loot-overlay" class="overlay">
+        <div class="card">
+            <h2 id="loot-title" style="margin:0; font-size: 18px;">НАЙДЕН ТРОФЕЙ!</h2>
+            <div class="loot-compare">
+                <div id="current-item" class="item-box"></div>
+                <div id="new-item" class="item-box"></div>
+            </div>
+            <button class="menu-btn" style="background:var(--accent); color:#000" onclick="equipLoot()">НАДЕТЬ</button>
+            <button class="menu-btn" style="background:var(--red); color:#fff" onclick="closeLoot()">ВЫБРОСИТЬ</button>
+        </div>
+    </div>
+
     <div id="info-overlay" class="overlay" onclick="closeO()">
         <div class="card" onclick="event.stopPropagation()">
-            <h2 id="info-name" style="margin-top:0; color:var(--gold)">Имя</h2>
-            <div class="stats-grid" id="info-stats"></div>
-            <div id="info-skills"></div>
-            <button class="menu-btn" onclick="closeO()">ПОНЯТНО</button>
+            <h2 id="info-name" style="color:var(--gold); margin-top:0;">Инфо</h2>
+            <div id="info-stats" style="text-align:left; font-size:14px; line-height: 1.6;"></div>
+            <div id="info-equip" style="border-top:1px solid #333; padding-top:10px; font-size:12px; text-align:left; margin-top:10px;"></div>
+            <button class="menu-btn" style="background:#444; color:#fff" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
-    <div id="admin-overlay" class="overlay" style="z-index: 2000;">
+    <div id="admin-overlay" class="overlay">
         <div class="card">
             <h3>АДМИН-ПАНЕЛЬ</h3>
-            <button class="menu-btn" onclick="resurrect()" style="background:var(--blue); color:#fff">ВОСКРЕСИТЬ</button>
-            <input type="number" id="jump-lvl" placeholder="Этап" style="width:90%; padding:10px; margin-top:10px;">
-            <button class="menu-btn" onclick="jumpTo()">ПЕРЕЙТИ</button>
-            <button class="menu-btn" onclick="closeO()" style="background:#444; color:#fff">ЗАКРЫТЬ</button>
+            <button class="menu-btn" onclick="st.bottles++; draw(); closeO();">+1 БУТЫЛКА</button>
+            <button class="menu-btn" onclick="resurrect()">БЕСПЛАТНЫЙ РЕЗ</button>
+            <button class="menu-btn" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
-    <div id="f-menu" class="overlay"><div class="card"><h2>КУЗНИЦА</h2><button class="menu-btn" onclick="buy('atk')">УРОН +2</button><button class="menu-btn" onclick="buy('hp')">ОЗ +20</button><button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ +1%</button><button class="menu-btn" onclick="closeO()">ЗАКРЫТЬ</button></div></div>
-
 <script>
+    const TYPES = ["Шлем", "Грудь", "Ноги", "Кольцо", "Амулет"];
+    const RARITY = ["Обычный", "Редкий", "Легендарный"];
+    
     let st = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
         hLvl: parseInt(localStorage.getItem('v_hlvl')) || 1,
         exp: parseInt(localStorage.getItem('v_exp')) || 0,
-        mExp: 600, atk: parseInt(localStorage.getItem('v_atk')) || 10,
-        mHP: parseInt(localStorage.getItem('v_mhp')) || 100,
-        agi: parseInt(localStorage.getItem('v_agi')) || 5,
         pts: parseInt(localStorage.getItem('v_pts')) || 0,
+        bottles: parseInt(localStorage.getItem('v_bot')) || 0,
         banUntil: parseInt(localStorage.getItem('v_ban')) || 0,
-        thor: 0, hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, eSkill: 0, combo: 1, adm: 0
+        equip: JSON.parse(localStorage.getItem('v_equip')) || {},
+        atk: 10, mHP: 100, agi: 5, hp: 100, ehp: 100, mehp: 100,
+        thor: 0, board: [], sel: null, lock: false, eSkill: 0, adm: 0, pendingItem: null
     };
 
     function sfx(n) { new Audio(`${n}.mp3`).play().catch(()=>{}); }
 
-    function showInfo(type) {
-        const name = document.getElementById('info-name');
-        const stats = document.getElementById('info-stats');
-        const skills = document.getElementById('info-skills');
-        if(type === 'hero') {
-            name.innerText = "ВИКИНГ (ВЫ)";
-            stats.innerHTML = `<div>⚔️ УРН: ${st.atk}</div><div>❤️ ХП: ${st.mHP}</div><div>🍃 ЛВК: ${st.agi}%</div><div>⭐ УР: ${st.hLvl}</div>`;
-            skills.innerHTML = `<div class="skill-desc"><b>МОЛОТ ТОРА:</b> Взрыв 15 рун. Заряд: ${Math.floor(st.thor)}%</div>`;
-        } else {
-            const isB = st.lvl % 25 === 0;
-            name.innerText = isB ? "БОСС ЭТАПА" : "ДИКИЙ ВОИН";
-            stats.innerHTML = `<div>⚔️ УРН: ${Math.floor(5 + st.lvl * 2.5)}</div><div>❤️ ХП: ${st.mehp}</div>`;
-            skills.innerHTML = isB ? `<div class="skill-desc"><b>ЯРОСТЬ:</b> Использует спецприем при заполнении шкалы.</div>` : `<div class="skill-desc">Обычный противник.</div>`;
-        }
-        document.getElementById('info-overlay').style.display = 'flex';
+    function calcStats() {
+        st.atk = 10 + (st.hLvl * 2); st.mHP = 100 + (st.hLvl * 20); st.agi = 5;
+        Object.values(st.equip).forEach(i => {
+            if(i.atk) st.atk += i.atk; if(i.hp) st.mHP += i.hp; if(i.agi) st.agi += i.agi;
+        });
     }
 
     function checkBan() {
         const now = Date.now();
         if (st.banUntil > now) {
             document.getElementById('death-screen').style.display = 'flex';
+            const btnBox = document.getElementById('res-action-box');
+            
+            if(st.bottles > 0) {
+                btnBox.innerHTML = `<button class="menu-btn" style="background:var(--purple); color:#fff; border: 2px solid #fff; animation: pulse 1.5s infinite;" onclick="useBottle()">ВОСКРЕСНУТЬ (🧴 1)</button>`;
+            } else {
+                btnBox.innerHTML = `<p style="font-size:12px; opacity:0.6;">Бутылок воскрешения нет</p>`;
+            }
+
             const diff = Math.ceil((st.banUntil - now) / 1000);
-            const m = Math.floor(diff / 60); const s = diff % 60;
+            const m = Math.floor(diff/60); const s = diff%60;
             document.getElementById('ban-timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
             setTimeout(checkBan, 1000); return true;
-        } else {
-            document.getElementById('death-screen').style.display = 'none'; return false;
+        }
+        document.getElementById('death-screen').style.display = 'none'; return false;
+    }
+
+    function useBottle() {
+        if(st.bottles > 0) {
+            st.bottles--;
+            st.banUntil = 0;
+            save();
+            resurrect();
         }
     }
 
+    function resurrect() {
+        st.banUntil = 0; st.hp = st.mHP; save();
+        document.getElementById('death-screen').style.display = 'none';
+        init();
+    }
+
     function init() {
+        calcStats();
         if (checkBan()) return;
         const isB = st.lvl % 25 === 0;
         st.mehp = isB ? (100 + st.lvl * 80) * 6 : 100 + st.lvl * 80;
-        st.ehp = st.mehp; st.eSkill = 0; st.mExp = st.hLvl * 600;
-        document.getElementById('m-icon').src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
+        st.ehp = st.mehp; st.eSkill = 0;
+        document.getElementById('m-icon').src = isB ? `boss.png` : `mob.png`;
         document.getElementById('e-skill-wrap').style.visibility = isB ? 'visible' : 'hidden';
         
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
@@ -163,174 +190,150 @@
     function draw() {
         document.getElementById('pts-val').innerText = st.pts;
         document.getElementById('lvl').innerText = st.lvl;
-        document.getElementById('h-lvl').innerText = st.hLvl;
-        document.getElementById('exp-fill').style.width = (st.exp/st.mExp*100)+'%';
+        document.getElementById('hp-val').innerText = Math.floor(st.hp);
+        document.getElementById('bottles-val').innerText = st.bottles;
+        document.getElementById('exp-fill').style.width = (st.exp/(st.hLvl*600)*100)+'%';
         document.getElementById('hp-e-fill').style.width = (st.ehp/st.mehp*100)+'%';
-        document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
-        document.getElementById('hp-p-txt').innerText = Math.floor(st.hp) + "/" + st.mHP;
         document.getElementById('p-skill-fill').style.width = st.thor + "%";
         document.getElementById('e-skill-fill').style.width = st.eSkill + "%";
         document.getElementById('thor-btn').className = st.thor >= 100 ? 'ready' : '';
-
         st.board.forEach((o, i) => {
             const c = document.getElementById('c-' + i);
             c.style.backgroundImage = o.type === -1 ? 'none' : `url(rune${o.type+1}.png)`;
-            c.className = `cell ${st.sel === i ? 'selected' : ''}`;
+            c.style.outline = st.sel === i ? '3px solid #fff' : 'none';
+            c.style.zIndex = st.sel === i ? '10' : '1';
         });
-    }
-
-    function handle(i) {
-        if (st.lock) return;
-        if (st.sel === null) { st.sel = i; draw(); }
-        else {
-            let a = st.sel, b = i;
-            if ((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
-                st.lock = true; swap(a, b);
-                if (!checkMatchesSimple()) { setTimeout(() => { swap(a, b); st.lock = false; st.sel = null; draw(); }, 300); }
-                else { sfx('swap'); st.sel = null; resolveBoard(); }
-            } else { st.sel = i; draw(); }
-        }
-    }
-
-    function swap(a, b) { let t = {...st.board[a]}; st.board[a] = {...st.board[b]}; st.board[b] = t; }
-    function checkMatchesSimple() {
-        for (let r=0; r<7; r++) for (let c=0; c<5; c++) {
-            let i = r*7+c; if (st.board[i].type!==-1 && st.board[i].type===st.board[i+1].type && st.board[i].type===st.board[i+2].type) return true;
-        }
-        for (let c=0; c<7; c++) for (let r=0; r<5; r++) {
-            let i = r*7+c; if (st.board[i].type!==-1 && st.board[i].type===st.board[i+7].type && st.board[i].type===st.board[i+14].type) return true;
-        }
-        return false;
     }
 
     async function resolveBoard() {
         st.combo = 1;
         while (true) {
             let toClear = new Set();
-            for (let r=0; r<7; r++) {
-                let cnt=1;
-                for (let c=0; c<7; c++) {
-                    let i = r*7+c;
-                    if (c<6 && st.board[i].type!==-1 && st.board[i].type===st.board[i+1].type) cnt++;
-                    else {
-                        if (cnt>=3) {
-                            for(let k=0; k<cnt; k++) toClear.add(i-k);
-                            if(cnt===4) { for(let j=0; j<7; j++) toClear.add(r*7+j); }
-                            if(cnt>=5) { 
-                                let mid = i-Math.floor(cnt/2);
-                                for(let rr=-1; rr<=1; rr++) for(let cc=-1; cc<=1; cc++) {
-                                    let idx=mid+rr*7+cc; if(idx>=0&&idx<49) toClear.add(idx);
-                                }
-                            }
-                        }
-                        cnt=1;
-                    }
-                }
-            }
-            for (let c=0; c<7; c++) {
-                let cnt=1;
-                for (let r=0; r<7; r++) {
-                    let i = r*7+c;
-                    if (r<6 && st.board[i].type!==-1 && st.board[i].type===st.board[i+7].type) cnt++;
-                    else {
-                        if (cnt>=3) {
-                            for(let k=0; k<cnt; k++) toClear.add(i-k*7);
-                            if(cnt===4) { for(let j=0; j<7; j++) toClear.add(j*7+c); }
-                        }
-                        cnt=1;
-                    }
-                }
+            for(let r=0; r<7; r++) for(let c=0; c<7; c++) {
+                let i = r*7+c;
+                if(c<5 && st.board[i].type!==-1 && st.board[i].type===st.board[i+1].type && st.board[i].type===st.board[i+2].type) { toClear.add(i); toClear.add(i+1); toClear.add(i+2); }
+                if(r<5 && st.board[i].type!==-1 && st.board[i].type===st.board[i+7].type && st.board[i].type===st.board[i+14].type) { toClear.add(i); toClear.add(i+7); toClear.add(i+14); }
             }
             if (toClear.size === 0) break;
             sfx('match');
-            let d = Math.floor(toClear.size * st.atk * (1 + (st.combo-1)*0.3));
-            st.ehp -= d; st.exp += d; st.thor = Math.min(100, st.thor + toClear.size * 1.8);
-            pop(d + (st.combo>1?` x${st.combo}`:''));
-            if (st.exp >= st.mExp) { st.exp -= st.mExp; st.hLvl++; st.pts++; st.mExp = st.hLvl * 600; pop("LVL UP!"); save(); }
-            toClear.forEach(i => { st.board[i].type = -1; });
-            draw(); await new Promise(r => setTimeout(r, 250));
+            let d = Math.floor(toClear.size * st.atk * (1 + (st.combo-1)*0.2));
+            st.ehp -= d; st.exp += d; st.thor = Math.min(100, st.thor + toClear.size * 1.5);
+            pop("-"+d, 'var(--gold)');
+            if(st.exp >= st.hLvl*600) { st.exp=0; st.hLvl++; calcStats(); pop("LEVEL UP!", 'var(--purple)'); }
+            toClear.forEach(i => st.board[i].type = -1); draw();
+            await new Promise(r => setTimeout(r, 250));
             fillBoard(); draw(); await new Promise(r => setTimeout(r, 250));
             st.combo++;
         }
+        if (st.ehp <= 0) {
+            const isB = st.lvl % 25 === 0;
+            if(isB) { st.bottles++; pop("+1🧴 БУТЫЛКА", "var(--purple)"); }
+            else if(Math.random() < 0.05) { st.bottles++; pop("+1🧴 БУТЫЛКА", "var(--purple)"); }
+            
+            if(Math.random() < 0.3 || isB) generateLoot(); else winCleanup();
+        } else enemyTurn();
         st.lock = false;
-        if (st.ehp <= 0) win(); else enemyTurn();
     }
 
-    function fillBoard() {
-        for (let c=0; c<7; c++) {
-            let e=0;
-            for (let r=6; r>=0; r--) {
-                let i = r*7+c;
-                if (st.board[i].type === -1) e++;
-                else if (e > 0) { st.board[i+e*7] = {...st.board[i]}; st.board[i].type = -1; }
-            }
-            for (let r=0; r<e; r++) st.board[r*7+c] = {type: Math.floor(Math.random()*5)};
-        }
+    function generateLoot() {
+        const type = TYPES[Math.floor(Math.random()*TYPES.length)];
+        const rare = Math.random() > 0.9 ? 2 : (Math.random() > 0.7 ? 1 : 0);
+        const mult = (rare + 1) * (1 + st.lvl * 0.1);
+        st.pendingItem = { type, rare, atk: Math.floor(Math.random()*5*mult), hp: Math.floor(Math.random()*30*mult), agi: rare===2?1:0 };
+        
+        const cur = st.equip[type] || {atk:0, hp:0, agi:0};
+        document.getElementById('loot-title').innerText = RARITY[rare] + " " + type;
+        document.getElementById('loot-title').className = "rarity-"+rare;
+        document.getElementById('current-item').innerHTML = `<span style="font-size:10px; opacity:0.6;">Надето:</span><br>⚔️${cur.atk} ❤️${cur.hp} 🍃${cur.agi}`;
+        document.getElementById('new-item').innerHTML = `<span style="font-size:10px; opacity:0.6;">Новое:</span><br>⚔️${st.pendingItem.atk} ❤️${st.pendingItem.hp} 🍃${st.pendingItem.agi}`;
+        document.getElementById('loot-overlay').style.display = 'flex';
     }
+
+    function equipLoot() { st.equip[st.pendingItem.type] = st.pendingItem; st.pendingItem = null; calcStats(); save(); closeLoot(); }
+    function closeLoot() { document.getElementById('loot-overlay').style.display = 'none'; if(st.ehp <= 0) winCleanup(); }
+    function winCleanup() { st.lvl++; let heal = Math.floor(st.mHP * 0.15); st.hp = Math.min(st.mHP, st.hp + heal); st.pts++; save(); init(); }
 
     function enemyTurn() {
         const isB = st.lvl % 25 === 0;
-        let d = Math.floor(5 + st.lvl * 2.5);
-        if (isB) {
-            st.eSkill += 25;
-            if (st.eSkill >= 100) {
-                st.eSkill = 0; d *= 3; pop("CRIT!"); 
-            }
+        let d = Math.floor(5 + st.lvl * 2);
+        if(isB) { st.eSkill += 25; if(st.eSkill >= 100) { st.eSkill=0; d *= 3; pop("КРИТ!", "var(--red)"); } }
+        if(Math.random()*100 > st.agi) { st.hp -= d; pop("-"+d, 'var(--red)'); } else pop("ПРОМАХ", '#fff');
+        if(st.hp <= 0) { 
+            sfx('death');
+            st.banUntil = Date.now() + 3600000; 
+            save(); checkBan(); 
         }
-        if (Math.random()*100 > st.agi) st.hp -= d; else pop("MISS");
-        if (st.hp <= 0) death();
         draw();
     }
 
-    function death() {
-        sfx('death'); st.exp = Math.max(0, Math.floor(st.exp * 0.9));
-        st.banUntil = Date.now() + (60 * 60 * 1000);
-        save(); checkBan();
+    function handle(i) {
+        if(st.lock) return;
+        if(st.sel === null) { st.sel = i; draw(); }
+        else {
+            let a = st.sel, b = i;
+            if((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
+                st.lock = true; swap(a,b); resolveBoard(); st.sel = null;
+            } else { st.sel = i; draw(); }
+        }
     }
 
-    function resurrect() {
-        st.banUntil = 0; st.hp = st.mHP;
-        save(); document.getElementById('death-screen').style.display = 'none';
-        init(); closeO();
+    function swap(a, b) { let t = st.board[a].type; st.board[a].type = st.board[b].type; st.board[b].type = t; }
+    function fillBoard() {
+        for(let c=0; c<7; c++) {
+            let e=0; for(let r=6; r>=0; r--) {
+                let i=r*7+c; if(st.board[i].type===-1) e++; else if(e>0) { st.board[i+e*7].type=st.board[i].type; st.board[i].type=-1; }
+            }
+            for(let r=0; r<e; r++) st.board[r*7+c].type = Math.floor(Math.random()*5);
+        }
     }
 
     async function useThor() {
-        if (st.thor < 100 || st.lock) return;
-        st.lock = true; st.thor = 0;
-        let targets = []; while(targets.length < 15) { let r = Math.floor(Math.random()*49); if(!targets.includes(r)) targets.push(r); }
-        targets.forEach(idx => document.getElementById('c-' + idx).classList.add('thor-charge'));
+        if(st.thor<100 || st.lock) return; st.lock=true; st.thor=0;
+        let targets = []; while(targets.length<15) { let r=Math.floor(Math.random()*49); if(!targets.includes(r)) targets.push(r); }
+        targets.forEach(idx => document.getElementById('c-'+idx).classList.add('thor-charge'));
         setTimeout(() => {
-            sfx('thor'); let d = st.atk * 15; st.ehp -= d; st.exp += d; pop(d + " [THOR]");
-            targets.forEach(idx => { st.board[idx].type = -1; document.getElementById('c-' + idx).classList.remove('thor-charge'); });
-            fillBoard(); draw(); setTimeout(() => { resolveBoard(); }, 400);
+            sfx('thor'); let d = st.atk * 10; st.ehp -= d; pop(d + " [ТОР]", 'var(--blue)');
+            targets.forEach(idx => { st.board[idx].type = -1; document.getElementById('c-'+idx).classList.remove('thor-charge'); });
+            fillBoard(); draw(); resolveBoard();
         }, 600);
     }
 
-    function pop(txt) {
+    function pop(txt, col) {
         const p = document.createElement('div'); p.className = 'dmg-text';
-        p.innerText = isNaN(txt) ? txt : "-"+txt;
-        p.style.left = (Math.random()*40+30)+'%'; p.style.top = '30%';
-        document.body.appendChild(p); setTimeout(() => p.remove(), 1000);
+        p.innerText = txt; p.style.color = col; p.style.left = '50%'; p.style.top = '30%';
+        document.body.appendChild(p); setTimeout(() => p.remove(), 1200);
     }
 
-    function win() {
-        st.lvl++; st.pts++; let heal = Math.floor(st.mHP * 0.15);
-        st.hp = Math.min(st.mHP, st.hp + heal);
-        pop("+"+heal+" HP"); save(); init();
+    function showInfo(type) {
+        const n = document.getElementById('info-name');
+        const s = document.getElementById('info-stats');
+        const e = document.getElementById('info-equip');
+        if(type==='hero') {
+            n.innerText = "ГЕРОЙ (УР."+st.hLvl+")";
+            s.innerHTML = `⚔️ АТАКA: ${st.atk}<br>❤️ ЗДОРОВЬЕ: ${Math.floor(st.hp)}/${st.mHP}<br>🍃 ЛОВКОСТЬ: ${st.agi}%<br>🧴 БУТЫЛОК: ${st.bottles}`;
+            e.innerHTML = "<b>ВАШ СЕТ:</b><br>" + TYPES.map(t => {
+                let i = st.equip[t];
+                return i ? `<span class="rarity-${i.rare}">${t}: ⚔️${i.atk} ❤️${i.hp}</span>` : `${t}: <span style="opacity:0.4">пусто</span>`;
+            }).join("<br>");
+        } else {
+            n.innerText = (st.lvl % 25 === 0) ? "БОСС" : "МОБ";
+            s.innerHTML = `⚔️ УРОН: ${Math.floor(5 + st.lvl * 2)}<br>❤️ HP: ${st.ehp}/${st.mehp}`;
+            e.innerHTML = "С боссов всегда падает бутылка воскрешения и шмотка.";
+        }
+        document.getElementById('info-overlay').style.display='flex';
     }
 
-    function save() { 
-        localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_hlvl', st.hLvl); localStorage.setItem('v_exp', st.exp);
-        localStorage.setItem('v_atk', st.atk); localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi); 
-        localStorage.setItem('v_pts', st.pts); localStorage.setItem('v_ban', st.banUntil);
+    function save() {
+        localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_hlvl', st.hLvl);
+        localStorage.setItem('v_exp', st.exp); localStorage.setItem('v_pts', st.pts);
+        localStorage.setItem('v_bot', st.bottles); localStorage.setItem('v_ban', st.banUntil);
+        localStorage.setItem('v_equip', JSON.stringify(st.equip));
     }
 
-    function admTrig() { st.adm++; if(st.adm>=5) { st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
-    function jumpTo() { let l = parseInt(document.getElementById('jump-lvl').value); if(l>0){ st.lvl=l; save(); init(); closeO(); } }
-    function openF() { document.getElementById('f-menu').style.display='flex'; }
-    function closeO() { document.querySelectorAll('.overlay').forEach(e => { if(e.id !== 'death-screen') e.style.display='none'; }); }
-    function buy(t) { if(st.pts>0){ if(t==='atk')st.atk+=2; if(t==='hp'){st.mHP+=20;st.hp+=20} if(t==='agi')st.agi++; st.pts--; draw(); save(); } }
+    function admTrig() { st.adm++; if(st.adm>=5){ st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
+    function closeO() { document.querySelectorAll('.overlay').forEach(o => { if(o.id!=='death-screen') o.style.display='none'; }); }
+    function openF() { showInfo('hero'); }
 
     init();
 </script>
