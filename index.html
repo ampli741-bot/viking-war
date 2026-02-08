@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Stats & Skills</title>
+    <title>Viking Saga: Fixed Bars</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
@@ -13,12 +13,15 @@
         #exp-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.3s; }
 
         .arena { height: 26vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-        .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .p-icon { width: 75px; height: 75px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
+        .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; }
+        .p-icon { width: 75px; height: 75px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; cursor: pointer; }
         
         .bar-bg { width: 100%; height: 16px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
         .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 9px; line-height: 16px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
+
+        .skill-bar { width: 100%; height: 6px; background: #111; margin-top: 3px; border-radius: 3px; overflow: hidden; border: 1px solid #333; }
+        .skill-fill { height: 100%; width: 0%; transition: 0.3s; }
 
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
         #grid-container { width: 92vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
@@ -27,14 +30,14 @@
         .thor-charge { box-shadow: inset 0 0 15px var(--gold); border: 2px solid var(--gold); filter: brightness(1.5); transform: scale(1.05); z-index: 50; }
 
         #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; }
-        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 10px var(--blue); }
+        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 10px var(--blue); cursor: pointer; }
 
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 85%; max-width: 400px; box-sizing: border-box; }
+        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 85%; max-width: 400px; }
         .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; background: var(--accent); color: #000; cursor: pointer; }
         
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; text-align: left; font-size: 14px; }
-        .skill-desc { text-align: left; font-size: 13px; background: #222; padding: 10px; border-radius: 6px; border-left: 3px solid var(--blue); margin-top: 10px; }
+        .skill-desc { text-align: left; font-size: 13px; background: #222; padding: 8px; border-radius: 6px; border-left: 3px solid var(--blue); margin-top: 8px; }
 
         #death-screen { background: rgba(20, 0, 0, 0.98); z-index: 999; }
         .dmg-text { position: absolute; font-size: 24px; font-weight: bold; animation: fly 1s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; color: var(--gold); }
@@ -57,13 +60,15 @@
     <div id="exp-bar"><div id="exp-fill"></div></div>
 
     <div class="arena">
-        <div class="char-box" onclick="showInfo('hero')">
-            <img src="hero1.png" class="p-icon" style="border-color:var(--accent)">
+        <div class="char-box">
+            <img src="hero1.png" class="p-icon" style="border-color:var(--accent)" onclick="showInfo('hero')">
             <div class="bar-bg"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div><div id="hp-p-txt" class="bar-txt">100/100</div></div>
+            <div class="skill-bar"><div id="p-skill-fill" class="skill-fill" style="background:var(--blue)"></div></div>
         </div>
-        <div class="char-box" onclick="showInfo('enemy')">
-            <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
+        <div class="char-box">
+            <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)" onclick="showInfo('enemy')">
             <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div id="hp-e-txt" class="bar-txt">100/100</div></div>
+            <div class="skill-bar" id="e-skill-wrap"><div id="e-skill-fill" class="skill-fill" style="background:var(--purple)"></div></div>
         </div>
     </div>
 
@@ -103,7 +108,7 @@
         agi: parseInt(localStorage.getItem('v_agi')) || 5,
         pts: parseInt(localStorage.getItem('v_pts')) || 0,
         banUntil: parseInt(localStorage.getItem('v_ban')) || 0,
-        thor: 0, hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 1, adm: 0
+        thor: 0, hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, eSkill: 0, combo: 1, adm: 0
     };
 
     function sfx(n) { new Audio(`${n}.mp3`).play().catch(()=>{}); }
@@ -112,20 +117,15 @@
         const name = document.getElementById('info-name');
         const stats = document.getElementById('info-stats');
         const skills = document.getElementById('info-skills');
-        
         if(type === 'hero') {
             name.innerText = "ВИКИНГ (ВЫ)";
-            stats.innerHTML = `<div>⚔️ УРОН: ${st.atk}</div><div>❤️ ХП: ${st.mHP}</div><div>🍃 ЛОВК: ${st.agi}%</div><div>⭐ УР: ${st.hLvl}</div>`;
-            skills.innerHTML = `<div class="skill-desc"><b>МОЛОТ ТОРА:</b> Уничтожает 15 случайных рун и наносит 15х урон. Заряжается от матчей.</div><div class="skill-desc"><b>МИЛОСТЬ ОДИНА:</b> После каждой победы восстанавливает 15% ХП.</div>`;
+            stats.innerHTML = `<div>⚔️ УРН: ${st.atk}</div><div>❤️ ХП: ${st.mHP}</div><div>🍃 ЛВК: ${st.agi}%</div><div>⭐ УР: ${st.hLvl}</div>`;
+            skills.innerHTML = `<div class="skill-desc"><b>МОЛОТ ТОРА:</b> Взрыв 15 рун. Заряд: ${Math.floor(st.thor)}%</div>`;
         } else {
             const isB = st.lvl % 25 === 0;
             name.innerText = isB ? "БОСС ЭТАПА" : "ДИКИЙ ВОИН";
-            name.style.color = "var(--red)";
-            stats.innerHTML = `<div>⚔️ УРОН: ${Math.floor(5 + st.lvl * 2.5)}</div><div>❤️ ХП: ${st.mehp}</div>`;
-            
-            let skillText = isB ? "<b>ЯРОСТЬ БОССА:</b> Наносит тройной урон или замораживает поле." : "<b>СТОЙКОСТЬ:</b> Становится сильнее с каждым этапом.";
-            if(st.lvl >= 25) skillText += `<div class="skill-desc"><b>ЛЕДЯНЫЕ ОКОВЫ:</b> Замораживает случайные плитки на 3 хода.</div>`;
-            skills.innerHTML = `<div class="skill-desc">${skillText}</div>`;
+            stats.innerHTML = `<div>⚔️ УРН: ${Math.floor(5 + st.lvl * 2.5)}</div><div>❤️ ХП: ${st.mehp}</div>`;
+            skills.innerHTML = isB ? `<div class="skill-desc"><b>ЯРОСТЬ:</b> Использует спецприем при заполнении шкалы.</div>` : `<div class="skill-desc">Обычный противник.</div>`;
         }
         document.getElementById('info-overlay').style.display = 'flex';
     }
@@ -147,8 +147,9 @@
         if (checkBan()) return;
         const isB = st.lvl % 25 === 0;
         st.mehp = isB ? (100 + st.lvl * 80) * 6 : 100 + st.lvl * 80;
-        st.ehp = st.mehp; st.mExp = st.hLvl * 600;
+        st.ehp = st.mehp; st.eSkill = 0; st.mExp = st.hLvl * 600;
         document.getElementById('m-icon').src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
+        document.getElementById('e-skill-wrap').style.visibility = isB ? 'visible' : 'hidden';
         
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
         for (let i = 0; i < 49; i++) {
@@ -168,6 +169,8 @@
         document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
         document.getElementById('hp-p-txt').innerText = Math.floor(st.hp) + "/" + st.mHP;
+        document.getElementById('p-skill-fill').style.width = st.thor + "%";
+        document.getElementById('e-skill-fill').style.width = st.eSkill + "%";
         document.getElementById('thor-btn').className = st.thor >= 100 ? 'ready' : '';
 
         st.board.forEach((o, i) => {
@@ -239,7 +242,6 @@
                     }
                 }
             }
-
             if (toClear.size === 0) break;
             sfx('match');
             let d = Math.floor(toClear.size * st.atk * (1 + (st.combo-1)*0.3));
@@ -268,15 +270,21 @@
     }
 
     function enemyTurn() {
+        const isB = st.lvl % 25 === 0;
         let d = Math.floor(5 + st.lvl * 2.5);
+        if (isB) {
+            st.eSkill += 25;
+            if (st.eSkill >= 100) {
+                st.eSkill = 0; d *= 3; pop("CRIT!"); 
+            }
+        }
         if (Math.random()*100 > st.agi) st.hp -= d; else pop("MISS");
         if (st.hp <= 0) death();
         draw();
     }
 
     function death() {
-        sfx('death');
-        st.exp = Math.max(0, Math.floor(st.exp * 0.9));
+        sfx('death'); st.exp = Math.max(0, Math.floor(st.exp * 0.9));
         st.banUntil = Date.now() + (60 * 60 * 1000);
         save(); checkBan();
     }
@@ -290,22 +298,12 @@
     async function useThor() {
         if (st.thor < 100 || st.lock) return;
         st.lock = true; st.thor = 0;
-        let targets = [];
-        while(targets.length < 15) {
-            let r = Math.floor(Math.random()*49);
-            if(!targets.includes(r)) targets.push(r);
-        }
+        let targets = []; while(targets.length < 15) { let r = Math.floor(Math.random()*49); if(!targets.includes(r)) targets.push(r); }
         targets.forEach(idx => document.getElementById('c-' + idx).classList.add('thor-charge'));
         setTimeout(() => {
-            sfx('thor');
-            let d = st.atk * 15; st.ehp -= d; st.exp += d;
-            pop(d + " [THOR]");
-            targets.forEach(idx => {
-                st.board[idx].type = -1;
-                document.getElementById('c-' + idx).classList.remove('thor-charge');
-            });
-            fillBoard(); draw();
-            setTimeout(() => { resolveBoard(); }, 400);
+            sfx('thor'); let d = st.atk * 15; st.ehp -= d; st.exp += d; pop(d + " [THOR]");
+            targets.forEach(idx => { st.board[idx].type = -1; document.getElementById('c-' + idx).classList.remove('thor-charge'); });
+            fillBoard(); draw(); setTimeout(() => { resolveBoard(); }, 400);
         }, 600);
     }
 
@@ -317,11 +315,9 @@
     }
 
     function win() {
-        st.lvl++; st.pts++;
-        let heal = Math.floor(st.mHP * 0.15);
+        st.lvl++; st.pts++; let heal = Math.floor(st.mHP * 0.15);
         st.hp = Math.min(st.mHP, st.hp + heal);
-        pop("+"+heal+" HP");
-        save(); init();
+        pop("+"+heal+" HP"); save(); init();
     }
 
     function save() { 
