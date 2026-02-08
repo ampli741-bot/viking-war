@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Boss Mob4</title>
+    <title>Viking Saga: Boss Fixed</title>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
         #adm { display: none; background: #400; padding: 5px; font-size: 10px; position: sticky; top: 0; z-index: 1000; }
         .adm-btn { background: #fff; color: #000; border: none; padding: 3px 8px; margin: 0 3px; font-weight: bold; border-radius: 3px; }
         .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; display: flex; justify-content: space-around; }
-        .arena { height: 170px; background: #050505; position: relative; padding-top: 10px; overflow: hidden; }
-        .hp-bar { width: 90%; height: 12px; background: #333; margin: 5px auto; border-radius: 6px; overflow: hidden; border: 1px solid #444; position: relative; }
+        
+        /* АРЕНА */
+        .arena { height: 180px; background: #050505; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0; }
+        .hp-bar { width: 90%; height: 12px; background: #333; border-radius: 6px; overflow: hidden; border: 1px solid #444; position: relative; z-index: 10; }
         .fill { height: 100%; width: 100%; transition: 0.3s; }
         
-        #boss-en-bar { width: 60%; height: 6px; background: #222; margin: 2px auto; border-radius: 3px; border: 1px solid #ff4500; display: none; overflow: hidden; }
+        #boss-en-bar { width: 60%; height: 8px; background: #222; border-radius: 4px; border: 1px solid #ff4500; display: none; overflow: hidden; z-index: 10; margin-top: -5px; }
         
-        #mob-img { height: 90px; width: auto; transition: 0.5s; z-index: 2; filter: drop-shadow(0 0 5px rgba(255,0,0,0.3)); }
-        .boss-glow { filter: drop-shadow(0 0 15px red) !important; }
+        #mob-img { height: 100px; width: auto; transition: 0.5s; z-index: 5; margin: 5px 0; }
+        .boss-glow { filter: drop-shadow(0 0 15px red); }
 
+        /* ИНТЕРФЕЙС */
         .ui { padding: 10px 0; background: #111; }
         .en-bar { width: 280px; height: 20px; background: #222; margin: 0 auto 5px; border-radius: 10px; overflow: hidden; position: relative; border: 1px solid #3498db; }
-        #en-txt { position: absolute; width: 100%; font-size: 11px; line-height: 20px; color: #fff; font-weight: bold; z-index: 5; text-shadow: 1px 1px 2px #000; }
+        #en-txt { position: absolute; width: 100%; font-size: 11px; line-height: 20px; color: #fff; font-weight: bold; z-index: 15; text-shadow: 1px 1px 2px #000; }
 
         .btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
         .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; }
@@ -28,7 +31,7 @@
         #grid { width: 315px; margin: 5px auto; display: block; font-size: 0; }
         .cell { display: inline-block; width: 40px; height: 40px; margin: 2px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333; vertical-align: top; box-sizing: border-box; }
         .sel { border: 2px solid #fff !important; transform: scale(0.85); box-shadow: 0 0 10px #fff; }
-        #msg { position: fixed; top: 40%; width: 100%; background: rgba(0,0,0,0.9); color: gold; display: none; padding: 20px 0; font-size: 26px; z-index: 100; font-weight: bold; border-top: 2px solid gold; border-bottom: 2px solid gold; }
+        #msg { position: fixed; top: 40%; width: 100%; background: rgba(0,0,0,0.95); color: gold; display: none; padding: 20px 0; font-size: 26px; z-index: 100; font-weight: bold; border-top: 2px solid gold; border-bottom: 2px solid gold; }
     </style>
 </head>
 <body>
@@ -73,46 +76,35 @@
     };
 
     let audioCtx = null;
-    let bossMusicNode = null;
+    let bossTimer = null;
 
     function play(f) { new Audio(f).play().catch(()=>{}); }
 
-    // 8-битный генератор страшной музыки
+    // НОВАЯ МУЗЫКА БОССА (Ритмичный бас)
     function startBossMusic() {
-        try {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (bossMusicNode) return;
-            
+        if (bossTimer) return;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let step = 0;
+        bossTimer = setInterval(() => {
             const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            
-            // Грозная низкая последовательность
-            const notes = [73.42, 69.30, 65.41, 61.74]; // D2, C#2, C2, B1
-            let i = 0;
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            gain.gain.value = 0.05;
-            
-            osc.start();
-            bossMusicNode = { osc, gain };
-            
-            const loop = () => {
-                if(!bossMusicNode) return;
-                osc.frequency.setTargetAtTime(notes[i % notes.length], audioCtx.currentTime, 0.1);
-                i++;
-                setTimeout(loop, 600);
-            };
-            loop();
-        } catch(e) {}
+            const g = audioCtx.createGain();
+            osc.type = 'triangle';
+            // Ритм: Та-та-ТАМ, Та-та-ТАМ
+            const freqs = [60, 60, 80, 0, 60, 60, 50, 0];
+            let f = freqs[step % 8];
+            if(f > 0) {
+                osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+                g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                osc.connect(g); g.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            }
+            step++;
+        }, 200);
     }
 
     function stopBossMusic() {
-        if (bossMusicNode) {
-            bossMusicNode.osc.stop();
-            bossMusicNode = null;
-        }
+        if (bossTimer) { clearInterval(bossTimer); bossTimer = null; }
     }
 
     let hits = 0;
@@ -146,9 +138,7 @@
         document.getElementById('mob-img').style.transform = isBoss ? "scale(1.7)" : "scale(1)";
 
         s.maxEHP = (100 + (s.lvl * 25)) * (isBoss ? 3 : 1);
-        s.ehp = s.maxEHP;
-        s.hp = 100;
-        s.bossEn = 0;
+        s.ehp = s.maxEHP; s.hp = 100; s.bossEn = 0;
 
         document.getElementById('lvl-txt').innerText = (isBoss ? "БОСС " : "УРОВЕНЬ ") + s.lvl;
         
@@ -174,11 +164,9 @@
         });
         document.getElementById('php').style.width = s.hp + '%';
         document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
-        
         document.getElementById('en-f').style.width = s.en + '%';
         document.getElementById('en-txt').innerText = `МОЛОТ: ${s.en}% (${Math.ceil((100-s.en)/5)} плиток)`;
         document.getElementById('boss-en-fill').style.width = s.bossEn + '%';
-        
         document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
         localStorage.setItem('v_lvl', s.lvl);
         localStorage.setItem('v_en', s.en);
@@ -222,8 +210,7 @@
         }
         if (found) {
             if (s.ehp <= 0) { 
-                stopBossMusic();
-                play('win.mp3');
+                stopBossMusic(); play('win.mp3');
                 document.getElementById('msg').style.display='block';
                 document.getElementById('msg').innerText = "БОСС ПОВЕРЖЕН!";
                 setTimeout(() => { s.lvl++; init(); document.getElementById('msg').style.display='none'; }, 1500);
@@ -249,15 +236,12 @@
         if (s.lvl % 25 === 0) {
             s.bossEn += 25;
             if (s.bossEn >= 100) {
-                dmg *= 3;
-                s.bossEn = 0;
-                play('super.mp3');
+                dmg *= 3; s.bossEn = 0; play('super.mp3');
                 document.getElementById('arena-bg').style.background = 'red';
                 setTimeout(()=>document.getElementById('arena-bg').style.background='#1a0000', 100);
             }
         }
-        s.hp -= dmg;
-        play('hit.mp3');
+        s.hp -= dmg; play('hit.mp3');
         if (s.hp <= 0) { stopBossMusic(); localStorage.setItem('v_ban', Date.now() + 3600000); location.reload(); }
         draw();
     }
