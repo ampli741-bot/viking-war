@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Ultra Stable</title>
+    <title>Viking Saga: Hammer Smash</title>
     <style>
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
@@ -17,165 +17,93 @@
         .sel { outline: 3px solid var(--gold); transform: scale(0.85); z-index: 5; }
         .btn { width: 90%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
         .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; }
+        
+        /* Экран смерти / Бана */
+        #ban-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: none; justify-content: center; align-items: center; flex-direction: column; }
         #msg { position: absolute; top: 40%; width: 100%; font-weight: bold; background: rgba(0,0,0,0.9); display: none; padding: 20px 0; z-index: 100; }
+        
+        @keyframes explosion { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.2); filter: brightness(3); } 100% { transform: scale(1); filter: brightness(1); } }
+        .smash-anim { animation: explosion 0.4s ease-out; }
         @keyframes shake { 0% { transform: translate(2px, 2px); } 100% { transform: translate(0,0); } }
         .shaking { animation: shake 0.1s infinite; }
     </style>
 </head>
 <body>
-    <div class="header" id="lvl-display">УРОВЕНЬ 1</div>
-    <div id="battle-screen" class="arena">
-        <div id="msg"></div>
-        <div class="hp-bar"><div id="ehp" class="fill" style="background: var(--red);"></div></div>
-        <img id="mob" src="mob1.png" onerror="this.src='https://via.placeholder.com/100/red?text=MOB'">
-        <div class="hp-bar"><div id="php" class="fill" style="background: var(--green);"></div></div>
-    </div>
-    <div id="grid"></div>
-    <div style="height: 6px; width: 90%; background: #222; margin: 10px auto; border-radius: 3px;">
-        <div id="en-fill" style="width: 0%; height: 100%; background: gold; transition: 0.3s;"></div>
-    </div>
-    <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
+
+<div id="ban-screen">
+    <h1 style="color: var(--red);">ВЫ ПАЛИ В БОЮ</h1>
+    <p>Вальхалла ждет. Возвращайтесь через:</p>
+    <h2 id="timer" style="color: var(--gold);">60:00</h2>
+</div>
+
+<div class="header" id="lvl-display">УРОВЕНЬ 1</div>
+<div id="battle-screen" class="arena">
+    <div id="msg"></div>
+    <div class="hp-bar"><div id="ehp" class="fill" style="background: var(--red);"></div></div>
+    <img id="mob" src="mob1.png">
+    <div class="hp-bar"><div id="php" class="fill" style="background: var(--green);"></div></div>
+</div>
+<div id="grid"></div>
+<div style="height: 6px; width: 90%; background: #222; margin: 10px auto; border-radius: 3px;">
+    <div id="en-fill" style="width: 0%; height: 100%; background: gold; transition: 0.3s;"></div>
+</div>
+<button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
 
 <script>
-    // Цвета на случай, если картинки не загрузятся
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#95a5a6'];
     let s = { board: [], sel: null, hp: 100, ehp: 100, en: 0, lock: false, lvl: 1, stunTurns: 0 };
 
     function sfx(n) { try { new Audio(n + '.mp3').play().catch(()=>{}); } catch(e){} }
 
+    // Проверка бана при загрузке
+    function checkBan() {
+        const banTime = localStorage.getItem('viking_ban');
+        if (banTime) {
+            const now = Date.now();
+            const diff = banTime - now;
+            if (diff > 0) {
+                document.getElementById('ban-screen').style.display = 'flex';
+                updateTimer(diff);
+                return true;
+            } else {
+                localStorage.removeItem('viking_ban');
+            }
+        }
+        return false;
+    }
+
+    function updateTimer(ms) {
+        const minutes = Math.floor(ms / 60000);
+        const seconds = Math.floor((ms % 60000) / 1000);
+        document.getElementById('timer').innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        if (ms > 0) setTimeout(() => updateTimer(ms - 1000), 1000);
+        else location.reload();
+    }
+
+    function setBan() {
+        const banUntil = Date.now() + (60 * 60 * 1000); // 1 час
+        localStorage.setItem('viking_ban', banUntil);
+        location.reload();
+    }
+
     function init() {
+        if (checkBan()) return;
         document.getElementById('lvl-display').innerText = "УРОВЕНЬ " + s.lvl;
         const g = document.getElementById('grid');
-        g.innerHTML = '';
-        s.board = [];
+        g.innerHTML = ''; s.board = [];
         
-        // Генерация без групп по 3
         for (let i = 0; i < 49; i++) {
             let type;
-            do {
-                type = Math.floor(Math.random() * 5);
-            } while (
-                (i % 7 >= 2 && type === s.board[i-1] && type === s.board[i-2]) ||
-                (i >= 14 && type === s.board[i-7] && type === s.board[i-14])
-            );
+            do { type = Math.floor(Math.random() * 5); } 
+            while ((i % 7 >= 2 && type === s.board[i-1] && type === s.board[i-2]) || (i >= 14 && type === s.board[i-7] && type === s.board[i-14]));
             s.board.push(type);
             let c = document.createElement('div');
-            c.className = 'cell';
-            c.id = 'c' + i;
+            c.className = 'cell'; c.id = 'c' + i;
             c.onclick = () => touch(i);
             g.appendChild(c);
         }
         
         let maxEHP = (s.lvl === 25) ? 500 : 100 + (s.lvl * 15);
         s.ehp = maxEHP;
-        document.getElementById('mob').src = (s.lvl === 25) ? 'boss.png' : 'mob' + (Math.min(4, Math.floor(s.lvl/3)+1)) + '.png';
-        
-        s.lock = false;
-        draw();
-    }
-
-    function draw() {
-        s.board.forEach((t, i) => {
-            const c = document.getElementById('c' + i);
-            if (c) {
-                c.style.backgroundColor = colors[t]; // Запасной цвет
-                c.style.backgroundImage = "url(" + runes[t] + ")";
-                c.classList.toggle('sel', s.sel === i);
-            }
-        });
-        document.getElementById('php').style.width = s.hp + '%';
-        let maxEHP = (s.lvl === 25) ? 500 : 100 + (s.lvl * 15);
-        document.getElementById('ehp').style.width = Math.max(0, (s.ehp / maxEHP * 100)) + '%';
-        document.getElementById('en-fill').style.width = s.en + '%';
-        document.getElementById('s-btn').classList.toggle('ready', s.en >= 100);
-    }
-
-    async function touch(i) {
-        if (s.lock) return;
-        if (s.sel === null) { s.sel = i; draw(); } 
-        else {
-            let d = Math.abs(s.sel - i);
-            if (d === 1 || d === 7) {
-                s.lock = true;
-                let a = s.sel, b = i;
-                let t = s.board[a]; s.board[a] = s.board[b]; s.board[b] = t;
-                let matched = await processMatches(true);
-                if (!matched) {
-                    let temp = s.board[a]; s.board[a] = s.board[b]; s.board[b] = temp;
-                    s.lock = false;
-                }
-            }
-            s.sel = null; draw();
-        }
-    }
-
-    async function processMatches(isPlayer) {
-        let hasMatched = false;
-        let combo = 0;
-        while (true) {
-            let m = [];
-            for (let i = 0; i < 49; i++) {
-                if (i % 7 < 5 && s.board[i] !== -1 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) m.push(i, i+1, i+2);
-                if (i < 35 && s.board[i] !== -1 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) m.push(i, i+7, i+14);
-            }
-            if (m.length === 0) break;
-            hasMatched = true; combo++;
-            [...new Set(m)].forEach(idx => {
-                let type = s.board[idx];
-                if (isPlayer) {
-                    if (type === 0) s.hp = Math.min(100, s.hp + 1); // КРАСНЫЕ ЛЕЧАТ
-                    if (type === 4) s.en = Math.min(100, s.en + 10); // СЕРЫЕ ДЛЯ УЛЬТЫ
-                    s.ehp -= (5 * combo);
-                }
-                s.board[idx] = -1;
-            });
-            sfx('match'); draw();
-            await new Promise(r => setTimeout(r, 300));
-            for (let i = 0; i < 49; i++) if (s.board[i] === -1) s.board[i] = Math.floor(Math.random() * 5);
-            draw();
-            await new Promise(r => setTimeout(r, 200));
-        }
-        if (isPlayer && hasMatched) {
-            if (s.ehp <= 0) win(); else setTimeout(enemyTurn, 600);
-        }
-        return hasMatched;
-    }
-
-    function enemyTurn() {
-        if (s.ehp <= 0) return;
-        if (s.stunTurns > 0) { s.stunTurns--; s.lock = false; return; }
-        let i1 = Math.floor(Math.random() * 48);
-        let i2 = i1 + 1;
-        let t = s.board[i1]; s.board[i1] = s.board[i2]; s.board[i2] = t;
-        s.hp -= (6 + Math.floor(s.lvl/2));
-        shake(); sfx('player_hit');
-        processMatches(false);
-        if (s.hp <= 0) { alert("Game Over"); location.reload(); }
-        s.lock = false; draw();
-    }
-
-    function win() {
-        s.lvl++; s.hp = Math.min(100, s.hp + 15);
-        sfx('win');
-        let m = document.getElementById('msg');
-        m.innerText = "ПОБЕДА! +15% HP"; m.style.display = 'block';
-        setTimeout(() => { m.style.display = 'none'; init(); }, 1500);
-    }
-
-    function shake() {
-        document.getElementById('battle-screen').classList.add('shaking');
-        setTimeout(() => document.getElementById('battle-screen').classList.remove('shaking'), 300);
-    }
-
-    function useSuper() {
-        if (s.en < 100 || s.lock) return;
-        s.ehp -= 120; s.en = 0; s.stunTurns = (s.lvl === 25) ? 1 : 2;
-        sfx('super'); draw(); if (s.ehp <= 0) win();
-    }
-
-    // Запуск после полной загрузки
-    window.onload = init;
-</script>
-</body>
-</html>
+        document.getElementById('mob').src =
