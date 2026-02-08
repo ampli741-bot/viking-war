@@ -3,177 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Valhalla Rising</title>
+    <title>Viking Saga: Professional Edition</title>
     <style>
-        :root { 
-            --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; 
-            --blue: #3498db; --purple: #a55eea; --white: #f5f6fa;
-        }
-        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; }
+        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; }
 
-        /* Интерфейс */
         .header { background: #1a1a1a; height: 60px; display: flex; justify-content: space-around; align-items: center; border-bottom: 3px solid #333; }
         .lvl-badge { color: var(--gold); font-size: 20px; font-weight: bold; cursor: pointer; }
-        #pts-txt { font-weight: bold; padding: 8px 15px; border-radius: 8px; border: 1px solid #444; transition: 0.3s; }
-        .has-pts { color: var(--accent); border-color: var(--accent); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0px var(--accent); } 50% { box-shadow: 0 0 15px var(--accent); } 100% { box-shadow: 0 0 0px var(--accent); } }
-
-        /* Арена */
-        .arena { max-width: 500px; height: 280px; margin: 0 auto; position: relative; background: #080808; overflow: hidden; border-bottom: 4px solid #222; }
-        .boss-active { background: radial-gradient(circle, #400 0%, #000 100%) !important; }
-        .abyss-active { background: radial-gradient(circle, #204 0%, #000 100%) !important; }
-        .valkyrie-active { background: radial-gradient(circle, #442 0%, #000 100%) !important; }
-
-        #mob-img { height: 190px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 5; transition: 0.5s; filter: drop-shadow(0 0 15px #000); }
         
-        .bar-wrap { width: 90%; height: 16px; background: #222; margin: 10px auto; border-radius: 8px; border: 2px solid #333; overflow: hidden; position: relative; z-index: 10; }
-        .bar-fill { height: 100%; width: 100%; transition: 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
-        #boss-super-wrap { width: 70%; height: 6px; background: #111; margin: -5px auto 5px; border-radius: 3px; border: 1px solid #444; overflow: hidden; display: none; position: relative; z-index: 11; }
-        #boss-en-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.3s; }
+        /* Арена */
+        .arena { max-width: 500px; height: 300px; margin: 0 auto; position: relative; background: #080808; overflow: hidden; border-bottom: 4px solid #222; }
+        #mob-img { height: 180px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; transition: 0.3s; }
+        
+        .bar-wrap { width: 90%; height: 14px; background: #222; margin: 10px auto; border-radius: 7px; border: 2px solid #333; overflow: hidden; position: relative; z-index: 10; }
+        .bar-fill { height: 100%; width: 100%; transition: 0.4s; }
+        
+        /* Описание умений босса */
+        #boss-skill-info { color: var(--purple); font-size: 12px; font-weight: bold; margin-top: -5px; text-transform: uppercase; height: 15px; }
 
         /* Поле */
-        #grid { width: 322px; margin: 10px auto; background: #111; padding: 10px; border-radius: 15px; border: 4px solid #333; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .cell { width: 42px; height: 42px; background-size: 85%; background-repeat: no-repeat; background-position: center; background-color: #222; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-        .selected { border: 2px solid #fff; box-shadow: 0 0 15px #fff; transform: scale(0.9); }
-        .locked { filter: grayscale(1) brightness(0.4); border: 2px solid var(--purple); pointer-events: none; animation: shake 0.3s infinite; }
-        .holy { border: 2px solid var(--gold); box-shadow: inset 0 0 10px var(--gold); }
-        @keyframes shake { 0%{transform:translateX(0)} 50%{transform:translateX(2px)} 100%{transform:translateX(0)} }
-
-        /* Оверлеи */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
-        .menu-btn { width: 240px; padding: 15px; margin: 8px; border-radius: 10px; background: #2a2a2a; color: #fff; font-weight: bold; border: 1px solid #444; cursor: pointer; }
-        .buy-btn { background: var(--accent) !important; color: #000 !important; }
+        #grid-wrap { width: 322px; margin: 10px auto; background: #111; padding: 6px; border-radius: 10px; border: 3px solid #333; box-sizing: border-box; }
+        #grid { display: grid; grid-template-columns: repeat(7, 42px); gap: 2px; justify-content: center; }
+        .cell { width: 42px; height: 42px; background-size: 80%; background-repeat: no-repeat; background-position: center; background-color: #222; border-radius: 4px; cursor: pointer; box-sizing: border-box; transition: transform 0.1s; }
+        .selected { outline: 3px solid #fff; outline-offset: -3px; transform: scale(0.9); z-index: 2; }
         
-        .dmg-text { position: absolute; font-size: 32px; font-weight: 900; pointer-events: none; animation: flyUp 0.8s forwards; z-index: 200; text-shadow: 2px 2px #000; }
-        @keyframes flyUp { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -100px); } }
+        /* Эффекты спец-плиток */
+        .line-v { box-shadow: inset 0 0 15px var(--blue); border: 1px solid var(--blue); }
+        .bomb { box-shadow: inset 0 0 15px var(--red); border: 1px solid var(--red); animation: pulse-bomb 1s infinite; }
+        @keyframes pulse-bomb { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .super-container { width: 320px; margin: 5px auto; }
-        #super-btn { width: 100%; padding: 14px; background: #222; color: #555; border: 2px solid #333; border-radius: 10px; font-weight: bold; font-size: 16px; }
-        #super-btn.ready { background: var(--blue) !important; color: #fff !important; cursor: pointer; box-shadow: 0 0 15px var(--blue); }
+        .locked { filter: grayscale(1) brightness(0.3); border: 1px solid var(--purple); pointer-events: none; }
+        .holy { box-shadow: 0 0 10px var(--gold); border: 1px solid var(--gold); }
+
+        /* Всплывашки */
+        .dmg-text { position: absolute; font-size: 28px; font-weight: 900; pointer-events: none; animation: flyUp 0.8s forwards; z-index: 200; text-shadow: 2px 2px #000; }
+        @keyframes flyUp { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -80px); } }
+
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .menu-btn { width: 220px; padding: 15px; margin: 8px; border-radius: 8px; background: #2a2a2a; color: #fff; font-weight: bold; border: 1px solid #444; }
     </style>
 </head>
-<body onclick="startMusic()">
+<body onclick="startAudio()">
 
     <div class="header">
-        <div class="lvl-badge" onclick="adminClick()">УРОВЕНЬ <span id="lvl-val">1</span></div>
-        <div id="pts-txt" onclick="openForge()">ОЧКИ: <span id="pts-val">0</span></div>
-        <div onclick="openInfo()" style="cursor:pointer">📜</div>
+        <div class="lvl-badge" onclick="adminClick()">LVL <span id="lvl-val">1</span></div>
+        <div id="pts-txt" onclick="openForge()">PTS: <span id="pts-val">0</span></div>
     </div>
 
     <div class="arena" id="arena">
         <div class="bar-wrap"><div id="hp-e" class="bar-fill" style="background:var(--red)"></div></div>
-        <div id="boss-super-wrap"><div id="boss-en-fill"></div></div>
+        <div id="boss-skill-info"></div>
+        <div id="boss-super-wrap" class="bar-wrap" style="height:6px; display:none; margin-top:0;"><div id="boss-en-fill" class="bar-fill" style="background:var(--purple)"></div></div>
+        
         <img id="mob-img" src="mob1.png">
+        
         <div class="bar-wrap"><div id="hp-p" class="bar-fill" style="background:var(--accent)"></div></div>
-
-        <div id="forge-menu" class="overlay">
-            <h2 style="color:var(--gold)">КУЗНИЦА ГНОМОВ</h2>
-            <button class="menu-btn buy-btn" onclick="buyStat('atk')">АТАКА +2 (1 PTS)</button>
-            <button class="menu-btn buy-btn" onclick="buyStat('hp')">ЖИЗНЬ +20 (1 PTS)</button>
-            <button class="menu-btn buy-btn" onclick="buyStat('agi')">ЛОВКОСТЬ +1% (1 PTS)</button>
-            <button class="menu-btn" onclick="closeMenus()">ЗАКРЫТЬ</button>
-        </div>
-
-        <div id="admin-menu" class="overlay">
-            <h2 style="color:var(--red)">ODIN'S CONTROL</h2>
-            <button class="menu-btn" onclick="jumpTo(25)">БОСС 25</button>
-            <button class="menu-btn" onclick="jumpTo(50)">ДЕМОН БЕЗДНЫ (50)</button>
-            <button class="menu-btn" onclick="jumpTo(75)">ВАЛЬКИРИЯ (75)</button>
-            <button class="menu-btn" onclick="state.pts += 50; draw();">ДАЙ 50 ОЧКОВ</button>
-            <button class="menu-btn" onclick="closeMenus()">ВЫХОД</button>
-        </div>
     </div>
 
-    <div class="super-container">
-        <div style="width:100%; height:8px; background:#111; border-radius:4px; margin-bottom:5px; overflow:hidden;">
-            <div id="en-fill" style="width:0%; height:100%; background:var(--blue); transition: 0.3s;"></div>
-        </div>
-        <button id="super-btn" onclick="activateSuper()">МОЛОТ ТОРА</button>
+    <div style="margin: 5px;">
+        <div id="combo-txt" style="color:var(--gold); font-weight:bold; height:20px; font-size:18px;"></div>
+        <button id="super-btn" onclick="activateSuper()" style="width:310px; padding:10px; background:#222; color:#555; border:none; border-radius:5px;">МОЛОТ ТОРА</button>
     </div>
 
-    <div id="grid"></div>
+    <div id="grid-wrap"><div id="grid"></div></div>
+
+    <div id="forge-menu" class="overlay">
+        <h2 style="color:var(--gold)">КУЗНИЦА</h2>
+        <button class="menu-btn" onclick="buyStat('atk')" style="background:var(--accent); color:#000">АТАКА +2</button>
+        <button class="menu-btn" onclick="buyStat('hp')" style="background:var(--accent); color:#000">ЖИЗНЬ +20</button>
+        <button class="menu-btn" onclick="closeMenus()">ВЕРНУТЬСЯ</button>
+    </div>
+
+    <div id="admin-menu" class="overlay">
+        <button class="menu-btn" onclick="jumpTo(50)">БОСС 50</button>
+        <button class="menu-btn" onclick="jumpTo(75)">БОСС 75</button>
+        <button class="menu-btn" onclick="closeMenus()">CLOSE</button>
+    </div>
 
 <script>
     const audio = {
         click: new Audio('click.mp3'), match: new Audio('match.mp3'),
         hit: new Audio('hit.mp3'), win: new Audio('win.mp3'),
-        super: new Audio('super.mp3'), bg: new Audio('track_normal.mp3'),
-        bgBoss: new Audio('track_boss.mp3')
+        super: new Audio('super.mp3'), bg: new Audio('track_normal.mp3')
     };
-    audio.bg.loop = true; audio.bgBoss.loop = true;
 
     let state = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
         atk: parseInt(localStorage.getItem('v_atk')) || 10,
         mHP: parseInt(localStorage.getItem('v_mhp')) || 100,
-        agi: parseInt(localStorage.getItem('v_agi')) || 5,
-        pts: parseInt(localStorage.getItem('v_pts')) || 0,
+        agi: 5, pts: parseInt(localStorage.getItem('v_pts')) || 0,
         hp: 100, ehp: 100, mehp: 100, en: 0, bossEn: 0,
-        board: [], lockedCells: [], holyCells: [], sel: null, isMusic: false, lock: false, adminHits: 0
+        board: [], // {type, special: 'none'|'line'|'bomb'}
+        lockedCells: [], holyCells: [], sel: null, 
+        lock: false, combo: 0, adminHits: 0
     };
 
-    function startMusic() { if(!state.isMusic) { state.isMusic=true; updateMusic(); } }
-
-    function updateMusic() {
-        if (!state.isMusic) return;
-        if (state.lvl % 25 === 0) { audio.bg.pause(); audio.bgBoss.play(); } 
-        else { audio.bgBoss.pause(); audio.bg.play(); }
-    }
+    function startAudio() { if(!state.isA) { state.isA=true; audio.bg.loop=true; audio.bg.play(); } }
 
     function init() {
         const isB = state.lvl % 25 === 0;
         const mob = document.getElementById('mob-img');
-        const arena = document.getElementById('arena');
+        const skillTxt = document.getElementById('boss-skill-info');
         
-        arena.className = 'arena'; 
-        if(isB) arena.classList.add('boss-active');
-        if(state.lvl === 50) arena.classList.add('abyss-active');
-        if(state.lvl === 75) arena.classList.add('valkyrie-active');
+        // Настройка боссов
+        skillTxt.innerText = "";
+        document.getElementById('boss-super-wrap').style.display = isB ? 'block' : 'none';
 
-        // Логика картинок
         if (isB) {
-            if(state.lvl === 25) mob.src = 'boss1.png';
-            else if(state.lvl === 50) mob.src = 'boss2.png';
-            else if(state.lvl === 75) mob.src = 'boss3.png'; // Валькирия
-            else mob.src = 'boss1.png';
+            if(state.lvl === 25) { mob.src = 'boss1.png'; skillTxt.innerText = "Ледяной удар: Сильный урон"; }
+            else if(state.lvl === 50) { mob.src = 'boss2.png'; skillTxt.innerText = "Бездна: Блокирует руны на 6 сек"; }
+            else if(state.lvl === 75) { mob.src = 'boss3.png'; skillTxt.innerText = "Валькирия: Исцеление, если не сбить святые руны"; }
+            state.mehp = (100 + state.lvl * 60) * 6;
         } else {
-            let idx = Math.floor((state.lvl - 1) / 5) + 1;
-            mob.src = `mob${Math.min(idx, 15)}.png`;
+            mob.src = `mob${Math.min(Math.floor((state.lvl-1)/5)+1, 15)}.png`;
+            state.mehp = 100 + state.lvl * 60;
         }
 
-        document.getElementById('boss-super-wrap').style.display = isB ? 'block' : 'none';
-        state.mehp = (100 + (state.lvl * 60)) * (isB ? 6 : 1);
-        state.ehp = state.mehp;
-        state.hp = state.mHP;
-        state.bossEn = 0;
-        state.lockedCells = [];
-        state.holyCells = [];
+        state.ehp = state.mehp; state.hp = state.mHP;
+        state.bossEn = 0; state.lockedCells = []; state.holyCells = []; state.en = 0;
 
         const g = document.getElementById('grid');
         g.innerHTML = '';
         state.board = [];
         for (let i = 0; i < 49; i++) {
             let t = Math.floor(Math.random() * 5);
-            state.board.push(t);
+            state.board.push({type: t, special: 'none'});
             let c = document.createElement('div');
             c.className = 'cell';
             c.id = 'c-' + i;
-            c.style.backgroundImage = `url(rune${t + 1}.png)`;
             c.onclick = () => handleInput(i);
             g.appendChild(c);
         }
-        updateMusic();
         draw();
     }
 
     function handleInput(i) {
         if (state.lock || state.lockedCells.includes(i)) return;
-        if (state.isMusic) audio.click.play();
         if (state.sel === null) state.sel = i;
         else {
             let a = state.sel, b = i;
             if ((Math.abs(a - b) === 1 && Math.floor(a/7) === Math.floor(b/7)) || Math.abs(a - b) === 7) {
-                [state.board[a], state.board[b]] = [state.board[b], state.board[a]];
+                swap(a, b);
+                state.combo = 0;
                 processMatches();
             }
             state.sel = null;
@@ -181,25 +152,44 @@
         draw();
     }
 
+    function swap(a, b) {
+        let temp = state.board[a];
+        state.board[a] = state.board[b];
+        state.board[b] = temp;
+    }
+
     async function processMatches() {
         state.lock = true;
-        let del = new Set();
-        for (let i = 0; i < 49; i++) {
-            if (i % 7 < 5 && state.board[i] !== -1 && state.board[i] === state.board[i+1] && state.board[i] === state.board[i+2]) { del.add(i); del.add(i+1); del.add(i+2); }
-            if (i < 35 && state.board[i] !== -1 && state.board[i] === state.board[i+7] && state.board[i] === state.board[i+14]) { del.add(i); del.add(i+7); del.add(i+14); }
-        }
+        let matches = findMatches();
+        
+        if (matches.length > 0) {
+            state.combo++;
+            if (state.combo > 1) document.getElementById('combo-txt').innerText = "COMBO X" + state.combo;
+            
+            audio.match.currentTime = 0; audio.match.play();
+            
+            let toRemove = new Set();
+            matches.forEach(m => {
+                // Логика создания спец-плиток
+                if (m.indices.length === 4) state.board[m.indices[1]].special = 'line';
+                if (m.indices.length >= 5) state.board[m.indices[2]].special = 'bomb';
+                
+                m.indices.forEach(idx => {
+                    // Если спец-плитка была взорвана
+                    if (state.board[idx].special === 'line') triggerLine(idx, toRemove);
+                    if (state.board[idx].special === 'bomb') triggerBomb(idx, toRemove);
+                    toRemove.add(idx);
+                });
+            });
 
-        if (del.size > 0) {
-            if (state.isMusic) audio.match.play();
-            let totalDmg = del.size * state.atk;
-            state.ehp -= totalDmg;
-            popDmg(totalDmg, false);
+            let totalDmg = toRemove.size * state.atk * (1 + (state.combo * 0.1));
+            state.ehp -= Math.floor(totalDmg);
+            popDmg(Math.floor(totalDmg), false);
 
-            del.forEach(idx => {
-                if (state.board[idx] === 1) state.en = Math.min(100, state.en + 7);
-                // Если сбили святую руну Валькирии
+            toRemove.forEach(idx => {
+                state.board[idx].type = -1;
+                state.board[idx].special = 'none';
                 state.holyCells = state.holyCells.filter(c => c !== idx);
-                state.board[idx] = -1;
             });
 
             draw();
@@ -210,7 +200,61 @@
             processMatches();
         } else {
             state.lock = false;
+            document.getElementById('combo-txt').innerText = "";
             if (state.ehp <= 0) win(); else enemyTurn();
+        }
+    }
+
+    function findMatches() {
+        let found = [];
+        // Горизонталь
+        for (let r = 0; r < 7; r++) {
+            let count = 1;
+            for (let c = 0; c < 7; c++) {
+                let idx = r * 7 + c;
+                if (c < 6 && state.board[idx].type !== -1 && state.board[idx].type === state.board[idx+1].type) {
+                    count++;
+                } else {
+                    if (count >= 3) {
+                        let m = [];
+                        for(let k=0; k<count; k++) m.push(idx - k);
+                        found.push({indices: m});
+                    }
+                    count = 1;
+                }
+            }
+        }
+        // Вертикаль
+        for (let c = 0; c < 7; c++) {
+            let count = 1;
+            for (let r = 0; r < 7; r++) {
+                let idx = r * 7 + c;
+                if (r < 6 && state.board[idx].type !== -1 && state.board[idx].type === state.board[idx+7].type) {
+                    count++;
+                } else {
+                    if (count >= 3) {
+                        let m = [];
+                        for(let k=0; k<count; k++) m.push(idx - k*7);
+                        found.push({indices: m});
+                    }
+                    count = 1;
+                }
+            }
+        }
+        return found;
+    }
+
+    function triggerLine(idx, set) {
+        let row = Math.floor(idx / 7);
+        for(let i=0; i<7; i++) set.add(row * 7 + i);
+    }
+
+    function triggerBomb(idx, set) {
+        let r = Math.floor(idx / 7), c = idx % 7;
+        for(let i=r-1; i<=r+1; i++) {
+            for(let j=c-1; j<=j+1; j++) {
+                if(i>=0 && i<7 && j>=0 && j<7) set.add(i*7 + j);
+            }
         }
     }
 
@@ -219,114 +263,78 @@
             let empty = 0;
             for (let r = 6; r >= 0; r--) {
                 let i = r * 7 + c;
-                if (state.board[i] === -1) empty++;
-                else if (empty > 0) { state.board[i + empty * 7] = state.board[i]; state.board[i] = -1; }
+                if (state.board[i].type === -1) empty++;
+                else if (empty > 0) {
+                    state.board[i + empty * 7] = {...state.board[i]};
+                    state.board[i].type = -1;
+                    state.board[i].special = 'none';
+                }
             }
-            for (let r = 0; r < empty; r++) state.board[r * 7 + c] = Math.floor(Math.random() * 5);
+            for (let r = 0; r < empty; r++) state.board[r * 7 + c] = {type: Math.floor(Math.random() * 5), special: 'none'};
         }
     }
 
     function enemyTurn() {
         const isB = state.lvl % 25 === 0;
-        if (Math.random() * 100 < state.agi) { popDmg("УКЛОН", true); if(isB) state.bossEn += 10; } 
-        else {
-            let d = 10 + Math.floor(state.lvl / 2);
-
-            // МЕХАНИКА ВАЛЬКИРИИ (75)
-            if (state.lvl === 75 && state.bossEn >= 100) {
-                if (state.holyCells.length > 0) {
-                    let heal = Math.floor(state.mehp * 0.15);
-                    state.ehp = Math.min(state.mehp, state.ehp + heal);
-                    popDmg("ИСЦЕЛЕНИЕ!", false);
-                }
-                state.bossEn = 0;
-                state.holyCells = [];
-                for(let k=0; k<4; k++) state.holyCells.push(Math.floor(Math.random()*49));
-                popDmg("ЩИТ СВЕТА", true);
-            } 
-            // МЕХАНИКА ДЕМОНА (50)
-            else if (state.lvl === 50 && state.bossEn >= 100) {
-                state.bossEn = 0;
-                popDmg("ОСКВЕРНЕНИЕ", true);
-                for(let k=0; k<6; k++) state.lockedCells.push(Math.floor(Math.random()*49));
-                setTimeout(() => { state.lockedCells = []; draw(); }, 6000);
-            }
-            else if (isB && state.bossEn >= 100) {
-                d *= 2.5; state.bossEn = 0; popDmg("КРИТ!", true);
-            } else if (isB) { state.bossEn += 20; }
-
-            state.hp -= Math.floor(d);
-            if(state.isMusic) audio.hit.play();
-            popDmg(Math.floor(d), true);
-            if (state.hp <= 0) { alert("Вы пали в бою!"); location.reload(); }
+        let d = 10 + state.lvl;
+        
+        if (state.lvl === 75 && state.bossEn >= 100) {
+            if (state.holyCells.length > 0) { state.ehp = Math.min(state.mehp, state.ehp + state.mehp*0.1); popDmg("HEAL", false); }
+            state.bossEn = 0; state.holyCells = [Math.floor(Math.random()*49), Math.floor(Math.random()*49)];
+        } else if (state.lvl === 50 && state.bossEn >= 100) {
+            state.bossEn = 0; for(let k=0; k<5; k++) state.lockedCells.push(Math.floor(Math.random()*49));
+            setTimeout(() => { state.lockedCells = []; draw(); }, 6000);
+        } else if (isB && state.bossEn >= 100) {
+            d *= 2; state.bossEn = 0;
+        } else if (isB) {
+            state.bossEn += 25;
         }
-        draw();
-    }
 
-    function win() {
-        if(state.isMusic) audio.win.play();
-        state.lvl++; state.pts += (state.lvl % 5 === 0) ? 3 : 1;
-        save(); init();
+        state.hp -= Math.floor(d);
+        popDmg(Math.floor(d), true);
+        if (state.hp <= 0) { alert("Game Over"); location.reload(); }
+        draw();
     }
 
     function draw() {
         document.getElementById('lvl-val').innerText = state.lvl;
         document.getElementById('pts-val').innerText = state.pts;
-        document.getElementById('pts-txt').className = state.pts > 0 ? 'has-pts' : '';
-        document.getElementById('hp-e').style.width = (state.ehp / state.mehp * 100) + '%';
-        document.getElementById('hp-p').style.width = (state.hp / state.mHP * 100) + '%';
-        document.getElementById('en-fill').style.width = state.en + '%';
+        document.getElementById('hp-e').style.width = (state.ehp/state.mehp*100) + '%';
+        document.getElementById('hp-p').style.width = (state.hp/state.mHP*100) + '%';
         document.getElementById('boss-en-fill').style.width = state.bossEn + '%';
-        
-        const sBtn = document.getElementById('super-btn');
-        if (state.en >= 100) sBtn.classList.add('ready'); else sBtn.classList.remove('ready');
 
-        state.board.forEach((t, i) => {
+        state.board.forEach((obj, i) => {
             const c = document.getElementById('c-' + i);
-            c.style.backgroundImage = t === -1 ? 'none' : `url(rune${t + 1}.png)`;
-            c.classList.toggle('selected', state.sel === i);
-            c.classList.toggle('locked', state.lockedCells.includes(i));
-            c.classList.toggle('holy', state.holyCells.includes(i));
+            c.className = 'cell';
+            if (obj.type === -1) c.style.backgroundImage = 'none';
+            else {
+                c.style.backgroundImage = `url(rune${obj.type + 1}.png)`;
+                if (obj.special === 'line') c.classList.add('line-v');
+                if (obj.special === 'bomb') c.classList.add('bomb');
+            }
+            if (state.sel === i) c.classList.add('selected');
+            if (state.lockedCells.includes(i)) c.classList.add('locked');
+            if (state.holyCells.includes(i)) c.classList.add('holy');
         });
     }
 
     function popDmg(v, p) {
         const d = document.createElement('div');
         d.className = 'dmg-text';
-        d.innerText = (typeof v === 'number' ? '-' : '') + v;
+        d.innerText = "-" + v;
         d.style.color = p ? 'var(--red)' : 'var(--gold)';
         d.style.left = '50%'; d.style.top = p ? '70%' : '30%';
         document.getElementById('arena').appendChild(d);
         setTimeout(() => d.remove(), 800);
     }
 
-    function buyStat(t) {
-        if(state.pts < 1) return;
-        if(t==='atk') state.atk += 2;
-        if(t==='hp') { state.mHP += 20; state.hp += 20; }
-        if(t==='agi') state.agi += 1;
-        state.pts--; save(); draw();
-    }
-
-    function activateSuper() {
-        if(state.en < 100) return;
-        state.en = 0; audio.super.play();
-        state.ehp -= state.atk * 15;
-        popDmg(state.atk * 15, false);
-        for(let i=0; i<10; i++) state.board[Math.floor(Math.random()*49)] = -1;
-        draw(); setTimeout(() => { gravity(); processMatches(); }, 400);
-    }
-
+    function win() { state.lvl++; state.pts++; save(); init(); }
+    function save() { localStorage.setItem('v_lvl', state.lvl); localStorage.setItem('v_pts', state.pts); }
     function openForge() { document.getElementById('forge-menu').style.display='flex'; }
-    function openInfo() { alert(`АТК: ${state.atk}\nХП: ${state.mHP}\nЛОВК: ${state.agi}%`); }
     function closeMenus() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
     function adminClick() { state.adminHits++; if(state.adminHits >= 5) { state.adminHits=0; document.getElementById('admin-menu').style.display='flex'; } }
     function jumpTo(l) { state.lvl = l; save(); closeMenus(); init(); }
-    function save() {
-        localStorage.setItem('v_lvl', state.lvl); localStorage.setItem('v_atk', state.atk);
-        localStorage.setItem('v_mhp', state.mHP); localStorage.setItem('v_agi', state.agi);
-        localStorage.setItem('v_pts', state.pts);
-    }
+    function buyStat(t) { if(state.pts>0){ if(t==='atk')state.atk+=2; else state.mHP+=20; state.pts--; save(); draw(); } }
 
     init();
 </script>
