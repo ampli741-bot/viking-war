@@ -3,72 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Ultra Stable</title>
+    <title>Viking Saga: Boss Edition</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; }
-        .header { background: #1a1a1a; padding: 10px; border-bottom: 1px solid #333; }
+        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; --blue: #3498db; }
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
         
-        /* Жесткая фиксация контейнера */
+        #admin-info { display: none; background: #600; font-size: 10px; padding: 5px; position: sticky; top: 0; z-index: 1000; }
+        .admin-btn { background: #fff; color: #000; border: none; padding: 2px 5px; margin: 0 2px; font-weight: bold; }
+
+        .header { background: #1a1a1a; padding: 8px; border-bottom: 1px solid #333; display: flex; justify-content: space-around; font-size: 14px; }
+        
+        .arena { height: 110px; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .hp-bar { width: 90%; height: 8px; background: #333; margin: 3px; border-radius: 4px; overflow: hidden; border: 1px solid #444; }
+        .fill { height: 100%; transition: 0.3s; width: 100%; }
+        #mob-img { height: 60px; transition: transform 0.2s; }
+        .boss-warn { color: red; font-weight: bold; font-size: 12px; position: absolute; top: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Панель управления (над плитками) */
+        .controls { padding: 10px 0; background: #111; }
+        .super-bar { width: 280px; height: 10px; background: #222; margin: 0 auto 8px; border-radius: 5px; border: 1px solid #3498db; overflow: hidden; }
+        .s-btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; font-size: 14px; }
+        .ready { background: linear-gradient(to bottom, #f39c12, #e67e22) !important; color: #fff !important; box-shadow: 0 0 15px #e67e22; }
+
+        /* СЕТКА (Grid) */
         #grid { 
-            display: block; 
-            width: 315px; 
-            height: 315px; 
-            margin: 10px auto; 
-            background: #111;
-            line-height: 0; /* Убирает лишние отступы между строками */
+            display: grid; 
+            grid-template-columns: repeat(7, 42px); 
+            grid-template-rows: repeat(7, 42px); 
+            gap: 4px; 
+            justify-content: center; 
+            margin: 10px auto;
+            width: fit-content;
         }
-
         .cell { 
-            display: inline-block;
-            width: 40px; 
-            height: 40px; 
-            margin: 2px;
-            border-radius: 4px; 
-            background-size: cover;
-            background-position: center;
-            vertical-align: top;
-            line-height: 40px; /* Для центровки текста внутри */
-            font-size: 12px;
-            font-weight: bold;
-            color: rgba(255,255,255,0.5);
+            width: 42px; height: 42px; 
+            background-size: cover; border-radius: 4px; 
+            background-color: #1a1a1a; border: 1px solid #222;
+            box-sizing: border-box;
         }
+        .sel { outline: 3px solid #fff; transform: scale(0.9); z-index: 10; box-shadow: 0 0 10px gold; }
 
-        .arena { height: 120px; background: #050505; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .hp-bar { width: 280px; height: 10px; background: #333; margin: 5px; border-radius: 5px; overflow: hidden; }
-        .fill { height: 100%; width: 100%; transition: 0.3s; }
-        #mob-img { height: 60px; }
-
-        .btn { width: 300px; padding: 15px; margin: 10px; border: none; border-radius: 8px; background: #444; color: #fff; font-weight: bold; }
-        .ready { background: #f39c12 !important; box-shadow: 0 0 10px #f39c12; }
-        
-        #admin-info { display: none; background: #600; font-size: 10px; padding: 5px; }
-        #msg { position: fixed; top: 50%; width: 100%; background: rgba(0,0,0,0.8); color: gold; display: none; padding: 20px; z-index: 100; }
+        #msg { position: fixed; top: 40%; width: 100%; background: rgba(0,0,0,0.9); color: gold; display: none; padding: 20px 0; z-index: 2000; font-size: 24px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="admin-info">
-        ADMIN MODE: <button onclick="changeLvl(1)">+1 УР</button> | <button onclick="skipBan()">СБРОС БАНА</button>
+        ADM: <button class="admin-btn" onclick="changeLvl(-1)">-1</button>
+        <button class="admin-btn" onclick="changeLvl(1)">+1</button>
+        <button class="admin-btn" onclick="state.en=100;render();">MAX ⚡</button>
+        <button class="admin-btn" onclick="skipBan()">SKIP BAN</button>
     </div>
 
     <div class="header" onclick="adminTouch()">
-        <span id="lvl-txt">УРОВЕНЬ 1</span> | <span id="best-txt" style="opacity:0.5">РЕКОРД: 1</span>
+        <span id="best-txt" style="opacity:0.5">РЕКОРД: 1</span>
+        <span id="lvl-txt" style="color:var(--gold)">УРОВЕНЬ 1</span>
     </div>
 
     <div class="arena">
-        <div class="hp-bar"><div id="ehp" class="fill" style="background: #e74c3c;"></div></div>
+        <div id="boss-tag" class="boss-warn" style="display:none">⚠️ БОСС ПРИБЛИЖАЕТСЯ ⚠️</div>
+        <div id="msg"></div>
+        <div class="hp-bar"><div id="ehp" class="fill" style="background: var(--red);"></div></div>
         <img id="mob-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/60/red?text=MOB'">
-        <div class="hp-bar"><div id="php" class="fill" style="background: #2ecc71;"></div></div>
+        <div class="hp-bar"><div id="php" class="fill" style="background: var(--green);"></div></div>
+    </div>
+
+    <div class="controls">
+        <div class="super-bar"><div id="en-fill" class="fill" style="background: var(--blue); width: 0%;"></div></div>
+        <button id="s-btn" class="s-btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
     </div>
 
     <div id="grid"></div>
-
-    <div id="msg"></div>
-
-    <div style="width: 300px; height: 6px; background: #222; margin: 5px auto; border-radius: 3px; overflow: hidden;">
-        <div id="en-fill" style="width: 0%; height: 100%; background: #3498db;"></div>
-    </div>
-    <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
 
 <script>
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
@@ -78,187 +84,42 @@
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
         best: parseInt(localStorage.getItem('v_best')) || 1,
         en: parseInt(localStorage.getItem('v_en')) || 0,
-        hp: 100, ehp: 100, lock: false, board: [], sel: null
+        hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null
     };
 
-    let admClicks = 0;
-    function adminTouch() {
-        if (++admClicks >= 5) {
-            localStorage.setItem('v_adm', 'true');
-            document.getElementById('admin-info').style.display = 'block';
-        }
-    }
-
-    function changeLvl(v) { state.lvl += v; save(); location.reload(); }
+    let admHits = 0;
+    function adminTouch() { if(++admHits >= 5) { localStorage.setItem('v_adm','true'); document.getElementById('admin-info').style.display='block'; } }
+    function changeLvl(v) { state.lvl += v; save(); init(); }
     function skipBan() { localStorage.removeItem('v_ban'); location.reload(); }
-    function save() {
-        localStorage.setItem('v_lvl', state.lvl);
-        localStorage.setItem('v_en', state.en);
-        if(state.lvl > state.best) localStorage.setItem('v_best', state.lvl);
-    }
+    function save() { localStorage.setItem('v_lvl', state.lvl); localStorage.setItem('v_en', state.en); if(state.lvl > state.best) localStorage.setItem('v_best', state.lvl); }
 
     function init() {
-        // Проверка бана
         const ban = localStorage.getItem('v_ban');
         if (ban && Date.now() < ban) {
-            document.body.innerHTML = `<h1 style="margin-top:100px; color:red;">ВЫ РАНЕНЫ</h1><p>Вернитесь через час</p><button onclick="skipBan()">АДМИН: СНЯТЬ</button>`;
-            if (localStorage.getItem('v_adm') === 'true') return;
+            document.body.innerHTML = `<div style="padding:50px; color:red"><h1>ВЫ РАНЕНЫ</h1><button onclick="skipBan()">АДМИН: СНЯТЬ</button></div>`;
             return;
         }
-
         if (localStorage.getItem('v_adm') === 'true') document.getElementById('admin-info').style.display = 'block';
 
-        state.ehp = 100 + (state.lvl * 20);
+        // Логика Босса
+        const isBoss = state.lvl % 25 === 0;
+        document.getElementById('boss-tag').style.display = isBoss ? 'block' : 'none';
+        
+        let baseEHP = 100 + (state.lvl * 25);
+        state.ehp = isBoss ? baseEHP * 3 : baseEHP;
         state.maxEHP = state.ehp;
+        state.hp = 100;
 
-        document.getElementById('lvl-txt').innerText = "УРОВЕНЬ " + state.lvl;
+        document.getElementById('lvl-txt').innerText = (isBoss ? "БОСС " : "УРОВЕНЬ ") + state.lvl;
         document.getElementById('best-txt').innerText = "РЕКОРД: " + state.best;
+        document.getElementById('mob-img').style.transform = isBoss ? 'scale(1.5)' : 'scale(1)';
 
-        const container = document.getElementById('grid');
-        container.innerHTML = '';
-        state.board = [];
-
-        // Создаем плитки
+        const g = document.getElementById('grid');
+        g.innerHTML = ''; state.board = [];
         for (let i = 0; i < 49; i++) {
-            let type = Math.floor(Math.random() * 5);
-            state.board.push(type);
-            
-            let div = document.createElement('div');
-            div.className = 'cell';
-            div.id = 'tile-' + i;
-            div.onclick = () => handleTouch(i);
-            container.appendChild(div);
+            state.board.push(Math.floor(Math.random() * 5));
+            let d = document.createElement('div');
+            d.className = 'cell'; d.id = 'c'+i;
+            d.onclick = () => handleTouch(i);
+            g.appendChild(d);
         }
-        render();
-    }
-
-    function render() {
-        state.board.forEach((t, i) => {
-            const el = document.getElementById('tile-' + i);
-            if (!el) return;
-            if (t === -1) {
-                el.style.backgroundColor = '#000';
-                el.style.backgroundImage = 'none';
-                el.innerText = '';
-            } else {
-                el.style.backgroundColor = colors[t];
-                el.style.backgroundImage = `url(${runes[t]})`;
-                el.innerText = t; // Подстраховка: если картинки нет, будет цифра
-            }
-            el.style.border = (state.sel === i) ? '2px solid white' : '1px solid #222';
-        });
-
-        document.getElementById('php').style.width = state.hp + '%';
-        document.getElementById('ehp').style.width = (state.ehp / state.maxEHP * 100) + '%';
-        document.getElementById('en-fill').style.width = state.en + '%';
-        document.getElementById('s-btn').className = 'btn' + (state.en >= 100 ? ' ready' : '');
-    }
-
-    async function handleTouch(i) {
-        if (state.lock) return;
-        if (state.sel === null) {
-            state.sel = i;
-        } else {
-            let a = state.sel, b = i;
-            let dist = Math.abs(a - b);
-            if (dist === 1 || dist === 7) {
-                state.lock = true;
-                [state.board[a], state.board[b]] = [state.board[b], state.board[a]];
-                render();
-                if (!await checkMatches()) {
-                    [state.board[a], state.board[b]] = [state.board[b], state.board[a]];
-                }
-            }
-            state.sel = null;
-            state.lock = false;
-        }
-        render();
-    }
-
-    async function checkMatches() {
-        let hasMatch = false;
-        while (true) {
-            let toDestroy = new Set();
-            for (let i = 0; i < 49; i++) {
-                // Горизонталь
-                if (i % 7 < 5 && state.board[i] !== -1 && state.board[i] === state.board[i+1] && state.board[i] === state.board[i+2]) {
-                    toDestroy.add(i); toDestroy.add(i+1); toDestroy.add(i+2);
-                }
-                // Вертикаль
-                if (i < 35 && state.board[i] !== -1 && state.board[i] === state.board[i+7] && state.board[i] === state.board[i+14]) {
-                    toDestroy.add(i); toDestroy.add(i+7); toDestroy.add(i+14);
-                }
-            }
-
-            if (toDestroy.size === 0) break;
-            hasMatch = true;
-
-            toDestroy.forEach(idx => {
-                if (state.board[idx] === 1) state.en = Math.min(100, state.en + 5);
-                if (state.board[idx] === 0) state.hp = Math.min(100, state.hp + 2);
-                state.ehp -= 10;
-                state.board[idx] = -1;
-            });
-
-            render();
-            await new Promise(r => setTimeout(r, 200));
-            dropTiles();
-            render();
-            await new Promise(r => setTimeout(r, 200));
-        }
-
-        if (hasMatch) {
-            if (state.ehp <= 0) {
-                alert("ПОБЕДА!");
-                state.lvl++;
-                save();
-                location.reload();
-            } else {
-                enemyAttack();
-            }
-        }
-        return hasMatch;
-    }
-
-    function dropTiles() {
-        for (let c = 0; c < 7; c++) {
-            let empty = 0;
-            for (let r = 6; r >= 0; r--) {
-                let idx = r * 7 + c;
-                if (state.board[idx] === -1) empty++;
-                else if (empty > 0) {
-                    state.board[idx + empty * 7] = state.board[idx];
-                    state.board[idx] = -1;
-                }
-            }
-            for (let r = 0; r < empty; r++) {
-                state.board[r * 7 + c] = Math.floor(Math.random() * 5);
-            }
-        }
-    }
-
-    function enemyAttack() {
-        state.hp -= (5 + Math.floor(state.lvl/2));
-        if (state.hp <= 0) {
-            localStorage.setItem('v_ban', Date.now() + 3600000);
-            location.reload();
-        }
-        render();
-    }
-
-    async function useSuper() {
-        if (state.en < 100 || state.lock) return;
-        state.lock = true; state.en = 0; state.ehp -= 100;
-        for (let i = 0; i < 10; i++) state.board[Math.floor(Math.random()*49)] = -1;
-        render();
-        await new Promise(r => setTimeout(r, 300));
-        dropTiles();
-        await checkMatches();
-        state.lock = false;
-        render();
-    }
-
-    window.onload = init;
-</script>
-</body>
-</html>
