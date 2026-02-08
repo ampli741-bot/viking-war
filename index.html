@@ -3,57 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Admin & Scroll Edition</title>
+    <title>Viking Saga: Ultimate Edition</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --bg: #000; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; }
         
-        /* Хедер */
-        .header { background: #151515; height: 55px; display: flex; justify-content: space-around; align-items: center; border-bottom: 3px solid #333; position: relative; z-index: 100; }
-        #lvl-trigger { cursor: pointer; padding: 5px; }
-        #pts-txt { font-weight: bold; padding: 6px 15px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
-        .has-pts { color: var(--accent); border-color: var(--accent); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0px var(--accent); } 50% { box-shadow: 0 0 10px var(--accent); } 100% { box-shadow: 0 0 0px var(--accent); } }
+        body { 
+            background: var(--bg); 
+            color: #fff; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            text-align: center; 
+            overflow: hidden; 
+            user-select: none; 
+            touch-action: manipulation; 
+        }
 
-        /* Арена */
-        .arena { max-width: 500px; height: 250px; margin: 0 auto; position: relative; background: #080808; overflow: hidden; }
-        .boss-active { background: radial-gradient(circle, #700 0%, #000 100%) !important; }
-        #mob-img { height: 140px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 5; }
-        
-        .bar-wrap { width: 92%; height: 16px; background: #222; margin: 6px auto; border-radius: 8px; border: 1px solid #444; overflow: hidden; position: relative; z-index: 10; }
-        .bar-fill { height: 100%; width: 100%; transition: 0.4s; }
+        /* Шапка игры */
+        .header { 
+            background: #151515; 
+            height: 60px; 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            border-bottom: 3px solid #333; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.7); 
+            position: relative; 
+            z-index: 100; 
+        }
 
-        /* Поле */
-        #grid { width: 322px; margin: 15px auto; line-height: 0; background: #111; padding: 8px; border-radius: 15px; border: 3px solid #333; }
-        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-color: #222; border-radius: 8px; cursor: pointer; box-sizing: border-box; }
-        .selected { border: 3px solid #fff; box-shadow: 0 0 15px #fff; transform: scale(0.8); }
+        #lvl-trigger { 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 18px; 
+            color: #fff;
+            padding: 10px;
+        }
 
-        /* Окна с прокруткой */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 1000; display: none; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        .menu-btn { width: 240px; padding: 15px; margin: 8px; border: none; border-radius: 8px; background: #252525; color: #fff; font-weight: bold; cursor: pointer; flex-shrink: 0; }
-        .buy-btn { background: var(--accent) !important; color: #000 !important; }
-        
-        /* Урон */
-        .dmg-text { position: absolute; font-size: 28px; font-weight: 900; pointer-events: none; animation: flyUp 0.8s forwards; z-index: 200; text-shadow: 2px 2px #000; }
-        @keyframes flyUp { 100% { opacity: 0; transform: translate(-50%, -80px); } }
+        #pts-txt { 
+            font-weight: bold; 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            border: 2px solid transparent; 
+            transition: 0.3s; 
+        }
 
-        /* Супер */
-        #super-btn { width: 310px; padding: 12px; background: #222; color: #555; border: 2px solid #333; border-radius: 8px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-        #super-btn.ready { background: var(--blue) !important; color: #fff !important; cursor: pointer; box-shadow: 0 0 15px var(--blue); }
-    </style>
-</head>
-<body onclick="startAudio()">
+        .has-pts { 
+            color: var(--accent); 
+            border-color: var(--accent); 
+            background: rgba(46, 204, 113, 0.1); 
+            animation: pulse-pts 1.5s infinite; 
+        }
 
-    <div class="header">
-        <div id="lvl-trigger" onclick="adminClick()">LEVEL <span id="lvl-val">1</span></div>
-        <div id="pts-txt" onclick="openForge()">PTS: <span id="pts-val">0</span></div>
-        <div onclick="openInfo()" style="cursor:pointer;">🛡️ ГЕРОЙ</div>
-    </div>
+        @keyframes pulse-pts {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 10px var(--accent); }
+            100% { transform: scale(1); }
+        }
 
-    <div class="arena" id="arena">
-        <div class="bar-wrap"><div id="hp-e" class="bar-fill" style="background:var(--red)"></div></div>
-        <img id="mob-img" src="mob1.png">
-        <div class="bar-wrap"><div id="hp-p" class="bar-fill" style="background:var(--accent)"></div></div>
+        /* Арена боя */
+        .arena { 
+            max-width: 500px; 
+            height: 260px; 
+            margin: 0 auto; 
+            position: relative; 
+            background: #080808; 
+            overflow: hidden; 
+            border-bottom: 2px solid #222; 
+        }
 
-        <div id="forge-menu" class="overlay">
-            <h1 style="color:var(--gold
+        .boss-active { 
+            background: radial-gradient(circle, #800 0%, #000 100%) !important; 
+        }
+
+        #mob-img { 
+            height: 150px; 
+            position: absolute; 
+            top: 55%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            z-index: 5; 
+            filter: drop-shadow(0 0 15px #000); 
+            transition: transform 0.2s, filter 0.5s;
+        }
+
+        /* Полоски здоровья */
+        .bar-wrap { 
+            width: 92%; 
+            height: 20px; 
+            background: #222; 
+            margin: 8px auto; 
+            border-radius: 10px; 
+            border: 1px solid #444; 
+            overflow: hidden; 
+            position: relative; 
+            z-index: 10; 
+        }
+
+        .bar-fill { 
+            height: 100%; 
+            width: 100%; 
+            transition: 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); 
+        }
+
+        /* Игровое поле */
+        #grid { 
+            width: 322px; 
+            margin: 15px auto; 
+            line-height: 0; 
+            background: #111; 
+            padding: 10px; 
+            border-radius: 18px; 
+            border: 3px solid #333; 
+            box-shadow: inset 0 0 40px #000; 
+        }
+
+        .cell { 
+            display: inline-block; 
+            width: 42px; 
+            height: 42px; 
+            margin: 2px; 
+            background-size: cover; 
+            background-position: center; 
+            background-color: #222; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            box-sizing: border-box; 
+            transition: transform 0.1s;
+        }
+
+        .selected { 
+            border: 3px solid #fff; 
+            box-shadow: 0 0 20px #fff; 
+            transform: scale(0.8); 
+            z-index: 50; 
+            position: relative; 
+        }
+
+        /* Меню и Оверлеи */
+        .overlay { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.97); 
+            z-index: 1000; 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 30px 20px; 
+            box-sizing: border-box; 
+            overflow-y: auto; 
+        }
+
+        .menu-btn { 
+            width: 260px; 
+            padding: 18px; 
+            margin: 10px; 
+            border: none; 
+            border-radius: 12px; 
+            background: #252525; 
+            color: #fff; 
+            font-weight: bold; 
+            font-size: 18px; 
+            cursor: pointer; 
+            flex-shrink: 0; 
+            border-bottom: 4px solid #000;
+        }
+
+        .buy-btn { 
+            background: var(--accent) !important; 
+            color: #000 !important; 
+            border-bottom-color: #1e844
