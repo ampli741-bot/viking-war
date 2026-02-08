@@ -3,64 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Final Boss Edition</title>
+    <title>Viking Saga: Fixed Engine</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #fff; }
-        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
-        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; flex-shrink: 0; }
-        .arena { height: 25vh; position: relative; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+        .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; }
+        .arena { height: 25vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
         .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .p-icon { width: 90px; height: 90px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
+        .p-icon { width: 85px; height: 85px; border-radius: 12px; border: 3px solid #444; background: #111; }
         
         .bar-bg { width: 100%; height: 18px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
         .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 10px; line-height: 18px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
 
-        .skill-bar { width: 100%; height: 6px; background: #111; margin-top: 3px; border-radius: 3px; overflow: hidden; border: 1px solid #333; }
-        #flash { position: fixed; inset: 0; background: var(--white); opacity: 0; pointer-events: none; z-index: 2000; }
-        .lightning { animation: flash-anim 0.4s ease-out; }
-        @keyframes flash-anim { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
-
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
         #grid-container { width: 95vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
         .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; }
-        .selected { background-color: #444 !important; outline: 2px solid #fff; z-index: 20; }
+        .selected { outline: 3px solid #fff; z-index: 20; background-color: #333; }
         
-        .frozen { border: 2px solid var(--blue) !important; filter: brightness(0.7) saturate(1.5); }
-        .light { border: 2px solid var(--gold) !important; box-shadow: inset 0 0 15px var(--gold); }
-        .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; font-size: 11px; min-width: 16px; height: 16px; border-radius: 50%; font-weight: bold; border: 1px solid white; display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .frozen { border: 2px solid var(--blue); filter: brightness(0.6) grayscale(0.5); }
+        .light { border: 2px solid var(--gold); box-shadow: inset 0 0 10px var(--gold); }
+        .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: #fff; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #fff; font-weight: bold; }
 
-        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; transition: 0.3s; }
-        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 10px var(--blue); cursor: pointer; }
+        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; }
+        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; cursor: pointer; }
 
-        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 85%; max-width: 300px; }
-        .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); color: #000; }
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 80%; }
+        .menu-btn { width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; background: var(--accent); }
         
-        .dmg-text { position: absolute; font-size: 26px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
-        @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-100px); } }
+        .dmg-text { position: absolute; font-size: 24px; font-weight: bold; animation: fly 1s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; color: var(--gold); }
+        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
     </style>
 </head>
-<body onclick="startAudio()">
-
-    <div id="flash"></div>
+<body>
 
     <div class="header">
-        <div style="color:var(--gold)" onclick="admTrigger()">УРОВЕНЬ: <span id="lvl">1</span></div>
-        <div onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: <span id="pts-val">0</span></div>
+        <div style="color:var(--gold)" onclick="admTrig()">УРОВЕНЬ: <span id="lvl">1</span></div>
+        <div onclick="openF()" style="color:var(--accent); font-weight:bold">PTS: <span id="pts-val">0</span></div>
     </div>
 
     <div class="arena">
         <div class="char-box" onclick="showInfo('p')">
             <img src="hero1.png" class="p-icon" style="border-color:var(--accent)">
             <div class="bar-bg"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div><div id="hp-p-txt" class="bar-txt">100/100</div></div>
-            <div class="skill-bar"><div id="thor-progress" style="height:100%; background:var(--blue); width:0%;"></div></div>
         </div>
         <div class="char-box" onclick="showInfo('e')">
             <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
             <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div id="hp-e-txt" class="bar-txt">100/100</div></div>
-            <div id="boss-skill-wrap" class="skill-bar" style="display:none"><div id="e-skill-fill" style="height:100%; background:var(--purple); width:0%"></div></div>
         </div>
     </div>
 
@@ -71,50 +62,47 @@
 
     <div id="admin-overlay" class="overlay">
         <div class="card">
-            <h2 style="color:var(--gold)">АДМИН-ПАНЕЛЬ</h2>
-            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:80%; padding:10px; margin-bottom:10px; background:#222; border:1px solid #444; color:#fff; text-align:center;">
-            <button class="menu-btn" onclick="jumpToLvl()">ПЕРЕЙТИ НА УРОВЕНЬ</button>
-            <button class="menu-btn" style="background:var(--blue)" onclick="addPts()">+10 PTS</button>
-            <button class="menu-btn" style="background:var(--red)" onclick="resetAll()">СБРОСИТЬ ВСЁ</button>
-            <button class="menu-btn" style="background:#444" onclick="closeM()">ЗАКРЫТЬ</button>
+            <h3>АДМИНКА</h3>
+            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:90%; padding:10px; margin-bottom:10px; text-align:center">
+            <button class="menu-btn" onclick="jumpTo()">ПЕРЕЙТИ</button>
+            <button class="menu-btn" onclick="addPts()" style="background:var(--blue); color:#fff">+10 PTS</button>
+            <button class="menu-btn" onclick="resetAll()" style="background:var(--red); color:#fff">СБРОСИТЬ ВСЁ</button>
+            <button class="menu-btn" onclick="closeO()" style="background:#444; color:#fff">ЗАКРЫТЬ</button>
         </div>
     </div>
 
-    <div id="info-overlay" class="overlay" onclick="closeM()">
+    <div id="info-overlay" class="overlay" onclick="closeO()">
         <div class="card" onclick="event.stopPropagation()">
-            <h2 id="info-title" style="color:var(--gold); margin:0;">ИНФО</h2>
-            <div id="info-body" style="text-align:left; margin:15px 0; font-size:14px; line-height:1.4;"></div>
-            <button class="menu-btn" onclick="closeM()">ЗАКРЫТЬ</button>
+            <h2 id="info-t"></h2>
+            <p id="info-b" style="text-align:left; font-size:14px"></p>
+            <button class="menu-btn" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
     <div id="f-menu" class="overlay">
         <div class="card">
-            <h2 style="color:var(--gold)">КУЗНИЦА</h2>
-            <button class="menu-btn" onclick="buy('atk')">УРОН (+2)</button>
-            <button class="menu-btn" onclick="buy('hp')">ЖИЗНЬ (+20)</button>
-            <button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ (+1%)</button>
-            <button class="menu-btn" style="background:#444" onclick="closeM()">ЗАКРЫТЬ</button>
+            <h2>КУЗНИЦА</h2>
+            <button class="menu-btn" onclick="buy('atk')">УРОН +2</button>
+            <button class="menu-btn" onclick="buy('hp')">ОЗ +20</button>
+            <button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ +1%</button>
+            <button class="menu-btn" onclick="closeO()" style="background:#444; color:#fff">ЗАКРЫТЬ</button>
         </div>
     </div>
 
 <script>
-    const audio = { match: new Audio('match.mp3'), thunder: new Audio('thunder.mp3') };
     let st = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1, atk: parseInt(localStorage.getItem('v_atk')) || 10,
         mHP: parseInt(localStorage.getItem('v_mhp')) || 100, agi: parseInt(localStorage.getItem('v_agi')) || 5,
-        pts: parseInt(localStorage.getItem('v_pts')) || 0, thor: parseInt(localStorage.getItem('v_thor')) || 0,
-        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 1, bSkill: 0, adm: 0
+        pts: parseInt(localStorage.getItem('v_pts')) || 0, thor: 0,
+        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 1, adm: 0
     };
-
-    function startAudio() {}
 
     function init() {
         const isB = st.lvl % 25 === 0;
-        document.getElementById('boss-skill-wrap').style.display = isB ? 'block' : 'none';
-        document.getElementById('m-icon').src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
         st.mehp = isB ? (100 + st.lvl * 60) * 5 : 100 + st.lvl * 60;
-        st.ehp = st.mehp; st.hp = st.mHP; st.bSkill = 0;
+        st.ehp = st.mehp; st.hp = st.mHP;
+        document.getElementById('m-icon').src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
+        
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
         for (let i = 0; i < 49; i++) {
             st.board.push({type: Math.floor(Math.random() * 5), frozen: 0, light: 0});
@@ -125,168 +113,204 @@
     }
 
     function draw() {
-        document.getElementById('lvl').innerText = st.lvl;
         document.getElementById('pts-val').innerText = st.pts;
         document.getElementById('hp-e-fill').style.width = (st.ehp/st.mehp*100)+'%';
         document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
         document.getElementById('hp-p-txt').innerText = Math.floor(st.hp) + "/" + st.mHP;
-        document.getElementById('thor-progress').style.width = st.thor + "%";
-        document.getElementById('e-skill-fill').style.width = st.bSkill + "%";
-        document.getElementById('thor-btn').className = (st.thor >= 100) ? 'ready' : '';
+        document.getElementById('thor-btn').className = st.thor >= 100 ? 'ready' : '';
 
         st.board.forEach((o, i) => {
             const c = document.getElementById('c-' + i);
-            c.style.backgroundImage = o.type===-1 ? 'none' : `url(rune${o.type+1}.png)`;
-            c.className = 'cell' + (st.sel===i?' selected':'') + (o.frozen>0?' frozen':'') + (o.light>0?' light':'');
-            c.innerHTML = (o.light > 0) ? `<div class="timer-badge">${o.light-1}</div>` : '';
+            c.style.backgroundImage = o.type === -1 ? 'none' : `url(rune${o.type+1}.png)`;
+            c.className = `cell ${st.sel === i ? 'selected' : ''} ${o.frozen > 0 ? 'frozen' : ''} ${o.light > 0 ? 'light' : ''}`;
+            c.innerHTML = o.light > 0 ? `<div class="timer-badge">${o.light}</div>` : '';
         });
     }
 
     function handle(i) {
         if (st.lock || st.board[i].frozen > 0) return;
-        if (st.sel === null) st.sel = i;
+        if (st.sel === null) { st.sel = i; draw(); }
         else {
             let a = st.sel, b = i;
             if ((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
-                swap(a, b); st.combo = 1;
-                if (!checkAndResolve()) setTimeout(() => { swap(a, b); draw(); }, 250);
-            }
-            st.sel = null;
+                st.lock = true;
+                swap(a, b);
+                if (!checkMatches()) {
+                    setTimeout(() => { swap(a, b); st.lock = false; st.sel = null; draw(); }, 300);
+                } else {
+                    st.sel = null;
+                    resolveBoard();
+                }
+            } else { st.sel = i; draw(); }
         }
-        draw();
     }
 
-    function swap(a, b) { let t = st.board[a]; st.board[a] = st.board[b]; st.board[b] = t; }
+    function swap(a, b) { let t = {...st.board[a]}; st.board[a] = {...st.board[b]}; st.board[b] = t; }
 
-    async function checkAndResolve() {
-        let matches = findMatches();
-        if (matches.length > 0) {
-            st.lock = true;
-            while (matches.length > 0) {
-                audio.match.currentTime = 0; audio.match.play().catch(()=>{});
-                let toDel = new Set();
-                matches.forEach(m => {
-                    if (st.board[m[0]].type === 3) st.thor = Math.min(100, st.thor + m.length * 4);
-                    if (m.length === 4) { let r = Math.floor(m[0]/7); for(let c=0; c<7; c++) toDel.add(r*7+c); }
-                    else if (m.length >= 5) { 
-                        let ctr = m[1]; for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) {
-                            let idx = ctr + r*7 + c; if (idx>=0 && idx<49) toDel.add(idx);
-                        }
-                    }
-                    m.forEach(idx => toDel.add(idx));
-                });
-                let dmg = toDel.size * st.atk * st.combo;
-                st.ehp -= dmg; pop(dmg + (st.combo>1 ? ` x${st.combo}` : ""), false);
-                toDel.forEach(idx => { st.board[idx].type = -1; st.board[idx].light = 0; st.board[idx].frozen = 0; });
-                draw(); await new Promise(r => setTimeout(r, 250));
-                gravity(); draw(); await new Promise(r => setTimeout(r, 250));
-                st.combo++; matches = findMatches();
-            }
-            st.lock = false; save();
-            if (st.ehp <= 0) win(); else enemyTurn();
-            return true;
-        }
-        return false;
-    }
-
-    function findMatches() {
-        let m = [];
+    function checkMatches() {
+        let toClear = new Set();
+        // Rows
         for (let r=0; r<7; r++) {
-            let cnt=1;
-            for (let c=0; c<7; c++) {
+            for (let c=0; c<5; c++) {
                 let i = r*7+c;
-                if (c<6 && st.board[i].type!==-1 && st.board[i].type===st.board[i+1].type) cnt++;
-                else { if (cnt>=3) { let row=[]; for(let k=0; k<cnt; k++) row.push(i-k); m.push(row); } cnt=1; }
+                if (st.board[i].type !== -1 && st.board[i].type === st.board[i+1].type && st.board[i].type === st.board[i+2].type) {
+                    toClear.add(i); toClear.add(i+1); toClear.add(i+2);
+                }
             }
         }
+        // Cols
         for (let c=0; c<7; c++) {
-            let cnt=1;
-            for (let r=0; r<7; r++) {
+            for (let r=0; r<5; r++) {
                 let i = r*7+c;
-                if (r<6 && st.board[i].type!==-1 && st.board[i].type===st.board[i+7].type) cnt++;
-                else { if (cnt>=3) { let col=[]; for(let k=0; k<cnt; k++) col.push(i-k*7); m.push(col); } cnt=1; }
+                if (st.board[i].type !== -1 && st.board[i].type === st.board[i+7].type && st.board[i].type === st.board[i+14].type) {
+                    toClear.add(i); toClear.add(i+7); toClear.add(i+14);
+                }
             }
         }
-        return m;
+        return toClear.size > 0;
     }
 
-    function gravity() {
+    async function resolveBoard() {
+        st.combo = 1;
+        let matchesFound = true;
+        while (matchesFound) {
+            let toClear = new Set();
+            let specialLines = [];
+            let explosions = [];
+
+            // Проверка рядов
+            for (let r=0; r<7; r++) {
+                let cnt=1;
+                for (let c=0; c<7; c++) {
+                    let i = r*7+c;
+                    if (c<6 && st.board[i].type!==-1 && st.board[i].type===st.board[i+1].type) cnt++;
+                    else {
+                        if (cnt>=3) {
+                            for(let k=0; k<cnt; k++) toClear.add(i-k);
+                            if(cnt===4) specialLines.push(Math.floor((i-1)/7));
+                            if(cnt>=5) explosions.push(i-Math.floor(cnt/2));
+                        }
+                        cnt=1;
+                    }
+                }
+            }
+            // Проверка колонок
+            for (let c=0; c<7; c++) {
+                let cnt=1;
+                for (let r=0; r<7; r++) {
+                    let i = r*7+c;
+                    if (r<6 && st.board[i].type!==-1 && st.board[i].type===st.board[i+7].type) cnt++;
+                    else {
+                        if (cnt>=3) {
+                            for(let k=0; k<cnt; k++) toClear.add(i-k*7);
+                            if(cnt>=5) explosions.push(i-Math.floor(cnt/2)*7);
+                        }
+                        cnt=1;
+                    }
+                }
+            }
+
+            if (toClear.size === 0) { matchesFound = false; break; }
+
+            // Эффекты 4 и 5
+            specialLines.forEach(r => { for(let c=0; c<7; c++) toClear.add(r*7+c); });
+            explosions.forEach(ctr => {
+                for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) {
+                    let idx = ctr+r*7+c; if(idx>=0 && idx<49) toClear.add(idx);
+                }
+            });
+
+            // Урон
+            let dmg = toClear.size * st.atk * st.combo;
+            st.ehp -= dmg; pop(dmg + (st.combo>1?` x${st.combo}`:''));
+            st.thor = Math.min(100, st.thor + toClear.size);
+
+            toClear.forEach(i => { st.board[i].type = -1; st.board[i].light = 0; st.board[i].frozen = 0; });
+            draw(); await new Promise(r => setTimeout(r, 300));
+            
+            fillBoard();
+            draw(); await new Promise(r => setTimeout(r, 300));
+            st.combo++;
+        }
+        st.lock = false;
+        if (st.ehp <= 0) win(); else enemyTurn();
+    }
+
+    function fillBoard() {
         for (let c=0; c<7; c++) {
             let e=0;
             for (let r=6; r>=0; r--) {
                 let i = r*7+c;
-                if (st.board[i].type===-1) e++;
-                else if (e>0) { st.board[i+e*7] = {...st.board[i]}; st.board[i].type=-1; }
+                if (st.board[i].type === -1) e++;
+                else if (e > 0) { st.board[i+e*7] = {...st.board[i]}; st.board[i].type = -1; }
             }
-            for (let r=0; r<e; r++) st.board[r*7+c] = {type:Math.floor(Math.random()*5), frozen:0, light:0};
+            for (let r=0; r<e; r++) st.board[r*7+c] = {type: Math.floor(Math.random()*5), frozen:0, light:0};
         }
     }
 
     function enemyTurn() {
         const isB = st.lvl % 25 === 0;
         let d = Math.floor(5 + st.lvl * 1.5);
+        
+        // Логика умений
         if (isB) {
-            st.bSkill += 25;
-            if (st.bSkill >= 100) {
-                st.bSkill = 0;
-                if (st.lvl===25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen=4; pop("ICE!", true); }
-                if (st.lvl===50) { d*=3; pop("FIRE!", true); }
-                if (st.lvl===75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light=4; pop("VALKYRIE!", true); }
+            st.adm++; // используем как счетчик ходов босса
+            if (st.adm >= 4) {
+                st.adm = 0;
+                if (st.lvl === 25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen=3; }
+                if (st.lvl === 75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light=3; }
+                if (st.lvl === 50) d *= 3;
             }
         }
+
+        // Таймеры Валькирии (уменьшаются после хода босса)
         st.board.forEach(o => {
-            if (o.light > 0) { o.light--; if (o.light===1) { st.ehp=Math.min(st.mehp, st.ehp+st.mehp*0.15); pop("HEAL", false); o.light=0; } }
+            if (o.light > 0) {
+                o.light--;
+                if (o.light === 0) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.1); pop("HEAL"); }
+            }
             if (o.frozen > 0) o.frozen--;
         });
-        if (Math.random()*100 < st.agi) pop("MISS!", true); else st.hp -= d;
-        if (st.hp <= 0) { alert("Game Over"); resetAll(); }
+
+        if (Math.random()*100 > st.agi) st.hp -= d; else pop("MISS");
+        if (st.hp <= 0) { alert("Вальхалла зовет!"); resetAll(); }
         draw();
     }
 
-    async function useThor() {
+    function useThor() {
         if (st.thor < 100 || st.lock) return;
-        st.lock = true; st.thor = 0; save();
-        audio.thunder.play().catch(()=>{});
-        document.getElementById('flash').classList.add('lightning');
-        setTimeout(()=>document.getElementById('flash').classList.remove('lightning'), 400);
-        for (let i=0; i<12; i++) {
-            let rIdx = Math.floor(Math.random()*49);
-            st.ehp -= st.atk; pop(st.atk, false);
-            st.board[rIdx].type=-1; draw(); await new Promise(r=>setTimeout(r,50));
-        }
-        gravity(); draw();
-        setTimeout(()=> { st.lock=false; if(st.ehp<=0) win(); else enemyTurn(); }, 400);
+        st.thor = 0; st.ehp -= st.atk * 10;
+        for(let i=0; i<10; i++) st.board[Math.floor(Math.random()*49)].type = -1;
+        resolveBoard();
+    }
+
+    function pop(txt) {
+        const p = document.createElement('div'); p.className = 'dmg-text';
+        p.innerText = isNaN(txt) ? txt : "-"+txt;
+        p.style.left = '50%'; p.style.top = '30%';
+        document.body.appendChild(p); setTimeout(() => p.remove(), 1000);
     }
 
     function showInfo(t) {
         const o = document.getElementById('info-overlay');
-        const tit = document.getElementById('info-title');
-        const bod = document.getElementById('info-body');
-        if (t === 'p') {
-            tit.innerText = "ГЕРОЙ";
-            bod.innerHTML = `<b>Урон:</b> ${st.atk}<br><b>ОЗ:</b> ${st.mHP}<br><b>Уворот:</b> ${st.agi}%<br><hr><b>4 в ряд:</b> Ряд уничтожается.<br><b>5 в ряд:</b> Взрыв 3х3.`;
-        } else {
-            const isB = st.lvl % 25 === 0;
-            tit.innerText = isB ? "БОСС" : "МОБ";
-            let desc = "Обычный противник.";
-            if(st.lvl===25) desc = "Замораживает клетки.";
-            if(st.lvl===50) desc = "Наносит мощный огненный удар.";
-            if(st.lvl===75) desc = "Валькирия: исцеляется за счет света.";
-            bod.innerHTML = `<b>Урон:</b> ${Math.floor(5 + st.lvl * 1.5)}<br><b>ОЗ:</b> ${st.mehp}<br><hr>${desc}`;
-        }
+        document.getElementById('info-t').innerText = t==='p' ? "ГЕРОЙ" : "ВРАГ";
+        document.getElementById('info-b').innerHTML = t==='p' ? 
+            `Урон: ${st.atk}<br>ОЗ: ${st.mHP}<br>Ловкость: ${st.agi}%<br><br>4 в ряд - удалит линию.<br>5 в ряд - взрыв.` :
+            `Здоровье: ${st.mehp}<br>Уровень: ${st.lvl}<br><br>Боссы на 25, 50, 75 уровнях имеют спец-умения.`;
         o.style.display = 'flex';
     }
 
-    function win() { st.lvl++; st.pts++; save(); init(); }
-    function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_atk', st.atk); localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi); localStorage.setItem('v_pts', st.pts); localStorage.setItem('v_thor', st.thor); }
-    function resetAll() { localStorage.clear(); location.reload(); }
-    function admTrigger() { st.adm++; if(st.adm>=5){ st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
-    function jumpToLvl() { let nl = parseInt(document.getElementById('jump-lvl').value); if(nl>0){ st.lvl=nl; save(); init(); closeM(); } }
+    function admTrig() { st.adm++; if(st.adm>=5) { st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
+    function jumpTo() { let l = parseInt(document.getElementById('jump-lvl').value); if(l>0){ st.lvl=l; save(); init(); closeO(); } }
     function addPts() { st.pts += 10; draw(); }
+    function win() { st.lvl++; st.pts++; save(); init(); }
+    function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_atk', st.atk); localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi); localStorage.setItem('v_pts', st.pts); }
+    function resetAll() { localStorage.clear(); location.reload(); }
     function openF() { document.getElementById('f-menu').style.display='flex'; }
-    function closeM() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
-    function buy(t) { if(st.pts>0){ if(t==='atk') st.atk+=2; else if(t==='hp'){st.mHP+=20; st.hp+=20;} else if(t==='agi') st.agi+=1; st.pts--; save(); draw(); } }
+    function closeO() { document.querySelectorAll('.overlay').forEach(e => e.style.display='none'); }
+    function buy(t) { if(st.pts>0){ if(t==='atk')st.atk+=2; if(t==='hp'){st.mHP+=20;st.hp+=20} if(t==='agi')st.agi++; st.pts--; draw(); save(); } }
+
     init();
 </script>
 </body>
