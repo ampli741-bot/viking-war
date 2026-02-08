@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Ultra Stable</title>
+    <title>Viking Saga: Hammer Power</title>
     <style>
         :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
@@ -16,10 +16,13 @@
         .cell { width: 42px; height: 42px; background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #333; transition: 0.2s; }
         .sel { outline: 3px solid var(--gold); transform: scale(0.85); z-index: 5; }
         .btn { width: 90%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
-        .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; }
+        .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; cursor: pointer; }
         #msg { position: absolute; top: 40%; width: 100%; font-weight: bold; background: rgba(0,0,0,0.9); display: none; padding: 20px 0; z-index: 100; }
         @keyframes shake { 0% { transform: translate(2px, 2px); } 100% { transform: translate(0,0); } }
         .shaking { animation: shake 0.1s infinite; }
+        /* Эффект взрыва плитки */
+        @keyframes boom { 0% { transform: scale(1); } 50% { transform: scale(1.2); filter: brightness(2); } 100% { transform: scale(1); } }
+        .exploding { animation: boom 0.4s ease-out; }
     </style>
 </head>
 <body>
@@ -37,7 +40,6 @@
     <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
 
 <script>
-    // Цвета на случай, если картинки не загрузятся
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#95a5a6'];
     let s = { board: [], sel: null, hp: 100, ehp: 100, en: 0, lock: false, lvl: 1, stunTurns: 0 };
@@ -50,7 +52,6 @@
         g.innerHTML = '';
         s.board = [];
         
-        // Генерация без групп по 3
         for (let i = 0; i < 49; i++) {
             let type;
             do {
@@ -79,8 +80,13 @@
         s.board.forEach((t, i) => {
             const c = document.getElementById('c' + i);
             if (c) {
-                c.style.backgroundColor = colors[t]; // Запасной цвет
-                c.style.backgroundImage = "url(" + runes[t] + ")";
+                if (t === -1) {
+                    c.style.backgroundImage = 'none';
+                    c.style.backgroundColor = '#fff';
+                } else {
+                    c.style.backgroundColor = colors[t];
+                    c.style.backgroundImage = "url(" + runes[t] + ")";
+                }
                 c.classList.toggle('sel', s.sel === i);
             }
         });
@@ -124,8 +130,8 @@
             [...new Set(m)].forEach(idx => {
                 let type = s.board[idx];
                 if (isPlayer) {
-                    if (type === 0) s.hp = Math.min(100, s.hp + 1); // КРАСНЫЕ ЛЕЧАТ
-                    if (type === 4) s.en = Math.min(100, s.en + 10); // СЕРЫЕ ДЛЯ УЛЬТЫ
+                    if (type === 0) s.hp = Math.min(100, s.hp + 1);
+                    if (type === 4) s.en = Math.min(100, s.en + 10);
                     s.ehp -= (5 * combo);
                 }
                 s.board[idx] = -1;
@@ -151,31 +157,4 @@
         s.hp -= (6 + Math.floor(s.lvl/2));
         shake(); sfx('player_hit');
         processMatches(false);
-        if (s.hp <= 0) { alert("Game Over"); location.reload(); }
-        s.lock = false; draw();
-    }
-
-    function win() {
-        s.lvl++; s.hp = Math.min(100, s.hp + 15);
-        sfx('win');
-        let m = document.getElementById('msg');
-        m.innerText = "ПОБЕДА! +15% HP"; m.style.display = 'block';
-        setTimeout(() => { m.style.display = 'none'; init(); }, 1500);
-    }
-
-    function shake() {
-        document.getElementById('battle-screen').classList.add('shaking');
-        setTimeout(() => document.getElementById('battle-screen').classList.remove('shaking'), 300);
-    }
-
-    function useSuper() {
-        if (s.en < 100 || s.lock) return;
-        s.ehp -= 120; s.en = 0; s.stunTurns = (s.lvl === 25) ? 1 : 2;
-        sfx('super'); draw(); if (s.ehp <= 0) win();
-    }
-
-    // Запуск после полной загрузки
-    window.onload = init;
-</script>
-</body>
-</html>
+        if (s.hp <= 0) { alert("Game Over"); location
