@@ -3,31 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Boss Fixed</title>
+    <title>Viking Saga: Combo Balance</title>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; }
         #adm { display: none; background: #400; padding: 5px; font-size: 10px; position: sticky; top: 0; z-index: 1000; }
         .adm-btn { background: #fff; color: #000; border: none; padding: 3px 8px; margin: 0 3px; font-weight: bold; border-radius: 3px; }
         .header { background: #1a1a1a; padding: 10px; border-bottom: 2px solid #333; display: flex; justify-content: space-around; }
-        
-        /* АРЕНА */
         .arena { height: 180px; background: #050505; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0; }
         .hp-bar { width: 90%; height: 12px; background: #333; border-radius: 6px; overflow: hidden; border: 1px solid #444; position: relative; z-index: 10; }
         .fill { height: 100%; width: 100%; transition: 0.3s; }
-        
         #boss-en-bar { width: 60%; height: 8px; background: #222; border-radius: 4px; border: 1px solid #ff4500; display: none; overflow: hidden; z-index: 10; margin-top: -5px; }
-        
         #mob-img { height: 100px; width: auto; transition: 0.5s; z-index: 5; margin: 5px 0; }
         .boss-glow { filter: drop-shadow(0 0 15px red); }
-
-        /* ИНТЕРФЕЙС */
         .ui { padding: 10px 0; background: #111; }
         .en-bar { width: 280px; height: 20px; background: #222; margin: 0 auto 5px; border-radius: 10px; overflow: hidden; position: relative; border: 1px solid #3498db; }
         #en-txt { position: absolute; width: 100%; font-size: 11px; line-height: 20px; color: #fff; font-weight: bold; z-index: 15; text-shadow: 1px 1px 2px #000; }
-
         .btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
         .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; }
-        
         #grid { width: 315px; margin: 5px auto; display: block; font-size: 0; }
         .cell { display: inline-block; width: 40px; height: 40px; margin: 2px; background-size: cover; background-color: #222; border-radius: 4px; border: 1px solid #333; vertical-align: top; box-sizing: border-box; }
         .sel { border: 2px solid #fff !important; transform: scale(0.85); box-shadow: 0 0 10px #fff; }
@@ -80,7 +72,6 @@
 
     function play(f) { new Audio(f).play().catch(()=>{}); }
 
-    // НОВАЯ МУЗЫКА БОССА (Ритмичный бас)
     function startBossMusic() {
         if (bossTimer) return;
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -89,12 +80,11 @@
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
             osc.type = 'triangle';
-            // Ритм: Та-та-ТАМ, Та-та-ТАМ
             const freqs = [60, 60, 80, 0, 60, 60, 50, 0];
             let f = freqs[step % 8];
             if(f > 0) {
                 osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-                g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                g.gain.setValueAtTime(0.05, audioCtx.currentTime);
                 g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
                 osc.connect(g); g.connect(audioCtx.destination);
                 osc.start(); osc.stop(audioCtx.currentTime + 0.4);
@@ -103,9 +93,7 @@
         }, 200);
     }
 
-    function stopBossMusic() {
-        if (bossTimer) { clearInterval(bossTimer); bossTimer = null; }
-    }
+    function stopBossMusic() { if (bossTimer) { clearInterval(bossTimer); bossTimer = null; } }
 
     let hits = 0;
     function admOn() { if(++hits >= 5) { localStorage.setItem('v_adm','1'); document.getElementById('adm').style.display='block'; } }
@@ -114,34 +102,25 @@
 
     function init() {
         stopBossMusic();
-        if(localStorage.getItem('v_adm')) document.getElementById('adm').style.display='block';
-
         const isBoss = s.lvl % 25 === 0;
         let mobFile = 'mob1.png';
-        
         if (isBoss) {
             mobFile = 'mob4.png';
             document.getElementById('boss-en-bar').style.display = 'block';
             document.getElementById('mob-img').classList.add('boss-glow');
-            document.getElementById('arena-bg').style.background = '#1a0000';
             startBossMusic();
         } else {
             document.getElementById('boss-en-bar').style.display = 'none';
             document.getElementById('mob-img').classList.remove('boss-glow');
-            document.getElementById('arena-bg').style.background = '#050505';
             let cycle = s.lvl % 25;
             if (cycle > 8 && cycle <= 16) mobFile = 'mob2.png';
             else if (cycle > 16) mobFile = 'mob3.png';
         }
-
         document.getElementById('mob-img').src = mobFile;
         document.getElementById('mob-img').style.transform = isBoss ? "scale(1.7)" : "scale(1)";
-
         s.maxEHP = (100 + (s.lvl * 25)) * (isBoss ? 3 : 1);
         s.ehp = s.maxEHP; s.hp = 100; s.bossEn = 0;
-
         document.getElementById('lvl-txt').innerText = (isBoss ? "БОСС " : "УРОВЕНЬ ") + s.lvl;
-        
         const g = document.getElementById('grid');
         g.innerHTML = ''; s.board = [];
         for (let i = 0; i < 49; i++) {
@@ -165,11 +144,9 @@
         document.getElementById('php').style.width = s.hp + '%';
         document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
         document.getElementById('en-f').style.width = s.en + '%';
-        document.getElementById('en-txt').innerText = `МОЛОТ: ${s.en}% (${Math.ceil((100-s.en)/5)} плиток)`;
+        document.getElementById('en-txt').innerText = `МОЛОТ: ${s.en}%`;
         document.getElementById('boss-en-fill').style.width = s.bossEn + '%';
         document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
-        localStorage.setItem('v_lvl', s.lvl);
-        localStorage.setItem('v_en', s.en);
     }
 
     async function touch(i) {
@@ -192,71 +169,35 @@
         let found = false;
         while (true) {
             let del = new Set();
-            for (let i = 0; i < 49; i++) {
-                if (i % 7 < 5 && s.board[i] !== -1 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) [i,i+1,i+2].forEach(x => del.add(x));
-                if (i < 35 && s.board[i] !== -1 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) [i,i+7,i+14].forEach(x => del.add(x));
+            let horizontalMatches = [];
+            let verticalMatches = [];
+
+            // Поиск совпадений и их длины
+            for (let r = 0; r < 7; r++) {
+                for (let c = 0; c < 5; c++) {
+                    let i = r * 7 + c;
+                    if (s.board[i] !== -1 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) {
+                        let match = [i, i+1, i+2];
+                        if (c < 4 && s.board[i] === s.board[i+3]) match.push(i+3);
+                        if (c < 3 && s.board[i] === s.board[i+4]) match.push(i+4);
+                        horizontalMatches.push(match);
+                        match.forEach(idx => del.add(idx));
+                        c += match.length - 1;
+                    }
+                }
             }
-            if (del.size === 0) break;
-            found = true;
-            play('match.mp3');
-            del.forEach(idx => {
-                if (s.board[idx] === 1) s.en = Math.min(100, s.en + 5);
-                if (s.board[idx] === 0) s.hp = Math.min(100, s.hp + 2);
-                s.ehp -= 10;
-                s.board[idx] = -1;
-            });
-            draw(); await new Promise(r => setTimeout(r, 200));
-            drop(); draw(); await new Promise(r => setTimeout(r, 200));
-        }
-        if (found) {
-            if (s.ehp <= 0) { 
-                stopBossMusic(); play('win.mp3');
-                document.getElementById('msg').style.display='block';
-                document.getElementById('msg').innerText = "БОСС ПОВЕРЖЕН!";
-                setTimeout(() => { s.lvl++; init(); document.getElementById('msg').style.display='none'; }, 1500);
-            } else enemy();
-        }
-        return found;
-    }
-
-    function drop() {
-        for (let c = 0; c < 7; c++) {
-            let empty = 0;
-            for (let r = 6; r >= 0; r--) {
-                let i = r * 7 + c;
-                if (s.board[i] === -1) empty++;
-                else if (empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
+            for (let c = 0; c < 7; c++) {
+                for (let r = 0; r < 5; r++) {
+                    let i = r * 7 + c;
+                    if (s.board[i] !== -1 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) {
+                        let match = [i, i+7, i+14];
+                        if (r < 4 && s.board[i] === s.board[i+21]) match.push(i+21);
+                        if (r < 3 && s.board[i] === s.board[i+28]) match.push(i+28);
+                        verticalMatches.push(match);
+                        match.forEach(idx => del.add(idx));
+                        r += match.length - 1;
+                    }
+                }
             }
-            for (let r = 0; r < empty; r++) s.board[r*7+c] = Math.floor(Math.random() * 5);
-        }
-    }
 
-    function enemy() {
-        let dmg = 5 + Math.floor(s.lvl/3);
-        if (s.lvl % 25 === 0) {
-            s.bossEn += 25;
-            if (s.bossEn >= 100) {
-                dmg *= 3; s.bossEn = 0; play('super.mp3');
-                document.getElementById('arena-bg').style.background = 'red';
-                setTimeout(()=>document.getElementById('arena-bg').style.background='#1a0000', 100);
-            }
-        }
-        s.hp -= dmg; play('hit.mp3');
-        if (s.hp <= 0) { stopBossMusic(); localStorage.setItem('v_ban', Date.now() + 3600000); location.reload(); }
-        draw();
-    }
-
-    async function useSuper() {
-        if (s.en < 100 || s.lock) return;
-        s.lock = true; s.en = 0; s.ehp -= 150;
-        play('super.mp3');
-        for (let i = 0; i < 15; i++) s.board[Math.floor(Math.random()*49)] = -1;
-        draw(); await new Promise(r => setTimeout(r, 300));
-        drop(); await check();
-        s.lock = false;
-    }
-
-    window.onload = init;
-</script>
-</body>
-</html>
+            if (
