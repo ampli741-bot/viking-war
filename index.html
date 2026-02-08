@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Fixed Engine</title>
+    <title>Viking Saga: Abilities Restored</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #fff; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
@@ -74,7 +74,7 @@
     <div id="info-overlay" class="overlay" onclick="closeO()">
         <div class="card" onclick="event.stopPropagation()">
             <h2 id="info-t"></h2>
-            <p id="info-b" style="text-align:left; font-size:14px"></p>
+            <p id="info-b" style="text-align:left; font-size:14px; line-height:1.4;"></p>
             <button class="menu-btn" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
     </div>
@@ -94,13 +94,13 @@
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1, atk: parseInt(localStorage.getItem('v_atk')) || 10,
         mHP: parseInt(localStorage.getItem('v_mhp')) || 100, agi: parseInt(localStorage.getItem('v_agi')) || 5,
         pts: parseInt(localStorage.getItem('v_pts')) || 0, thor: 0,
-        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 1, adm: 0
+        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 1, adm: 0, turnCnt: 0
     };
 
     function init() {
         const isB = st.lvl % 25 === 0;
         st.mehp = isB ? (100 + st.lvl * 60) * 5 : 100 + st.lvl * 60;
-        st.ehp = st.mehp; st.hp = st.mHP;
+        st.ehp = st.mehp; st.hp = st.mHP; st.turnCnt = 0;
         document.getElementById('m-icon').src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
         
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
@@ -114,6 +114,7 @@
 
     function draw() {
         document.getElementById('pts-val').innerText = st.pts;
+        document.getElementById('lvl').innerText = st.lvl;
         document.getElementById('hp-e-fill').style.width = (st.ehp/st.mehp*100)+'%';
         document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
@@ -124,7 +125,7 @@
             const c = document.getElementById('c-' + i);
             c.style.backgroundImage = o.type === -1 ? 'none' : `url(rune${o.type+1}.png)`;
             c.className = `cell ${st.sel === i ? 'selected' : ''} ${o.frozen > 0 ? 'frozen' : ''} ${o.light > 0 ? 'light' : ''}`;
-            c.innerHTML = o.light > 0 ? `<div class="timer-badge">${o.light}</div>` : '';
+            c.innerHTML = o.light > 0 ? `<div class="timer-badge">${o.light}</div>` : (o.frozen > 0 ? `<div class="timer-badge" style="background:var(--blue)">${o.frozen}</div>` : '');
         });
     }
 
@@ -134,13 +135,11 @@
         else {
             let a = st.sel, b = i;
             if ((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
-                st.lock = true;
-                swap(a, b);
-                if (!checkMatches()) {
+                st.lock = true; swap(a, b);
+                if (!checkMatchesSimple()) {
                     setTimeout(() => { swap(a, b); st.lock = false; st.sel = null; draw(); }, 300);
                 } else {
-                    st.sel = null;
-                    resolveBoard();
+                    st.sel = null; resolveBoard();
                 }
             } else { st.sel = i; draw(); }
         }
@@ -148,38 +147,23 @@
 
     function swap(a, b) { let t = {...st.board[a]}; st.board[a] = {...st.board[b]}; st.board[b] = t; }
 
-    function checkMatches() {
-        let toClear = new Set();
-        // Rows
-        for (let r=0; r<7; r++) {
-            for (let c=0; c<5; c++) {
-                let i = r*7+c;
-                if (st.board[i].type !== -1 && st.board[i].type === st.board[i+1].type && st.board[i].type === st.board[i+2].type) {
-                    toClear.add(i); toClear.add(i+1); toClear.add(i+2);
-                }
-            }
+    function checkMatchesSimple() {
+        for (let r=0; r<7; r++) for (let c=0; c<5; c++) {
+            let i = r*7+c; if (st.board[i].type!==-1 && st.board[i].type===st.board[i+1].type && st.board[i].type===st.board[i+2].type) return true;
         }
-        // Cols
-        for (let c=0; c<7; c++) {
-            for (let r=0; r<5; r++) {
-                let i = r*7+c;
-                if (st.board[i].type !== -1 && st.board[i].type === st.board[i+7].type && st.board[i].type === st.board[i+14].type) {
-                    toClear.add(i); toClear.add(i+7); toClear.add(i+14);
-                }
-            }
+        for (let c=0; c<7; c++) for (let r=0; r<5; r++) {
+            let i = r*7+c; if (st.board[i].type!==-1 && st.board[i].type===st.board[i+7].type && st.board[i].type===st.board[i+14].type) return true;
         }
-        return toClear.size > 0;
+        return false;
     }
 
     async function resolveBoard() {
         st.combo = 1;
-        let matchesFound = true;
-        while (matchesFound) {
+        let active = true;
+        while (active) {
             let toClear = new Set();
-            let specialLines = [];
-            let explosions = [];
+            let rows4 = []; let expl5 = [];
 
-            // Проверка рядов
             for (let r=0; r<7; r++) {
                 let cnt=1;
                 for (let c=0; c<7; c++) {
@@ -188,14 +172,13 @@
                     else {
                         if (cnt>=3) {
                             for(let k=0; k<cnt; k++) toClear.add(i-k);
-                            if(cnt===4) specialLines.push(Math.floor((i-1)/7));
-                            if(cnt>=5) explosions.push(i-Math.floor(cnt/2));
+                            if(cnt===4) rows4.push(r);
+                            if(cnt>=5) expl5.push(i-Math.floor(cnt/2));
                         }
                         cnt=1;
                     }
                 }
             }
-            // Проверка колонок
             for (let c=0; c<7; c++) {
                 let cnt=1;
                 for (let r=0; r<7; r++) {
@@ -204,31 +187,28 @@
                     else {
                         if (cnt>=3) {
                             for(let k=0; k<cnt; k++) toClear.add(i-k*7);
-                            if(cnt>=5) explosions.push(i-Math.floor(cnt/2)*7);
+                            if(cnt>=5) expl5.push(i-Math.floor(cnt/2)*7);
                         }
                         cnt=1;
                     }
                 }
             }
 
-            if (toClear.size === 0) { matchesFound = false; break; }
+            if (toClear.size === 0) break;
 
-            // Эффекты 4 и 5
-            specialLines.forEach(r => { for(let c=0; c<7; c++) toClear.add(r*7+c); });
-            explosions.forEach(ctr => {
+            rows4.forEach(r => { for(let c=0; c<7; c++) toClear.add(r*7+c); });
+            expl5.forEach(ctr => {
                 for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) {
                     let idx = ctr+r*7+c; if(idx>=0 && idx<49) toClear.add(idx);
                 }
             });
 
-            // Урон
             let dmg = toClear.size * st.atk * st.combo;
             st.ehp -= dmg; pop(dmg + (st.combo>1?` x${st.combo}`:''));
             st.thor = Math.min(100, st.thor + toClear.size);
 
             toClear.forEach(i => { st.board[i].type = -1; st.board[i].light = 0; st.board[i].frozen = 0; });
             draw(); await new Promise(r => setTimeout(r, 300));
-            
             fillBoard();
             draw(); await new Promise(r => setTimeout(r, 300));
             st.combo++;
@@ -252,23 +232,29 @@
     function enemyTurn() {
         const isB = st.lvl % 25 === 0;
         let d = Math.floor(5 + st.lvl * 1.5);
-        
-        // Логика умений
-        if (isB) {
-            st.adm++; // используем как счетчик ходов босса
-            if (st.adm >= 4) {
-                st.adm = 0;
-                if (st.lvl === 25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen=3; }
-                if (st.lvl === 75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light=3; }
-                if (st.lvl === 50) d *= 3;
+        st.turnCnt++;
+
+        // Применение способностей боссов
+        if (isB && st.turnCnt >= 4) {
+            st.turnCnt = 0;
+            if (st.lvl === 25) { 
+                pop("ICE!"); 
+                for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen = 3; 
+            }
+            if (st.lvl === 50) { 
+                pop("FIRE!"); d *= 3; 
+            }
+            if (st.lvl === 75) { 
+                pop("LIGHT!"); 
+                for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light = 3; 
             }
         }
 
-        // Таймеры Валькирии (уменьшаются после хода босса)
+        // Обработка эффектов плиток
         st.board.forEach(o => {
             if (o.light > 0) {
                 o.light--;
-                if (o.light === 0) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.1); pop("HEAL"); }
+                if (o.light === 0) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.15); pop("HEAL"); }
             }
             if (o.frozen > 0) o.frozen--;
         });
@@ -281,23 +267,32 @@
     function useThor() {
         if (st.thor < 100 || st.lock) return;
         st.thor = 0; st.ehp -= st.atk * 10;
-        for(let i=0; i<10; i++) st.board[Math.floor(Math.random()*49)].type = -1;
+        for(let i=0; i<15; i++) st.board[Math.floor(Math.random()*49)].type = -1;
         resolveBoard();
     }
 
     function pop(txt) {
         const p = document.createElement('div'); p.className = 'dmg-text';
         p.innerText = isNaN(txt) ? txt : "-"+txt;
-        p.style.left = '50%'; p.style.top = '30%';
+        p.style.left = (40 + Math.random()*20) + '%'; p.style.top = '30%';
         document.body.appendChild(p); setTimeout(() => p.remove(), 1000);
     }
 
     function showInfo(t) {
         const o = document.getElementById('info-overlay');
-        document.getElementById('info-t').innerText = t==='p' ? "ГЕРОЙ" : "ВРАГ";
-        document.getElementById('info-b').innerHTML = t==='p' ? 
-            `Урон: ${st.atk}<br>ОЗ: ${st.mHP}<br>Ловкость: ${st.agi}%<br><br>4 в ряд - удалит линию.<br>5 в ряд - взрыв.` :
-            `Здоровье: ${st.mehp}<br>Уровень: ${st.lvl}<br><br>Боссы на 25, 50, 75 уровнях имеют спец-умения.`;
+        document.getElementById('info-t').innerText = t==='p' ? "ГЕРОЙ" : "ПРОТИВНИК";
+        let b = "";
+        if (t === 'p') {
+            b = `Урон: ${st.atk}<br>ОЗ: ${st.mHP}<br>Ловкость: ${st.agi}%<br><br><b>Комбо:</b><br>4 в ряд - уничтожит весь ряд.<br>5 в ряд - мощный взрыв.`;
+        } else {
+            const isB = st.lvl % 25 === 0;
+            let abi = "Обычный моб.";
+            if (st.lvl === 25) abi = "<b>Босс Льда:</b> Каждые 4 хода замораживает 3 плитки на 3 хода.";
+            if (st.lvl === 50) abi = "<b>Босс Огня:</b> Каждые 4 хода наносит тройной урон.";
+            if (st.lvl === 75) abi = "<b>Валькирия:</b> Каждые 4 хода создает 3 плитки Света. Если не убрать за 3 хода - лечится.";
+            b = `Здоровье: ${st.mehp}<br>Урон: ${Math.floor(5 + st.lvl * 1.5)}<br><br>${abi}`;
+        }
+        document.getElementById('info-b').innerHTML = b;
         o.style.display = 'flex';
     }
 
