@@ -3,76 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Final Stable</title>
+    <title>Viking Saga: No-Image Mode</title>
     <style>
-        :root { --gold: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
-        body { background: #111; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; }
+        :root { --r: #e74c3c; --b: #3498db; --g: #2ecc71; --y: #f1c40f; --s: #95a5a6; }
+        body { background: #111; color: #fff; font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; }
+        #lvl-display { padding: 10px; color: var(--y); font-size: 20px; font-weight: bold; background: #222; }
+        .arena { height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1a1a1a; }
+        .hp-bar { width: 90%; height: 12px; background: #000; border-radius: 6px; overflow: hidden; margin: 5px; border: 1px solid #444; }
+        .fill { height: 100%; transition: 0.3s; }
         
-        /* Шапка */
-        #lvl-display { padding: 10px; color: var(--gold); font-size: 22px; font-weight: bold; background: #222; border-bottom: 2px solid #444; }
-        
-        /* Арена боя */
-        .arena { height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: space-around; background: #1a1a1a; position: relative; }
-        .mob-container { font-size: 60px; height: 80px; display: flex; align-items: center; justify-content: center; }
-        
-        /* Полоски HP */
-        .hp-bar { width: 90%; height: 14px; background: #000; border: 1px solid #444; border-radius: 7px; overflow: hidden; position: relative; }
-        .fill { height: 100%; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .hp-text { position: absolute; width: 100%; font-size: 10px; font-weight: bold; line-height: 14px; color: white; text-shadow: 1px 1px 0 black; z-index: 10; }
-
-        /* Сетка */
         #grid { 
-            display: grid; 
-            grid-template-columns: repeat(7, 44px); 
-            gap: 4px; 
-            width: 332px; 
-            margin: 10px auto; 
-            padding: 8px;
-            background: #222; 
-            border-radius: 10px;
-            box-shadow: inset 0 0 15px #000;
+            display: grid; grid-template-columns: repeat(7, 42px); gap: 5px; 
+            width: 324px; margin: 10px auto; padding: 10px; background: #333; border-radius: 8px; 
         }
         .cell { 
-            width: 44px; height: 44px; 
-            background-color: #333; 
-            background-size: cover; 
-            background-position: center;
-            border-radius: 6px;
-            transition: 0.2s;
+            width: 42px; height: 42px; border-radius: 5px; 
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            background-size: cover; background-position: center; border: 1px solid rgba(0,0,0,0.2);
         }
-        .sel { outline: 3px solid white; transform: scale(0.9); box-shadow: 0 0 15px var(--gold); z-index: 5; }
-
-        /* Кнопка и энергия */
-        .en-bar { width: 332px; height: 10px; background: #222; margin: 10px auto; border-radius: 5px; border: 1px solid #333; overflow: hidden; }
-        .btn { 
-            width: 332px; padding: 16px; background: #444; color: #888; border: none; border-radius: 10px; 
-            font-weight: bold; font-size: 18px; transition: 0.3s;
-        }
-        .ready { background: linear-gradient(180deg, #f1c40f, #d35400) !important; color: #fff !important; box-shadow: 0 5px 15px rgba(241, 196, 15, 0.4); cursor: pointer; }
-        
-        /* Бан */
-        #ban-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        
-        @keyframes shake { 0% { transform: translate(2px, 2px); } 100% { transform: translate(0,0); } }
-        .shaking { animation: shake 0.1s infinite; }
+        .sel { outline: 3px solid white; transform: scale(0.9); box-shadow: 0 0 10px #fff; }
+        .btn { width: 324px; padding: 15px; background: #444; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        .ready { background: linear-gradient(#f1c40f, #d35400) !important; }
+        #ban { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:9999; }
     </style>
 </head>
 <body>
 
-<div id="ban-screen">
-    <h1 style="color: var(--red);">ВЫ ПАЛИ В БОЮ</h1>
-    <p>Вальхалла закрыта на час. Отдыхайте:</p>
-    <h2 id="timer" style="color: var(--gold);">60:00</h2>
+<div id="ban">
+    <h1 style="color:var(--r)">ВЫ ПАЛИ</h1>
+    <h2 id="timer" style="color:var(--y)">60:00</h2>
 </div>
 
 <div id="lvl-display">УРОВЕНЬ 1</div>
+<div class="arena">
+    <div class="hp-bar"><div id="ehp" class="fill" style="background:var(--r); width:100%"></div></div>
+    <div id="mob-view" style="font-size: 50px;">👹</div>
+    <div class="hp-bar"><div id="php" class="fill" style="background:var(--g); width:100%"></div></div>
+</div>
 
-<div class="arena" id="arena">
-    <div class="hp-bar">
-        <div class="hp-text" id="ehp-t">100 / 100</div>
-        <div id="ehp" class="fill" style="background: var(--red); width: 100%;"></div>
-    </div>
-    <div class="mob-container" id="mob-view">👾</div>
-    <div class="hp-bar">
-        <div class="hp-text" id="php-t">100 / 100</div>
-        <div id="php" class="fill"
+<div id="grid"></div>
+
+<div style="width:324px; height:8px; background:#222; margin:5px auto; border-radius:4px;">
+    <div id="en-fill" style="width:0%; height:100%; background:var(--y)"></div>
+</div>
+<button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
+
+<script>
+    const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
+    const colors = ['var(--r)', 'var(--b)', 'var(--g)', 'var(--y)', 'var(--s)'];
+    const icons = ['🔥', '💧', '🌿', '⭐', '🛡️']; // Если картинок нет - будут эти значки
+    
+    let s = { board: [], sel: null, hp: 100, ehp: 100, en: 0, lvl: 1, lock: false, stun: 0 };
+
+    function init() {
+        const banTime = localStorage.getItem('viking_ban');
+        if (banTime && banTime > Date.now()) {
+            document.getElementById('ban').style.display = 'flex';
+            setInterval(() => {
+                let diff = banTime - Date.now();
+                let m = Math.floor(diff/60000), sec = Math.floor((diff%60000)/1000);
+                document.getElementById('timer').innerText = `${m}:${sec < 10 ? '0' : ''}${sec}`;
+                if (diff <= 0) location.reload();
+            }, 1000); return;
+        }
+
+        const g = document.getElementById('grid');
+        g.innerHTML = ''; s.board = [];
+        for (let i = 0; i < 49; i++) {
+            let t;
+            do { t = Math.floor(Math.random() * 5); } 
+            while ((i%7>=2 && t===s.board[i-1] && t===s.board[i-2]) || (i>=14 && t===s.board[i-7] && t===s.board[i-14]));
+            s.board.push(t);
+            let c = document.createElement('div');
+            c.id = 'c' + i; c.className = 'cell';
+            c.onclick = () => touch(i);
+            g.appendChild(c);
+        }
+        draw();
+    }
+
+    function draw() {
+        s.board.forEach((t, i) => {
+            const c = document.getElementById('c' + i);
+            if (t === -1) { c.style.background = '#fff'; c.innerText = ''; } 
+            else {
+                c.style.backgroundColor = colors[t];
+                c.style.backgroundImage = `url(${runes[t]})`;
+                c.innerText = icons[t]; // Текст будет виден, только если картинка не перекроет его
+            }
+            c.classList.toggle('sel', s.sel === i);
+        });
+        document.getElementById('php').style.width = s.hp + '%';
+        document.getElementById('ehp').style.width = s.ehp + '%';
+        document.getElementById('en-fill').style.width = s.en + '%';
+        document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
+        document.getElementById('lvl-display').innerText = "УРОВЕНЬ " + s.lvl;
+    }
+
+    async function touch(i) {
+        if (s.lock) return;
+        if (s.sel === null) { s.sel = i; draw(); }
+        else {
+            let a = s.sel, b = i;
+            if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
+                s.lock = true;
+                [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+                if (!await checkMatches()) [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+            }
+            s.sel = null; s.lock = false; draw();
+        }
+    }
+
+    async function checkMatches() {
+        let found = false;
+        while (true) {
+            let m = [];
+            for (let i = 0; i < 49; i++) {
+                if (i % 7 < 5 && s.board[i] !== -1 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) m.push(i, i+1, i+2);
+                if (i < 35 && s.board[i] !== -1 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) m.push(i, i+7, i+14);
+            }
+            if (m.length === 0) break;
+            found = true;
+            [...new Set(m)].forEach(idx => {
+                if (s.board[idx] === 0) s.hp = Math.min(100, s.hp + 1);
+                if (s.board[idx] === 4) s.en = Math.min(100, s.en + 10);
+                s.ehp -= 5; s.board[idx] = -1;
+            });
+            draw(); await new Promise(r => setTimeout(r, 250));
+            for (let i = 0; i < 49; i++) if (s.board[i] === -1) s.board[i] = Math.floor(Math.random() * 5);
+            draw(); await new Promise(r => setTimeout(r, 150));
+        }
+        if (found) { if (s.ehp <= 0) win(); else enemyTurn(); }
+        return found;
+    }
+
+    function enemyTurn() {
+        if (s.stun > 0) { s.stun--; return; }
+        s.hp -= (5 + s.lvl);
+        if (s.hp <= 0) { localStorage.setItem('viking_ban', Date.now() + 3600000); location.reload(); }
+        draw();
+    }
+
+    function win() {
+        s.lvl++; s.hp
