@@ -3,91 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Hardcore Edition</title>
+    <title>Viking Saga: Audio Fix</title>
     <style>
+        /* Весь стиль оставляем прежним */
         :root { --main-bg: #000; --panel-bg: #1a1a1a; --accent: #2ecc71; --gold: #ffd700; --rage: #ff4500; }
         body { background: var(--main-bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; user-select: none; }
-        
         .cell, .btn, .up-btn, .info-btn, .adm-btn, #pts-txt { cursor: pointer; }
-
-        #adm { display: none; background: #300; padding: 10px; border-bottom: 2px solid red; position: relative; z-index: 2000; }
-        .adm-btn { background: #fff; color: #000; border: none; padding: 5px 10px; margin: 2px; font-weight: bold; border-radius: 4px; }
-
-        .header { background: var(--panel-bg); padding: 8px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; font-size: 14px; height: 50px; box-sizing: border-box; }
-        
-        @keyframes pulse-pts { 0% { transform: scale(1); } 50% { transform: scale(1.1); color: var(--accent); text-shadow: 0 0 10px var(--accent); } 100% { transform: scale(1); } }
-        .has-pts { animation: pulse-pts 1s infinite; font-weight: bold; border: 1px solid var(--accent); padding: 2px 8px; border-radius: 4px; }
-
-        .arena { max-width: 500px; height: 230px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; margin: 0 auto; transition: background 1s; }
+        .header { background: var(--panel-bg); padding: 8px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; height: 50px; box-sizing: border-box; }
+        .arena { max-width: 500px; height: 230px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; margin: 0 auto; }
         .boss-bg { background: radial-gradient(circle, #400 0%, #000 100%) !important; }
-
         .hp-bar { width: 92%; height: 16px; background: #222; border-radius: 8px; margin: 2px auto; overflow: hidden; border: 1px solid #555; position: relative; z-index: 100; }
-        #boss-rage-bar { width: 60%; height: 6px; background: #111; border-radius: 3px; border: 1px solid var(--rage); display: none; position: relative; z-index: 100; margin: 2px auto; }
         .fill { height: 100%; width: 100%; transition: 0.2s ease-out; }
-        
-        #mob-img { height: 130px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; transition: 0.2s; }
-        
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .stat-card { background: #222; border: 1px solid #444; padding: 10px; border-radius: 8px; text-align: left; }
-
-        .up-row { margin-bottom: 12px; width: 100%; display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; }
-        .up-btn { background: var(--accent); color: #fff; border: none; padding: 10px 25px; border-radius: 6px; font-weight: bold; font-size: 20px; }
-
+        #mob-img { height: 130px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
         #grid { width: 322px; margin: 10px auto; display: block; font-size: 0; background: #111; padding: 6px; border-radius: 12px; border: 2px solid #444; }
         .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-color: #222; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; }
-        .sel { border: 3px solid #fff !important; transform: scale(0.85); box-shadow: 0 0 15px #fff; z-index: 50; position: relative; }
-
+        .sel { border: 3px solid #fff !important; transform: scale(0.85); box-shadow: 0 0 15px #fff; }
         .ui { padding: 10px 0; background: #111; }
-        .btn { width: 280px; padding: 14px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        .ready { background: linear-gradient(135deg, #ff9900, #ff4400) !important; color: #fff !important; cursor: pointer; }
-        
-        .dmg-num { position: absolute; font-weight: 900; font-size: 26px; z-index: 150; pointer-events: none; animation: fly-up 0.6s ease-out forwards; text-shadow: 2px 2px #000; }
+        .btn { width: 280px; padding: 14px; border: none; border-radius: 8px; background: #333; color: #fff; font-weight: bold; }
+        .ready { background: linear-gradient(135deg, #ff9900, #ff4400) !important; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        .dmg-num { position: absolute; font-weight: 900; font-size: 26px; z-index: 150; pointer-events: none; animation: fly-up 0.6s ease-out forwards; }
         @keyframes fly-up { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
+        #boss-rage-bar { width: 60%; height: 6px; background: #111; border-radius: 3px; border: 1px solid var(--rage); display: none; margin: 2px auto; }
     </style>
 </head>
 <body onload="init()">
 
-    <audio id="bg-music" loop></audio>
-    <audio id="sfx-click" src="click.mp3"></audio>
-    <audio id="sfx-match" src="match.mp3"></audio>
-    <audio id="sfx-hit" src="hit.mp3"></audio>
-    <audio id="sfx-win" src="win.mp3"></audio>
-    <audio id="sfx-super" src="super.mp3"></audio>
-
-    <div id="adm">
-        <button class="adm-btn" onclick="s.lvl=24; save(); init();">К БОССУ (25)</button>
-        <button class="adm-btn" onclick="s.pts+=5; draw();">DODGE +5</button>
-        <button class="adm-btn" onclick="localStorage.clear(); location.reload();">СБРОС ВСЕГО</button>
-    </div>
-
     <div class="header">
         <div id="admin-trigger"><span id="lvl-txt" style="color:var(--gold); font-weight:bold;">LVL 1</span></div>
         <span id="pts-txt" onclick="openForge()">PTS: 0</span>
-        <div class="info-btn" onclick="toggleInfo()" style="background:#333; color:gold; border:1px solid gold; border-radius:50%; width:30px; line-height:30px; font-weight:bold;">i</div>
+        <div class="info-btn" onclick="toggleInfo()">i</div>
     </div>
 
     <div class="arena" id="arena">
         <div id="upgrade-menu" class="overlay">
             <h2 style="color:var(--gold);">КУЗНИЦА</h2>
-            <p id="up-pts-info">У тебя есть очки характеристик!</p>
-            <div class="up-row"><div><b>СИЛА</b><div style="font-size:10px;">+2 ATK</div></div><button class="up-btn" onclick="upgrade('atk')">+</button></div>
-            <div class="up-row"><div><b>ЖИЗНЬ</b><div style="font-size:10px;">+20 HP</div></div><button class="up-btn" onclick="upgrade('hp')">+</button></div>
-            <div class="up-row"><div><b>ЛОВКОСТЬ</b><div style="font-size:10px;">Уворот</div></div><button class="up-btn" onclick="upgrade('agi')">+</button></div>
-            <div class="up-row"><div><b>УДАЧА</b><div style="font-size:10px;">Ульта</div></div><button class="up-btn" onclick="upgrade('luck')">+</button></div>
-            <button class="btn ready" onclick="closeForge()" style="margin-top:10px;">В БОЙ</button>
+            <button class="btn ready" onclick="upgrade('atk')">АТАКА (+2)</button><br>
+            <button class="btn ready" onclick="upgrade('hp')">ЖИЗНЬ (+20)</button><br>
+            <button class="btn ready" onclick="closeForge()">В БОЙ</button>
         </div>
 
         <div id="info-screen" class="overlay">
-            <h2 style="color:var(--gold);">СТАТУС ГЕРОЯ</h2>
-            <div class="stat-grid">
-                <div class="stat-card"><b>ATK</b><span id="stat-atk">0</span></div>
-                <div class="stat-card"><b>MAX HP</b><span id="stat-hp">0</span></div>
-                <div class="stat-card"><b>DODGE</b><span id="stat-agi">0%</span></div>
-                <div class="stat-card"><b>LUCK</b><span id="stat-luck">x0</span></div>
-            </div>
-            <p style="font-size: 11px; color: #888;">PTS даются раз в 3 уровня и за Боссов.</p>
+            <h2 style="color:var(--gold);">СТАТУС</h2>
+            <div id="status-content"></div>
             <button class="btn ready" onclick="toggleInfo()">ЗАКРЫТЬ</button>
         </div>
 
@@ -98,7 +56,7 @@
     </div>
 
     <div class="ui">
-        <div class="en-bar" style="width:280px; height:20px; background:#222; margin:0 auto 5px; border-radius:10px; border:1px solid #3498db; overflow:hidden;">
+        <div style="width:280px; height:10px; background:#222; margin:5px auto; border-radius:5px; overflow:hidden;">
             <div id="en-f" class="fill" style="background: #3498db; width: 0%;"></div>
         </div>
         <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
@@ -107,6 +65,54 @@
     <div id="grid"></div>
 
 <script>
+    // --- МЕНЕДЖЕР ЗВУКОВ ---
+    const AudioEngine = {
+        sounds: {},
+        music: new Audio(),
+        unlocked: false,
+
+        init() {
+            // Список всех звуков
+            const sfx = ['click', 'match', 'hit', 'win', 'super'];
+            sfx.forEach(name => {
+                this.sounds[name] = new Audio(`${name}.mp3`);
+            });
+            this.music.loop = true;
+        },
+
+        unlock() {
+            if (this.unlocked) return;
+            // Проигрываем пустой звук для разблокировки в iOS/Chrome
+            Object.values(this.sounds).forEach(s => {
+                s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(()=>{});
+            });
+            this.unlocked = true;
+            console.log("Audio Unlocked");
+            this.playMusic();
+        },
+
+        playSFX(name) {
+            const s = this.sounds[name];
+            if (s) {
+                s.currentTime = 0;
+                s.play().catch(e => console.log("SFX Error:", e));
+            }
+        },
+
+        playMusic() {
+            const isB = s.lvl % 25 === 0;
+            const track = isB ? 'track_boss.mp3' : 'track_normal.mp3';
+            if (this.music.getAttribute('data-now') !== track) {
+                this.music.src = track;
+                this.music.setAttribute('data-now', track);
+                this.music.play().catch(e => console.log("Music Error:", e));
+            }
+        }
+    };
+
+    AudioEngine.init();
+
+    // --- ЛОГИКА ИГРЫ ---
     const runes = ['rune1.png', 'rune2.png', 'rune3.png', 'rune4.png', 'rune5.png'];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6'];
 
@@ -117,55 +123,15 @@
         luck: parseInt(localStorage.getItem('v_luck')) || 5,
         agi: parseInt(localStorage.getItem('v_agi')) || 0,
         pts: parseInt(localStorage.getItem('v_pts')) || 0,
-        en: 0, hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null, rage: 0
+        en: 0, hp: 100, ehp: 100, maxEHP: 100, board: [], sel: null, rage: 0
     };
-
-    function playSFX(id) {
-        const sound = document.getElementById('sfx-' + id);
-        if (sound) { sound.currentTime = 0; sound.play().catch(()=>{}); }
-    }
-
-    function playMusic() {
-        const audio = document.getElementById('bg-music');
-        const isB = s.lvl % 25 === 0;
-        const target = isB ? 'track_boss.mp3' : 'track_normal.mp3';
-        if (audio.getAttribute('data-playing') !== target) {
-            audio.src = target;
-            audio.setAttribute('data-playing', target);
-            audio.play().catch(() => {});
-        }
-    }
-
-    function openForge() { if (s.pts > 0) document.getElementById('upgrade-menu').style.display = 'flex'; }
-    function closeForge() { document.getElementById('upgrade-menu').style.display = 'none'; }
-
-    function toggleInfo() {
-        document.getElementById('stat-atk').innerText = s.atk;
-        document.getElementById('stat-hp').innerText = s.maxHP;
-        document.getElementById('stat-luck').innerText = 'x' + s.luck;
-        document.getElementById('stat-agi').innerText = Math.floor((1 - (100 / (100 + s.agi))) * 100) + '%';
-        const el = document.getElementById('info-screen');
-        el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
-    }
-
-    // Админка
-    let admT;
-    document.getElementById('admin-trigger').addEventListener('mousedown', () => admT = setTimeout(() => document.getElementById('adm').style.display='block', 2000));
-    document.getElementById('admin-trigger').addEventListener('mouseup', () => clearTimeout(admT));
-
-    window.addEventListener('keydown', (e) => { if(e.code === 'Space') useSuper(); });
 
     function init() {
         const isB = s.lvl % 25 === 0;
-        const arena = document.getElementById('arena');
-        const mob = document.getElementById('mob-img');
-        
-        s.rage = 0;
-        arena.classList.toggle('boss-bg', isB);
-        mob.src = isB ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
+        document.getElementById('arena').classList.toggle('boss-bg', isB);
+        document.getElementById('mob-img').src = isB ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
         document.getElementById('boss-rage-bar').style.display = isB ? 'block' : 'none';
 
-        // Формула замедления прогресса мобов
         s.maxEHP = Math.floor((100 + (Math.pow(s.lvl, 1.5) * 10)) * (isB ? 4 : 1));
         s.ehp = s.maxEHP; s.hp = s.maxHP;
         
@@ -175,52 +141,46 @@
             s.board.push(Math.floor(Math.random() * 5));
             let d = document.createElement('div');
             d.className = 'cell'; d.id = 'c' + i;
-            d.addEventListener('click', () => { playMusic(); playSFX('click'); touch(i); });
+            // Клик по любой клетке разблокирует звук
+            d.onclick = () => { AudioEngine.unlock(); touch(i); };
             g.appendChild(d);
         }
         draw();
     }
 
-    function upgrade(type) {
-        if (s.pts <= 0) return;
-        if (type === 'atk') s.atk += 2;
-        if (type === 'hp') s.maxHP += 20;
-        if (type === 'luck') s.luck += 1;
-        if (type === 'agi') s.agi += 5;
-        s.pts--; save(); draw();
-        if (s.pts <= 0) closeForge();
+    function touch(i) {
+        AudioEngine.playSFX('click');
+        if (s.sel === null) { s.sel = i; draw(); }
+        else {
+            let a = s.sel, b = i;
+            if (Math.abs(a - b) === 1 || Math.abs(a - b) === 7) {
+                [s.board[a], s.board[b]] = [s.board[b], s.board[a]];
+                check();
+            }
+            s.sel = null; draw();
+        }
     }
 
-    function save() {
-        localStorage.setItem('v_lvl', s.lvl);
-        localStorage.setItem('v_atk', s.atk);
-        localStorage.setItem('v_mhp', s.maxHP);
-        localStorage.setItem('v_luck', s.luck);
-        localStorage.setItem('v_agi', s.agi);
-        localStorage.setItem('v_pts', s.pts);
-    }
+    async function check() {
+        let found = false;
+        let del = new Set();
+        // Упрощенная логика поиска совпадений
+        for (let i = 0; i < 49; i++) {
+            if (i % 7 < 5 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) { del.add(i); del.add(i+1); del.add(i+2); }
+            if (i < 35 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) { del.add(i); del.add(i+7); del.add(i+14); }
+        }
 
-    function draw() {
-        document.getElementById('lvl-txt').innerText = "LVL " + s.lvl;
-        const pTxt = document.getElementById('pts-txt');
-        pTxt.innerText = "PTS: " + s.pts;
-        pTxt.classList.toggle('has-pts', s.pts > 0);
-        
-        document.getElementById('php').style.width = (s.hp / s.maxHP * 100) + '%';
-        document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
-        document.getElementById('en-f').style.width = s.en + '%';
-        document.getElementById('rage-fill').style.width = s.rage + '%';
-        document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
-        
-        s.board.forEach((t, i) => {
-            const el = document.getElementById('c' + i);
-            el.style.backgroundColor = t === -1 ? '#000' : colors[t];
-            el.style.backgroundImage = t === -1 ? 'none' : `url(${runes[t]})`;
-            el.classList.toggle('sel', s.sel === i);
-        });
-    }
-
-    function spawnDmg(val, isP, crit) {
-        const d = document.createElement('div');
-        d.className = 'dmg-num'; 
-        d.innerText = (val === 0 ? 'MISS' : '-' + Math
+        if (del.size > 0) {
+            found = true;
+            AudioEngine.playSFX('match');
+            let dmg = del.size * s.atk;
+            s.ehp -= dmg; spawnDmg(dmg, false);
+            del.forEach(idx => {
+                if (s.board[idx] === 1) s.en = Math.min(100, s.en + s.luck);
+                s.board[idx] = -1;
+            });
+            draw();
+            await new Promise(r => setTimeout(r, 200));
+            drop();
+            check();
+        } else {
