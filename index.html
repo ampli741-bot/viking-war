@@ -3,52 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Advanced Bosses</title>
+    <title>Viking Saga: Fixed & Balanced</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #fff; }
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
         .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; flex-shrink: 0; }
-        
         .arena { height: 25vh; position: relative; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; flex-shrink: 0; }
-        .char-box { width: 42%; display: flex; flex-direction: column; align-items: center; z-index: 10; cursor: pointer; }
-        .p-icon { width: 95px; height: 95px; border-radius: 8px; border: 3px solid #444; background: #111; object-fit: cover; }
+        .char-box { width: 42%; display: flex; flex-direction: column; align-items: center; z-index: 10; }
+        .p-icon { width: 90px; height: 90px; border-radius: 8px; border: 3px solid #444; background: #111; object-fit: cover; }
         
         .bar-bg { width: 100%; height: 18px; background: #222; border-radius: 4px; margin-top: 3px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
         .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 10px; line-height: 18px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
 
         .skill-bar { width: 100%; height: 6px; background: #111; margin-top: 2px; border-radius: 3px; overflow: hidden; border: 1px solid #333; }
-        
         #main-mob { height: 100px; position: absolute; left: 50%; transform: translateX(-50%); z-index: 5; opacity: 0.8; }
 
         /* Эффекты */
         #flash { position: fixed; inset: 0; background: var(--white); opacity: 0; pointer-events: none; z-index: 2000; }
         .lightning { animation: flash-anim 0.4s ease-out; }
         @keyframes flash-anim { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
-        .shake { animation: shake-anim 0.3s; }
-        @keyframes shake-anim { 0%,100%{transform:translate(0,0)} 25%{transform:translate(5px,5px)} 50%{transform:translate(-5px,0)} 75%{transform:translate(5px,-5px)} }
 
-        /* Поле */
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
-        #grid-container { width: 98vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: #111; padding: 4px; border-radius: 8px; border: 2px solid #333; }
-        .cell { background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; border: 1px solid #222; border-radius: 4px; position: relative; }
-        .selected { background-color: #444 !important; box-shadow: inset 0 0 10px #fff; }
+        #grid-container { width: 95vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
+        .cell { background-color: #1a1a1a; background-size: 80%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; transition: 0.2s; }
+        .selected { background-color: #444 !important; outline: 2px solid #fff; z-index: 20; }
         
-        /* Стили модификаторов плиток */
-        .frozen { border: 2px solid var(--blue) !important; filter: hue-rotate(180deg) brightness(1.5); }
-        .light { border: 2px solid var(--gold) !important; box-shadow: 0 0 10px var(--gold); }
+        /* Модификаторы */
+        .frozen { border: 2px solid var(--blue) !important; filter: brightness(0.7) saturate(2); }
+        .light { border: 2px solid var(--gold) !important; box-shadow: inset 0 0 15px var(--gold); }
+        .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; font-size: 10px; padding: 2px 5px; border-radius: 50%; font-weight: bold; border: 1px solid white; z-index: 5; }
 
-        #thor-btn { width: 90%; max-width: 350px; padding: 14px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; transition: 0.4s; }
-        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 15px var(--blue); cursor: pointer; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; transition: 0.3s; }
+        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 15px var(--blue); cursor: pointer; }
 
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 15px; width: 85%; max-width: 300px; }
         .menu-btn { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); color: #000; }
         
-        .dmg-text { position: absolute; font-size: 32px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
-        @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-120px); } }
+        .dmg-text { position: absolute; font-size: 28px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
+        @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body onclick="startAudio()">
@@ -61,7 +56,7 @@
     </div>
 
     <div class="arena">
-        <div class="char-box" onclick="showStats('p')">
+        <div class="char-box">
             <img src="hero1.png" class="p-icon" style="border-color:var(--accent)">
             <div class="bar-bg">
                 <div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div>
@@ -72,7 +67,7 @@
 
         <img id="main-mob" src="mob1.png">
 
-        <div class="char-box" onclick="showStats('e')">
+        <div class="char-box">
             <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
             <div class="bar-bg">
                 <div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div>
@@ -81,7 +76,6 @@
             <div id="boss-skill-wrap" class="skill-bar" style="display:none">
                 <div id="e-skill-fill" style="height:100%; background:var(--purple); width:0%"></div>
             </div>
-            <div id="m-name" style="font-size:10px; color:var(--red); font-weight:bold">МОБ</div>
         </div>
     </div>
 
@@ -93,10 +87,20 @@
     <div id="admin-overlay" class="overlay">
         <div class="card">
             <h2 style="color:var(--gold)">АДМИНКА</h2>
-            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:80%; padding:10px; margin-bottom:10px;">
+            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:80%; padding:10px; margin-bottom:10px; background:#222; border:1px solid #444; color:#fff; text-align:center;">
             <button class="menu-btn" onclick="jumpToLvl()">ПЕРЕЙТИ</button>
             <button class="menu-btn" style="background:var(--blue)" onclick="addPts()">+10 PTS</button>
             <button class="menu-btn" style="background:var(--red)" onclick="resetAll()">СБРОСИТЬ ВСЁ</button>
+            <button class="menu-btn" style="background:#444" onclick="closeM()">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+
+    <div id="f-menu" class="overlay">
+        <div class="card">
+            <h2 style="color:var(--gold)">КУЗНИЦА</h2>
+            <button class="menu-btn" onclick="buy('atk')">УРОН (+2)</button>
+            <button class="menu-btn" onclick="buy('hp')">ЖИЗНЬ (+20)</button>
+            <button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ (+1%)</button>
             <button class="menu-btn" style="background:#444" onclick="closeM()">ЗАКРЫТЬ</button>
         </div>
     </div>
@@ -142,157 +146,183 @@
         document.getElementById('e-skill-fill').style.width = st.bSkill + "%";
         
         const btn = document.getElementById('thor-btn');
-        if(st.thor >= 100) btn.classList.add('ready'); else btn.classList.remove('ready');
+        btn.className = (st.thor >= 100) ? 'ready' : '';
 
         st.board.forEach((o, i) => {
             const c = document.getElementById('c-' + i);
             c.style.backgroundImage = o.type===-1 ? 'none' : `url(rune${o.type+1}.png)`;
             c.className = 'cell' + (st.sel===i?' selected':'') + (o.frozen>0?' frozen':'') + (o.light>0?' light':'');
+            c.innerHTML = (o.light > 0) ? `<div class="timer-badge">${o.light}</div>` : '';
         });
     }
 
     function handle(i) {
         if (st.lock || st.board[i].frozen > 0) return;
-        if (st.sel === null) st.sel = i;
-        else {
+        if (st.sel === null) {
+            st.sel = i;
+        } else {
             let a = st.sel, b = i;
-            if ((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
-                let t = st.board[a]; st.board[a] = st.board[b]; st.board[b] = t;
-                match();
+            const dist = Math.abs(a - b);
+            const isAdj = (dist === 1 && Math.floor(a/7) === Math.floor(b/7)) || dist === 7;
+            
+            if (isAdj) {
+                swap(a, b);
+                if (!checkAndResolve()) {
+                    setTimeout(() => { swap(a, b); draw(); }, 300);
+                }
             }
             st.sel = null;
         }
         draw();
     }
 
-    async function match() {
-        st.lock = true;
-        let res = findM();
-        if (res.length > 0) {
-            audio.match.currentTime = 0; audio.match.play().catch(()=>{});
-            let del = new Set();
-            res.forEach(s => {
-                if(st.board[s[0]].type === 3) st.thor = Math.min(100, st.thor + s.length * 5);
-                s.forEach(idx => del.add(idx));
-            });
-            st.ehp -= del.size * st.atk; pop(del.size * st.atk, false);
-            del.forEach(idx => st.board[idx].type = -1);
-            save(); draw(); await new Promise(r => setTimeout(r, 300));
-            gravity(); draw(); await new Promise(r => setTimeout(r, 300));
-            match();
-        } else {
+    function swap(a, b) {
+        let t = st.board[a];
+        st.board[a] = st.board[b];
+        st.board[b] = t;
+    }
+
+    async function checkAndResolve() {
+        let matches = findMatches();
+        if (matches.length > 0) {
+            st.lock = true;
+            while (matches.length > 0) {
+                audio.match.currentTime = 0; audio.match.play().catch(()=>{});
+                let toDel = new Set();
+                matches.forEach(m => {
+                    if (st.board[m[0]].type === 3) st.thor = Math.min(100, st.thor + m.length * 4);
+                    m.forEach(idx => toDel.add(idx));
+                });
+
+                st.ehp -= toDel.size * st.atk;
+                pop(toDel.size * st.atk, false);
+                toDel.forEach(idx => { st.board[idx].type = -1; st.board[idx].light = 0; st.board[idx].frozen = 0; });
+                
+                draw(); await new Promise(r => setTimeout(r, 300));
+                gravity();
+                draw(); await new Promise(r => setTimeout(r, 300));
+                matches = findMatches();
+            }
             st.lock = false;
-            if (st.ehp <= 0) win(); else enemy();
+            save();
+            if (st.ehp <= 0) win(); else enemyTurn();
+            return true;
         }
+        return false;
     }
 
-    async function useThor() {
-        if(st.thor < 100 || st.lock) return;
-        st.lock = true; st.thor = 0; save();
-        audio.thunder.play().catch(()=>{});
-        document.getElementById('flash').classList.add('lightning');
-        document.body.classList.add('shake');
-        setTimeout(()=>{
-            document.getElementById('flash').classList.remove('lightning');
-            document.body.classList.remove('shake');
-        }, 500);
-
-        for(let i=0; i<12; i++) {
-            let rIdx = Math.floor(Math.random()*49);
-            st.ehp -= st.atk; pop(st.atk, false);
-            st.board[rIdx].type = -1; st.board[rIdx].frozen = 0; st.board[rIdx].light = 0;
-            draw(); await new Promise(r => setTimeout(r, 50));
-        }
-        gravity(); draw();
-        setTimeout(() => { st.lock = false; if(st.ehp <= 0) win(); else enemy(); }, 400);
-    }
-
-    function findM() {
-        let m = [];
-        for(let r=0; r<7; r++) {
-            let c=1; for(let j=0; j<7; j++){
-                let idx = r*7+j;
-                if(j<6 && st.board[idx].type!==-1 && st.board[idx].type===st.board[idx+1].type) c++;
-                else { if(c>=3){ let s=[]; for(let k=0; k<c; k++) s.push(idx-k); m.push(s); } c=1; }
+    function findMatches() {
+        let matches = [];
+        // Horizontal
+        for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 5; c++) {
+                let i = r * 7 + c;
+                if (st.board[i].type !== -1 && st.board[i].type === st.board[i+1].type && st.board[i].type === st.board[i+2].type) {
+                    let m = [i, i+1, i+2];
+                    let k = i+3;
+                    while (k < (r+1)*7 && st.board[k].type === st.board[i].type) { m.push(k++); }
+                    matches.push(m); c += m.length - 1;
+                }
             }
         }
-        for(let j=0; j<7; j++) {
-            let c=1; for(let r=0; r<7; r++){
-                let idx = r*7+j;
-                if(r<6 && st.board[idx].type!==-1 && st.board[idx].type===st.board[idx+7].type) c++;
-                else { if(c>=3){ let s=[]; for(let k=0; k<c; r++) s.push(idx-k*7); m.push(s); } c=1; } // simplified
+        // Vertical
+        for (let c = 0; c < 7; c++) {
+            for (let r = 0; r < 5; r++) {
+                let i = r * 7 + c;
+                if (st.board[i].type !== -1 && st.board[i+7] && st.board[i+14] && st.board[i].type === st.board[i+7].type && st.board[i].type === st.board[i+14].type) {
+                    let m = [i, i+7, i+14];
+                    let k = i+21;
+                    while (k < 49 && st.board[k].type === st.board[i].type) { m.push(k); k += 7; }
+                    matches.push(m); r += m.length - 1;
+                }
             }
         }
-        // Переписанный поиск для стабильности
-        let final = [];
-        for(let i=0; i<49; i++) {
-            if(st.board[i].type === -1) continue;
-            // Horiz
-            let h = [i]; let curr = i;
-            while((curr+1)%7!==0 && st.board[curr+1].type === st.board[i].type) { h.push(++curr); }
-            if(h.length >=3) final.push(h);
-            // Vert
-            let v = [i]; curr = i;
-            while(curr+7 < 49 && st.board[curr+7].type === st.board[i].type) { v.push(curr+=7); }
-            if(v.length >=3) final.push(v);
-        }
-        return final;
+        return matches;
     }
 
     function gravity() {
-        for(let c=0; c<7; c++) {
-            let e=0; for(let r=6; r>=0; r--) {
-                let i=r*7+c; if(st.board[i].type===-1) e++;
-                else if(e>0){ st.board[i+e*7]={...st.board[i]}; st.board[i].type=-1; }
+        for (let c = 0; c < 7; c++) {
+            let empty = 0;
+            for (let r = 6; r >= 0; r--) {
+                let i = r * 7 + c;
+                if (st.board[i].type === -1) empty++;
+                else if (empty > 0) {
+                    st.board[i + empty * 7] = { ...st.board[i] };
+                    st.board[i].type = -1;
+                }
             }
-            for(let r=0; r<e; r++) st.board[r*7+c]={type:Math.floor(Math.random()*5), frozen:0, light:0};
+            for (let r = 0; r < empty; r++) {
+                st.board[r * 7 + c] = { type: Math.floor(Math.random() * 5), frozen: 0, light: 0 };
+            }
         }
     }
 
-    function enemy() {
+    function enemyTurn() {
         const isB = st.lvl % 25 === 0;
-        let d = Math.floor(5 + st.lvl * 1.2);
+        let d = Math.floor(5 + st.lvl * 1.5);
         
         if (isB) {
             st.bSkill += 25;
             if (st.bSkill >= 100) {
                 st.bSkill = 0;
-                if(st.lvl === 25) { // Мороз
-                    pop("ЗАМОРОЗКА!", true);
+                if (st.lvl === 25) {
+                    pop("FROZEN!", true);
                     for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen = 3;
-                } else if(st.lvl === 50) { // Огонь
-                    d *= 3; pop("ВЗРЫВ!", true);
-                } else if(st.lvl === 75) { // Валькирия
-                    pop("СВЕТ!", true);
-                    st.board[Math.floor(Math.random()*49)].light = 2;
+                } else if (st.lvl === 50) {
+                    d *= 3; pop("FIRE!", true);
+                } else if (st.lvl === 75) {
+                    pop("LIGHT!", true);
+                    for(let i=0; i<3; i++) {
+                        let idx = Math.floor(Math.random()*49);
+                        st.board[idx].light = 3; // 3 плитки - 3 хода
+                    }
                 }
             }
         }
 
-        // Проверка плиток света Валькирии
         st.board.forEach(o => {
-            if(o.light > 0) {
+            if (o.light > 0) {
                 o.light--;
-                if(o.light === 0) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.1); pop("HEAL", false); }
+                if (o.light === 0) { 
+                    st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.1); 
+                    pop("HEAL", false); 
+                }
             }
-            if(o.frozen > 0) o.frozen--;
+            if (o.frozen > 0) o.frozen--;
         });
 
-        if(Math.random()*100 < st.agi) pop("MISS!", true); else st.hp -= d;
-        if(st.hp <= 0) { alert("Game Over"); resetAll(); }
+        if (Math.random()*100 < st.agi) pop("MISS!", true); else st.hp -= d;
+        if (st.hp <= 0) { alert("Game Over"); resetAll(); }
         draw();
+    }
+
+    async function useThor() {
+        if (st.thor < 100 || st.lock) return;
+        st.lock = true; st.thor = 0; save();
+        audio.thunder.play().catch(()=>{});
+        document.getElementById('flash').classList.add('lightning');
+        setTimeout(() => document.getElementById('flash').classList.remove('lightning'), 400);
+
+        for (let i = 0; i < 12; i++) {
+            let rIdx = Math.floor(Math.random()*49);
+            st.ehp -= st.atk; pop(st.atk, false);
+            st.board[rIdx].type = -1; st.board[rIdx].light = 0; st.board[rIdx].frozen = 0;
+            draw(); await new Promise(r => setTimeout(r, 50));
+        }
+        gravity(); draw();
+        setTimeout(() => { st.lock = false; if(st.ehp <= 0) win(); else enemyTurn(); }, 400);
     }
 
     function pop(v, p) {
         const d = document.createElement('div'); d.className = 'dmg-text';
         d.innerText = isNaN(v) ? v : "-" + v;
         d.style.color = p ? 'var(--red)' : 'var(--gold)';
-        d.style.left = '50%'; d.style.top = '30%';
-        document.body.appendChild(d); setTimeout(()=>d.remove(), 1200);
+        d.style.left = (40 + Math.random()*20) + '%'; d.style.top = '30%';
+        document.body.appendChild(d); setTimeout(() => d.remove(), 1200);
     }
 
     function win() { st.lvl++; st.pts++; save(); init(); }
-    function save() { 
+    function save() {
         localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_atk', st.atk);
         localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi);
         localStorage.setItem('v_pts', st.pts); localStorage.setItem('v_thor', st.thor);
