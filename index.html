@@ -3,42 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Fixed UI</title>
+    <title>Viking Saga: Combat Evolved</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; user-select: none; }
         
-        /* Панель Админа */
-        #adm { display: none; background: #300; padding: 10px; border-bottom: 2px solid red; z-index: 2000; position: relative; }
+        #adm { display: none; background: #300; padding: 10px; border-bottom: 2px solid red; position: relative; z-index: 2000; }
         .adm-btn { background: #fff; color: #000; border: none; padding: 5px 10px; margin: 2px; font-weight: bold; border-radius: 4px; }
 
-        /* Шапка */
         .header { background: #1a1a1a; padding: 8px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; font-size: 12px; }
-        .info-btn { background: #444; color: gold; border: 1px solid gold; border-radius: 50%; width: 26px; height: 26px; font-weight: bold; cursor: pointer; transition: 0.2s; z-index: 1100; }
-        .info-active { background: gold !important; color: #000 !important; }
+        
+        /* Анимация пульсации для PTS */
+        @keyframes pulse-pts { 0% { transform: scale(1); color: #2ecc71; } 50% { transform: scale(1.1); color: #fff; } 100% { transform: scale(1); color: #2ecc71; } }
+        .has-pts { animation: pulse-pts 1s infinite; }
 
-        /* Арена */
-        .arena { height: 190px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; }
+        .info-btn { background: #444; color: gold; border: 1px solid gold; border-radius: 50%; width: 26px; height: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .info-btn:active { background: gold; color: #000; }
+
+        .arena { height: 200px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; }
         .hp-bar { width: 92%; height: 14px; background: #222; border-radius: 7px; margin: 2px auto; overflow: hidden; border: 1px solid #555; position: relative; z-index: 100; }
         #boss-en-bar { width: 60%; height: 6px; background: #111; border-radius: 3px; border: 1px solid #ff4500; display: none; position: relative; z-index: 100; margin: 0 auto; }
-        .fill { height: 100%; width: 100%; transition: 0.3s; }
-        #mob-img { height: 110px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; transition: 0.3s; }
+        .fill { height: 100%; width: 100%; transition: 0.2s ease-out; }
+        
+        #mob-img { height: 120px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; transition: transform 0.1s, filter 0.1s; }
+        
+        /* Вылетающий урон */
+        .dmg-num { position: absolute; color: #ff4d4d; font-weight: 900; font-size: 24px; z-index: 150; pointer-events: none; animation: fly-up 0.6s ease-out forwards; text-shadow: 2px 2px #000; }
+        @keyframes fly-up { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -60px); } }
 
-        /* Экраны */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .up-row { margin: 8px; width: 95%; display: flex; justify-content: space-between; align-items: center; background: #222; padding: 8px; border-radius: 8px; border: 1px solid #333; }
-        .up-btn { background: #2ecc71; color: #fff; border: none; padding: 10px 18px; border-radius: 5px; font-weight: bold; }
-        .desc-txt { font-size: 10px; color: #aaa; margin-top: 3px; text-align: left; }
+        /* Оверлеи */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .up-row { margin: 6px; width: 100%; display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; }
+        .up-btn { background: #2ecc71; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 18px; }
 
-        /* Сетка */
-        #grid { width: 322px; margin: 5px auto; display: block; font-size: 0; background: #111; padding: 4px; border-radius: 8px; border: 2px solid #333; }
+        #grid { width: 322px; margin: 5px auto; display: block; font-size: 0; background: #111; padding: 4px; border-radius: 10px; border: 2px solid #444; }
         .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-color: #222; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; vertical-align: top; }
-        .sel { border: 3px solid #fff !important; transform: scale(0.9); }
+        .sel { border: 3px solid #fff !important; transform: scale(0.9); box-shadow: 0 0 12px #fff; }
 
-        /* Кнопки */
         .ui { padding: 10px 0; background: #111; }
-        .en-bar { width: 280px; height: 20px; background: #222; margin: 0 auto 5px; border-radius: 10px; overflow: hidden; position: relative; border: 1px solid #3498db; }
-        .btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #444; color: #888; font-weight: bold; }
-        .ready { background: linear-gradient(orange, darkorange) !important; color: #fff !important; box-shadow: 0 0 15px gold; }
+        .en-bar { width: 280px; height: 22px; background: #222; margin: 0 auto 5px; border-radius: 11px; overflow: hidden; position: relative; border: 1px solid #3498db; }
+        .btn { width: 280px; padding: 14px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; font-size: 16px; }
+        .ready { background: linear-gradient(135deg, #ff9900, #ff4400) !important; color: #fff !important; box-shadow: 0 0 15px gold; cursor: pointer; }
         
         .shake { animation: shake 0.1s infinite; }
         @keyframes shake { 0% { transform: translate(2px,2px); } 50% { transform: translate(-2px,-2px); } 100% { transform: translate(0,0); } }
@@ -54,53 +60,53 @@
 
     <div class="header">
         <div onmousedown="startAdmin()" onmouseup="stopAdmin()" ontouchstart="startAdmin()" ontouchend="stopAdmin()">
-            <span id="lvl-txt" style="color:gold">LVL 1</span>
+            <span id="lvl-txt" style="color:gold; font-weight:bold;">LVL 1</span>
         </div>
-        <span id="pts-txt" style="color:#2ecc71; font-weight:bold;">PTS: 0</span>
-        <button id="info-toggle" class="info-btn" onclick="toggleInfo()">i</button>
+        <span id="pts-txt" style="font-weight:bold;">PTS: 0</span>
+        <div class="info-btn" id="i-btn" onclick="showInfo()">i</div>
     </div>
 
     <div class="arena" id="arena">
         <div id="upgrade-menu" class="overlay">
-            <h2 style="color:gold; margin-bottom:5px;">КУЗНИЦА</h2>
-            <p id="up-pts-info" style="color:#2ecc71">Очки: 0</p>
+            <h2 style="color:gold; margin-bottom:10px;">КУЗНИЦА</h2>
+            <p id="up-pts-info" style="color:#2ecc71; font-weight:bold; margin-bottom:15px;">Свободных очков: 0</p>
             <div class="up-row">
-                <div><b>СИЛА (ATK)</b><div class="desc-txt">+2 к урону за руну</div></div>
+                <div><b>СИЛА (ATK)</b><div style="font-size:10px; color:#aaa;">Текущий урон: <span id="cur-atk"></span></div></div>
                 <button class="up-btn" onclick="upgrade('atk')">+</button>
             </div>
             <div class="up-row">
-                <div><b>ЖИЗНЬ (HP)</b><div class="desc-txt">+20 к здоровью</div></div>
+                <div><b>ЖИЗНЬ (HP)</b><div style="font-size:10px; color:#aaa;">Макс. HP: <span id="cur-hp"></span></div></div>
                 <button class="up-btn" onclick="upgrade('hp')">+</button>
             </div>
             <div class="up-row">
-                <div><b>УДАЧА (ULT)</b><div class="desc-txt">Быстрее заряд ульты</div></div>
+                <div><b>УДАЧА (ULT)</b><div style="font-size:10px; color:#aaa;">Набор ульты: x<span id="cur-luck"></span></div></div>
                 <button class="up-btn" onclick="upgrade('luck')">+</button>
             </div>
         </div>
 
         <div id="info-screen" class="overlay">
-            <h3 style="color:gold; margin-top:0;">СПРАВКА</h3>
-            <div style="text-align:left; font-size:12px; line-height:1.4; padding:0 10px;">
-                ⚔️ <b>ATK:</b> Твой урон по врагу.<br>
-                ❤️ <b>HP:</b> Твоё здоровье.<br>
-                🍀 <b>LUCK:</b> Больше % ульты с синих рун.<br><br>
-                ⚡ <b>УЛЬТА (МОЛОТ ТОРА):</b><br>
-                • Мгновенный урон: <b>20 × ATK</b><br>
-                • Разрушение 15 случайных рун.<br>
-                • Активирует цепную реакцию комбо.
+            <h3 style="color:gold">ИНФОРМАЦИЯ</h3>
+            <div style="text-align:left; font-size:12px; line-height:1.6; background:#222; padding:15px; border-radius:10px; border:1px solid #444;">
+                ⚔️ <b>Сила (ATK):</b> Урон каждой руны. <br>
+                ❤️ <b>Жизнь (HP):</b> Твоё здоровье. <br>
+                🍀 <b>Удача:</b> Множитель энергии для Молота. <br><br>
+                🔨 <b>УЛЬТА (МОЛОТ ТОРА):</b><br>
+                Бьет врага на <b>2000% от ATK</b> и вызывает землетрясение, ломающее 15 случайных камней.
             </div>
-            <button class="btn ready" style="margin-top:15px; width:150px;" onclick="toggleInfo()">ОК</button>
+            <button class="btn ready" style="margin-top:20px;" onclick="hideInfo()">ВЕРНУТЬСЯ</button>
         </div>
 
         <div class="hp-bar"><div id="ehp" class="fill" style="background: #e74c3c;"></div></div>
         <div id="boss-en-bar"><div id="boss-en-fill" class="fill" style="background: orange; width: 0%;"></div></div>
+        
         <img id="mob-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/100/red?text=MOB'">
+        
         <div class="hp-bar"><div id="php" class="fill" style="background: #2ecc71;"></div></div>
     </div>
 
     <div class="ui">
         <div class="en-bar">
-            <div id="en-txt" style="position:absolute; width:100%; line-height:20px; font-size:10px; font-weight:bold; z-index:11;">МОЛОТ ТОРА</div>
+            <div id="en-txt" style="position:absolute; width:100%; line-height:22px; font-size:11px; font-weight:bold; z-index:11; text-shadow: 1px 1px #000;">МОЛОТ ТОРА</div>
             <div id="en-f" class="fill" style="background: #3498db; width: 0%;"></div>
         </div>
         <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
@@ -127,29 +133,31 @@
     function startAdmin() { adminTimer = setTimeout(() => { document.getElementById('adm').style.display = 'block'; }, 2000); }
     function stopAdmin() { clearTimeout(adminTimer); }
 
-    // ИСПРАВЛЕННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ИНФО
-    function toggleInfo() {
-        const info = document.getElementById('info-screen');
-        const btn = document.getElementById('info-toggle');
-        const isUpgrading = document.getElementById('upgrade-menu').style.display === 'flex';
-        
-        if (isUpgrading) return; // Не даем открывать инфо во время прокачки
+    function showInfo() { document.getElementById('info-screen').style.display = 'flex'; }
+    function hideInfo() { document.getElementById('info-screen').style.display = 'none'; }
 
-        if (info.style.display === 'flex') {
-            info.style.display = 'none';
-            btn.classList.remove('info-active');
-        } else {
-            info.style.display = 'flex';
-            btn.classList.add('info-active');
-        }
+    function spawnDmg(val) {
+        const d = document.createElement('div');
+        d.className = 'dmg-num';
+        d.innerText = '-' + val;
+        d.style.left = (50 + (Math.random()*20 - 10)) + '%';
+        d.style.top = '40%';
+        document.getElementById('arena').appendChild(d);
+        setTimeout(() => d.remove(), 600);
+        
+        // Вспышка босса
+        const mob = document.getElementById('mob-img');
+        mob.style.filter = 'brightness(3) contrast(2)';
+        setTimeout(() => mob.style.filter = s.lvl % 25 === 0 ? 'drop-shadow(0 0 20px red)' : 'none', 100);
     }
 
     function init() {
         const isBoss = s.lvl % 25 === 0;
         document.getElementById('boss-en-bar').style.display = isBoss ? 'block' : 'none';
         document.getElementById('mob-img').src = isBoss ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
+        document.getElementById('mob-img').style.filter = isBoss ? 'drop-shadow(0 0 20px red)' : 'none';
         
-        s.maxEHP = (100 + (s.lvl * 25)) * (isBoss ? 4 : 1);
+        s.maxEHP = (100 + (s.lvl * 30)) * (isBoss ? 4 : 1);
         s.ehp = s.maxEHP; s.hp = s.maxHP; s.bossEn = 0;
         
         const g = document.getElementById('grid');
@@ -171,12 +179,8 @@
         if (type === 'luck') s.luck += 1;
         s.pts--;
         save(); 
-        if (s.pts <= 0) {
-            document.getElementById('upgrade-menu').style.display = 'none';
-            init();
-        } else {
-            draw();
-        }
+        if (s.pts <= 0) { document.getElementById('upgrade-menu').style.display = 'none'; init(); } 
+        else draw();
     }
 
     function save() {
@@ -190,7 +194,13 @@
     function draw() {
         document.getElementById('lvl-txt').innerText = "LVL " + s.lvl;
         document.getElementById('pts-txt').innerText = "PTS: " + s.pts;
-        document.getElementById('up-pts-info').innerText = "Осталось очков: " + s.pts;
+        document.getElementById('pts-txt').className = s.pts > 0 ? 'has-pts' : '';
+        document.getElementById('i-btn').className = s.pts > 0 ? 'info-btn has-pts' : 'info-btn';
+        
+        document.getElementById('up-pts-info').innerText = "Свободных очков: " + s.pts;
+        document.getElementById('cur-atk').innerText = s.atk;
+        document.getElementById('cur-hp').innerText = s.maxHP;
+        document.getElementById('cur-luck').innerText = s.luck;
 
         s.board.forEach((t, i) => {
             const el = document.getElementById('c' + i);
@@ -206,7 +216,7 @@
     }
 
     async function touch(i) {
-        if (s.lock || document.getElementById('info-screen').style.display === 'flex') return;
+        if (s.lock) return;
         play('click');
         if (s.sel === null) { s.sel = i; draw(); }
         else {
@@ -235,3 +245,78 @@
                     if(m===5) for(let r=-2; r<=2; r++) for(let c=-2; c<=2; c++) { let t=i+2+r*7+c; if(t>=0 && t<49) del.add(t); }
                 }
                 if (i < 35 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) {
+                    let m = 3; if (i < 28 && s.board[i] === s.board[i+21]) m = 4;
+                    if (i < 21 && s.board[i] === s.board[i+28]) m = 5;
+                    for(let k=0; k<m; k++) del.add(i+k*7);
+                    if(m===4) for(let r=0; r<7; r++) del.add(r*7 + (i%7));
+                    if(m===5) for(let r=-2; r<=2; r++) for(let c=-2; c<=2; c++) { let t=i+14+r*7+c; if(t>=0 && t<49) del.add(t); }
+                }
+            }
+            if (del.size === 0) break;
+            found = true; combo++; play('match');
+            if(combo > 2) document.getElementById('arena').classList.add('shake');
+            
+            let totalDmg = del.size * s.atk * combo;
+            s.ehp -= totalDmg;
+            spawnDmg(totalDmg);
+
+            del.forEach(idx => {
+                if (s.board[idx] === 1) s.en = Math.min(100, s.en + s.luck);
+                s.board[idx] = -1;
+            });
+            draw(); await new Promise(r => setTimeout(r, 200));
+            drop(); draw(); await new Promise(r => setTimeout(r, 200));
+            document.getElementById('arena').classList.remove('shake');
+        }
+        if (found) {
+            if (s.ehp <= 0) { 
+                play('win'); s.lvl++; s.pts += (s.lvl % 25 === 0 ? 5 : 1); save();
+                document.getElementById('upgrade-menu').style.display = 'flex';
+                draw();
+            } else enemy();
+        }
+        return found;
+    }
+
+    function drop() {
+        for (let c = 0; c < 7; c++) {
+            let empty = 0;
+            for (let r = 6; r >= 0; r--) {
+                let i = r * 7 + c;
+                if (s.board[i] === -1) empty++;
+                else if (empty > 0) { s.board[i+empty*7] = s.board[i]; s.board[i] = -1; }
+            }
+            for (let r = 0; r < empty; r++) s.board[r*7+c] = Math.floor(Math.random() * 5);
+        }
+    }
+
+    function enemy() {
+        let dmg = 5 + Math.floor(s.lvl/5);
+        if (s.lvl % 25 === 0) {
+            s.bossEn += 20;
+            if (s.bossEn >= 100) { dmg *= 3; s.bossEn = 0; }
+        }
+        s.hp -= dmg; play('hit');
+        
+        // Анимация выпада врага
+        const mob = document.getElementById('mob-img');
+        mob.style.transform = 'translate(-50%, -40%) scale(1.2)';
+        setTimeout(() => mob.style.transform = 'translate(-50%, -50%) scale(1)', 100);
+
+        if (s.hp <= 0) { alert("Вальгалла зовёт!"); location.reload(); }
+        draw();
+    }
+
+    async function useSuper() {
+        if (s.en < 100 || s.lock) return;
+        play('super'); s.lock = true; s.en = 0; 
+        let sdmg = s.atk * 20;
+        s.ehp -= sdmg;
+        spawnDmg(sdmg);
+        for (let i = 0; i < 15; i++) s.board[Math.floor(Math.random()*49)] = -1;
+        draw(); await new Promise(r => setTimeout(r, 300));
+        drop(); await check(); s.lock = false;
+    }
+</script>
+</body>
+</html>
