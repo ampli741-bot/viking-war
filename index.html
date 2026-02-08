@@ -3,139 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Master Strategy</title>
+    <title>Viking Saga: Storm of Thor</title>
     <style>
-        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; }
+        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #ffffff; }
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
-        /* Компактная шапка */
         .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; flex-shrink: 0; }
         
-        /* АРЕНА (Минимум пустоты, максимум иконок) */
+        /* АРЕНА */
         .arena { 
-            height: 25vh; position: relative; 
-            background: #0a0a0a; border-bottom: 2px solid #444; overflow: hidden; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
+            height: 25vh; position: relative; background: #0a0a0a; border-bottom: 2px solid #444; 
+            display: flex; align-items: center; justify-content: space-between; padding: 0 10px; flex-shrink: 0;
         }
 
-        .char-box { width: 45%; cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 10; }
-        .p-icon { width: 90px; height: 90px; border-radius: 10px; border: 3px solid #555; background: #111; object-fit: cover; }
+        .char-box { width: 42%; display: flex; flex-direction: column; align-items: center; z-index: 10; cursor: pointer; }
+        .p-icon { width: 95px; height: 95px; border-radius: 8px; border: 3px solid #444; background: #111; object-fit: cover; }
         
-        .hp-bar-bg { width: 100%; height: 20px; background: #222; border-radius: 4px; margin-top: 4px; border: 1px solid #444; position: relative; overflow: hidden; }
-        .hp-bar-fill { height: 100%; width: 100%; transition: 0.3s; }
-        .hp-text { position: absolute; width: 100%; left: 0; top: 0; font-size: 11px; line-height: 20px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
+        .bar-bg { width: 100%; height: 18px; background: #222; border-radius: 4px; margin-top: 3px; border: 1px solid #444; position: relative; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
+        .bar-txt { position: absolute; width: 100%; left: 0; top: 0; font-size: 10px; line-height: 18px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
 
-        /* Опыт под героем */
-        .xp-bar-bg { width: 100%; height: 4px; background: #111; margin-top: 2px; border-radius: 2px; overflow: hidden; }
-        .xp-bar-fill { height: 100%; background: var(--blue); width: 0%; transition: 0.3s; }
+        .skill-bar { width: 100%; height: 6px; background: #111; margin-top: 2px; border-radius: 3px; overflow: hidden; border: 1px solid #333; }
+        
+        #main-mob { height: 100px; position: absolute; left: 50%; transform: translateX(-50%); z-index: 5; opacity: 0.8; }
 
-        #main-mob { height: 110px; position: absolute; left: 50%; transform: translateX(-50%); z-index: 5; filter: drop-shadow(0 0 10px #000); opacity: 0.8; }
+        /* ВСПЫШКА */
+        #flash { position: fixed; inset: 0; background: var(--white); opacity: 0; pointer-events: none; z-index: 2000; }
+        .lightning { animation: flash-anim 0.4s ease-out; }
+        @keyframes flash-anim { 0% { opacity: 0; } 50% { opacity: 0.8; } 100% { opacity: 0; } }
 
-        /* ГЕЙМПЛЕЙ (Нижняя часть 65%+) */
+        /* ГЕЙМПЛЕЙ */
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
-        
-        #grid-container { 
-            width: 98vw; max-width: 360px; aspect-ratio: 1/1;
-            background: #111; padding: 4px; border-radius: 8px; border: 2px solid #333;
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
-        }
-
-        .cell { background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; border-radius: 4px; border: 1px solid #222; }
+        #grid-container { width: 98vw; max-width: 360px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: #111; padding: 4px; border-radius: 8px; border: 2px solid #333; }
+        .cell { background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; border: 1px solid #222; border-radius: 4px; }
         .selected { background-color: #444 !important; box-shadow: inset 0 0 10px #fff; }
 
-        /* Окна */
+        #thor-btn { 
+            width: 90%; max-width: 350px; padding: 12px; margin-top: 10px; border-radius: 8px; 
+            border: 2px solid #333; background: #222; color: #555; font-weight: bold; 
+            transition: 0.3s; text-transform: uppercase;
+        }
+        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 15px var(--blue); cursor: pointer; }
+
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .stats-card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 15px; width: 85%; max-width: 300px; }
-        .stat-line { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding: 8px 0; font-size: 14px; }
+        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 15px; width: 85%; max-width: 300px; }
+        .menu-btn { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); color: #000; }
         
         .dmg-text { position: absolute; font-size: 32px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
         @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-120px); } }
-
-        .menu-btn { width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); }
     </style>
 </head>
 <body onclick="startAudio()">
 
+    <div id="flash"></div>
+
     <div class="header">
-        <div style="color:var(--gold)" onclick="adm()">УР. МИРА: <span id="lvl">1</span></div>
-        <div style="color:var(--blue)">ГЕРОЙ: <span id="p-lvl">1</span> УР.</div>
-        <div id="pts" onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: 0</div>
+        <div style="color:var(--gold)" onclick="admTrigger()">УР. МИРА: <span id="lvl">1</span></div>
+        <div id="pts" onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: <span id="pts-val">0</span></div>
     </div>
 
     <div class="arena">
         <div class="char-box" onclick="showStats('p')">
             <img src="hero1.png" class="p-icon" style="border-color:var(--accent)">
-            <div class="hp-bar-bg">
-                <div id="hp-p-fill" class="hp-bar-fill" style="background:var(--accent)"></div>
-                <div id="hp-p-txt" class="hp-text">100/100</div>
+            <div class="bar-bg">
+                <div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div>
+                <div id="hp-p-txt" class="bar-txt">100/100</div>
             </div>
-            <div class="xp-bar-bg"><div id="xp-fill" class="xp-bar-fill"></div></div>
+            <div class="skill-bar"><div id="thor-progress" style="height:100%; background:var(--blue); width:0%;"></div></div>
+            <div style="font-size:9px; color:var(--blue); font-weight:bold;">МОЛОТ ТОРА</div>
         </div>
 
         <img id="main-mob" src="mob1.png">
 
         <div class="char-box" onclick="showStats('e')">
             <img id="m-icon" src="mob1.png" class="p-icon" style="border-color:var(--red)">
-            <div class="hp-bar-bg">
-                <div id="hp-e-fill" class="hp-bar-fill" style="background:var(--red)"></div>
-                <div id="hp-e-txt" class="hp-text">100/100</div>
+            <div class="bar-bg">
+                <div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div>
+                <div id="hp-e-txt" class="bar-txt">100/100</div>
             </div>
-            <div id="m-name" style="font-size:11px; font-weight:bold; color:var(--red); margin-top:2px;">МОБ</div>
+            <div id="boss-skill-wrap" class="skill-bar" style="display:none">
+                <div id="e-skill-fill" style="height:100%; background:var(--purple); width:0%"></div>
+            </div>
+            <div id="m-name" style="font-size:10px; color:var(--red); font-weight:bold">МОБ</div>
         </div>
     </div>
 
     <div class="game-space">
-        <div id="combo-txt" style="color:var(--gold); font-weight:bold; height:25px; font-size:20px;"></div>
         <div id="grid-container"></div>
-        <div style="height: 10px;"></div>
+        <button id="thor-btn" onclick="useThor()">МОЛОТ ТОРА</button>
     </div>
 
     <div id="stats-overlay" class="overlay" onclick="closeM()">
-        <div class="stats-card" onclick="event.stopPropagation()">
-            <h2 id="st-name" style="color:var(--gold); margin:0 0 10px 0;">СТАТЫ</h2>
-            <div class="stat-line"><span>Урон:</span> <span id="st-atk" style="color:var(--red)"></span></div>
-            <div class="stat-line"><span>Здоровье:</span> <span id="st-hp" style="color:var(--accent)"></span></div>
-            <div class="stat-line"><span>Ловкость (Уворот):</span> <span id="st-agi" style="color:var(--blue)"></span></div>
-            <div class="stat-line"><span id="st-desc" style="font-size:12px; color:#aaa"></span></div>
+        <div class="card" onclick="event.stopPropagation()">
+            <h2 id="st-name" style="color:var(--gold); margin:0;">СТАТЫ</h2>
+            <hr border="0" height="1px" background="#333">
+            <div id="st-content" style="text-align:left; font-size:14px; line-height:1.5;"></div>
             <button class="menu-btn" onclick="closeM()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
     <div id="f-menu" class="overlay">
-        <div class="stats-card">
-            <h2 style="color:var(--gold)">ПОВЫШЕНИЕ</h2>
-            <p>Доступно очков: <span id="pts-count" style="color:var(--accent)">0</span></p>
+        <div class="card">
+            <h2 style="color:var(--gold)">КУЗНИЦА</h2>
             <button class="menu-btn" onclick="buy('atk')">УРОН (+2)</button>
             <button class="menu-btn" onclick="buy('hp')">ЖИЗНЬ (+20)</button>
-            <button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ (+1)</button>
-            <button class="menu-btn" style="background:#444" onclick="closeM()">ВЕРНУТЬСЯ</button>
+            <button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ (+1%)</button>
+            <button class="menu-btn" style="background:#444" onclick="closeM()">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+
+    <div id="admin-overlay" class="overlay">
+        <div class="card">
+            <h2 style="color:var(--gold)">АДМИНКА</h2>
+            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:80%; padding:10px; margin-bottom:10px; background:#222; color:#fff; border:1px solid #444;">
+            <button class="menu-btn" onclick="jumpToLvl()">ПЕРЕЙТИ</button>
+            <button class="menu-btn" style="background:var(--blue)" onclick="addPts()">+10 PTS</button>
+            <button class="menu-btn" style="background:#444" onclick="closeM()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
 <script>
     const audio = { match: new Audio('match.mp3'), bg: new Audio('track_normal.mp3') };
     let st = {
-        lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
-        pLvl: parseInt(localStorage.getItem('v_plvl')) || 1,
-        xp: parseInt(localStorage.getItem('v_xp')) || 0,
-        atk: parseInt(localStorage.getItem('v_atk')) || 10,
-        mHP: parseInt(localStorage.getItem('v_mhp')) || 100,
-        agi: parseInt(localStorage.getItem('v_agi')) || 5,
-        pts: parseInt(localStorage.getItem('v_pts')) || 0,
-        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, combo: 0, isA: false, adm: 0
+        lvl: parseInt(localStorage.getItem('v_lvl')) || 1, atk: parseInt(localStorage.getItem('v_atk')) || 10,
+        mHP: parseInt(localStorage.getItem('v_mhp')) || 100, agi: parseInt(localStorage.getItem('v_agi')) || 5,
+        pts: parseInt(localStorage.getItem('v_pts')) || 0, thorCharge: 0, bSkill: 0,
+        hp: 100, ehp: 100, mehp: 100, board: [], sel: null, lock: false, isA: false, adm: 0
     };
 
     function startAudio() { if(!st.isA){ st.isA=true; audio.bg.loop=true; audio.bg.play().catch(()=>{}); } }
 
-    function getNextXp() { return st.pLvl * 150; }
-
     function init() {
         const isB = st.lvl % 25 === 0;
+        document.getElementById('boss-skill-wrap').style.display = isB ? 'block' : 'none';
         let src = isB ? `boss${st.lvl/25}.png` : `mob${Math.min(Math.floor((st.lvl-1)/5)+1, 15)}.png`;
         document.getElementById('main-mob').src = document.getElementById('m-icon').src = src;
-        
         st.mehp = isB ? (100 + st.lvl * 60) * 5 : 100 + st.lvl * 60;
-        st.ehp = st.mehp; st.hp = st.mHP;
+        st.ehp = st.mehp; st.hp = st.mHP; st.bSkill = 0;
         document.getElementById('m-name').innerText = isB ? "БОСС" : "МОБ " + st.lvl;
 
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
@@ -151,15 +155,16 @@
 
     function draw() {
         document.getElementById('lvl').innerText = st.lvl;
-        document.getElementById('p-lvl').innerText = st.pLvl;
-        document.getElementById('pts').innerText = "PTS: " + st.pts;
-        document.getElementById('pts-count').innerText = st.pts;
-        
+        document.getElementById('pts-val').innerText = st.pts;
         document.getElementById('hp-e-fill').style.width = (st.ehp/st.mehp*100)+'%';
         document.getElementById('hp-e-txt').innerText = Math.floor(st.ehp) + "/" + st.mehp;
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
         document.getElementById('hp-p-txt').innerText = Math.floor(st.hp) + "/" + st.mHP;
-        document.getElementById('xp-fill').style.width = (st.xp/getNextXp()*100)+'%';
+        document.getElementById('thor-progress').style.width = st.thorCharge + "%";
+        document.getElementById('e-skill-fill').style.width = st.bSkill + "%";
+        
+        const btn = document.getElementById('thor-btn');
+        if(st.thorCharge >= 100) btn.classList.add('ready'); else btn.classList.remove('ready');
 
         st.board.forEach((o, i) => {
             const c = document.getElementById('c-' + i);
@@ -175,7 +180,7 @@
             let a = st.sel, b = i;
             if ((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
                 let t = st.board[a]; st.board[a] = st.board[b]; st.board[b] = t;
-                st.combo = 0; match();
+                match();
             }
             st.sel = null;
         }
@@ -186,22 +191,14 @@
         st.lock = true;
         let res = findM();
         if (res.length > 0) {
-            st.combo++;
             audio.match.currentTime = 0; audio.match.play().catch(()=>{});
-            
             let del = new Set();
-            res.forEach(s => s.forEach(idx => del.add(idx)));
-
-            // Начисление опыта за плитки
-            st.xp += del.size * 5;
-            if(st.xp >= getNextXp()) {
-                st.xp -= getNextXp(); st.pLvl++; st.pts++; pop("LEVEL UP!", false);
-            }
-
-            let dmg = del.size * st.atk * (1 + st.combo*0.1);
-            st.ehp -= Math.floor(dmg); pop(Math.floor(dmg), false);
+            res.forEach(s => {
+                if(st.board[s[0]].type === 3) st.thorCharge = Math.min(100, st.thorCharge + s.length * 5);
+                s.forEach(idx => del.add(idx));
+            });
+            st.ehp -= del.size * st.atk; pop(del.size * st.atk, false);
             del.forEach(idx => st.board[idx].type = -1);
-
             draw(); await new Promise(r => setTimeout(r, 300));
             gravity(); draw(); await new Promise(r => setTimeout(r, 300));
             match();
@@ -209,6 +206,23 @@
             st.lock = false;
             if (st.ehp <= 0) win(); else enemy();
         }
+    }
+
+    async function useThor() {
+        if(st.thorCharge < 100 || st.lock) return;
+        st.lock = true; st.thorCharge = 0;
+        
+        const f = document.getElementById('flash');
+        f.classList.add('lightning'); setTimeout(()=>f.classList.remove('lightning'), 400);
+
+        for(let i=0; i<10; i++) {
+            let rIdx = Math.floor(Math.random()*49);
+            st.ehp -= st.atk; pop(st.atk, false);
+            st.board[rIdx].type = -1;
+            draw(); await new Promise(r => setTimeout(r, 50));
+        }
+        gravity(); draw();
+        setTimeout(() => { st.lock = false; if(st.ehp <= 0) win(); else enemy(); }, 400);
     }
 
     function findM() {
@@ -241,66 +255,58 @@
     }
 
     function enemy() {
-        // Уворот на основе ловкости
-        if(Math.random() * 100 < st.agi) {
-            pop("MISS!", true);
-        } else {
-            let d = Math.floor(5 + st.lvl * 1.2);
-            st.hp -= d; pop(d, true);
+        const isB = st.lvl % 25 === 0;
+        let d = Math.floor(5 + st.lvl * 1.2);
+        if (isB) {
+            st.bSkill += 25;
+            if (st.bSkill >= 100) {
+                st.bSkill = 0;
+                if(st.lvl===25) pop("ЗАМОРОЗКА!", true);
+                else if(st.lvl===50) { d *= 3; pop("ВЗРЫВ!", true); }
+                else if(st.lvl===75) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.15); pop("ЛЕЧЕНИЕ!", false); }
+                else d *= 2;
+            }
         }
-        if(st.hp <= 0) { alert("Вы погибли, но опыт сохранен!"); save(); location.reload(); }
+        if(Math.random()*100 < st.agi) pop("MISS!", true); else st.hp -= d;
+        if(st.hp <= 0) { alert("Game Over"); location.reload(); }
         draw();
+    }
+
+    function showStats(t) {
+        const o = document.getElementById('stats-overlay');
+        const n = document.getElementById('st-name');
+        const c = document.getElementById('st-content');
+        if(t==='p') {
+            n.innerText = "ГЕРОЙ";
+            c.innerHTML = `<p>Урон: ${st.atk}</p><p>Здоровье: ${st.mHP}</p><p>Ловкость: ${st.agi}%</p><p style="color:var(--blue)">Умение: Собирай СИНИЕ руны, чтобы зарядить Молот Тора.</p>`;
+        } else {
+            const isB = st.lvl % 25 === 0;
+            n.innerText = isB ? "БОСС" : "МОБ";
+            let skillDesc = "Нет особых умений.";
+            if(st.lvl===25) skillDesc = "ЗАМОРОЗКА: Блокирует твои ходы на 1 ход.";
+            if(st.lvl===50) skillDesc = "ОГНЕННЫЙ ВЗРЫВ: Наносит тройной урон.";
+            if(st.lvl===75) skillDesc = "МИЛОСТЬ ВАЛЬКИРИИ: Исцеляет себя на 15% HP.";
+            c.innerHTML = `<p>Урон: ${Math.floor(5+st.lvl*1.2)}</p><p>Здоровье: ${st.mehp}</p><p style="color:var(--purple)">Умение: ${skillDesc}</p>`;
+        }
+        o.style.display = 'flex';
     }
 
     function pop(v, p) {
         const d = document.createElement('div'); d.className = 'dmg-text';
-        d.innerText = p ? (isNaN(v) ? v : "-" + v) : "+" + v;
+        d.innerText = isNaN(v) ? v : "-" + v;
         d.style.color = p ? (v==="MISS!"?'var(--blue)':'var(--red)') : 'var(--gold)';
         d.style.left = '50%'; d.style.top = '30%';
         document.body.appendChild(d); setTimeout(()=>d.remove(), 1200);
     }
 
     function win() { st.lvl++; st.pts++; save(); init(); }
-    
-    function save() {
-        localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_plvl', st.pLvl);
-        localStorage.setItem('v_xp', st.xp); localStorage.setItem('v_atk', st.atk);
-        localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi);
-        localStorage.setItem('v_pts', st.pts);
-    }
-
-    function showStats(type) {
-        const over = document.getElementById('stats-overlay');
-        if(type === 'p') {
-            document.getElementById('st-name').innerText = "ГЕРОЙ";
-            document.getElementById('st-atk').innerText = st.atk;
-            document.getElementById('st-hp').innerText = st.mHP;
-            document.getElementById('st-agi').innerText = st.agi + "%";
-            document.getElementById('st-desc').innerText = "Каждый уровень дает +1 очко PTS. Ловкость дает шанс уклониться от удара.";
-        } else {
-            document.getElementById('st-name').innerText = "ВРАГ";
-            document.getElementById('st-atk').innerText = Math.floor(5 + st.lvl * 1.2);
-            document.getElementById('st-hp').innerText = st.mehp;
-            document.getElementById('st-agi').innerText = "0%";
-            document.getElementById('st-desc').innerText = "Враги становятся сильнее с каждым уровнем мира.";
-        }
-        over.style.display = 'flex';
-    }
-
+    function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_atk', st.atk); localStorage.setItem('v_mhp', st.mHP); localStorage.setItem('v_agi', st.agi); localStorage.setItem('v_pts', st.pts); }
+    function admTrigger() { st.adm++; if(st.adm>=5){ st.adm=0; document.getElementById('admin-overlay').style.display='flex'; } }
+    function jumpToLvl() { let nl = parseInt(document.getElementById('jump-lvl').value); if(nl > 0) { st.lvl = nl; save(); init(); closeM(); } }
+    function addPts() { st.pts += 10; draw(); }
     function openF() { document.getElementById('f-menu').style.display='flex'; }
     function closeM() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
-    
-    function buy(t) {
-        if(st.pts > 0) {
-            if(t==='atk') st.atk+=2; 
-            else if(t==='hp') { st.mHP+=20; st.hp+=20; }
-            else if(t==='agi') st.agi+=1;
-            st.pts--; save(); draw();
-        }
-    }
-    
-    function adm() { st.adm++; if(st.adm>=5){ st.pts += 50; save(); draw(); } }
-
+    function buy(t) { if(st.pts > 0) { if(t==='atk') st.atk+=2; else if(t==='hp') { st.mHP+=20; st.hp+=20; } else if(t==='agi') st.agi+=1; st.pts--; save(); draw(); } }
     init();
 </script>
 </body>
