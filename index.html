@@ -3,60 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Agility & Fixes</title>
+    <title>Viking Saga: Cross-Platform</title>
     <style>
-        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; user-select: none; }
+        :root { --main-bg: #000; --panel-bg: #1a1a1a; --accent: #2ecc71; }
+        body { background: var(--main-bg); color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; text-align: center; overflow: hidden; touch-action: manipulation; user-select: none; }
         
+        /* КУРСОР ДЛЯ ПК */
+        .cell, .btn, .up-btn, .info-btn, .adm-btn { cursor: pointer; }
+
         #adm { display: none; background: #300; padding: 10px; border-bottom: 2px solid red; position: relative; z-index: 2000; }
         .adm-btn { background: #fff; color: #000; border: none; padding: 5px 10px; margin: 2px; font-weight: bold; border-radius: 4px; }
 
-        .header { background: #1a1a1a; padding: 8px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; font-size: 12px; height: 40px; box-sizing: border-box; }
+        .header { background: var(--panel-bg); padding: 8px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; font-size: 14px; height: 50px; box-sizing: border-box; }
         
-        @keyframes pulse-pts { 0% { transform: scale(1); color: #2ecc71; } 50% { transform: scale(1.1); color: #fff; } 100% { transform: scale(1); color: #2ecc71; } }
-        .has-pts { animation: pulse-pts 1s infinite; }
+        /* Анимация PTS */
+        @keyframes pulse-pts { 0% { transform: scale(1); } 50% { transform: scale(1.05); color: #fff; } 100% { transform: scale(1); } }
+        .has-pts { animation: pulse-pts 1s infinite; color: var(--accent); font-weight: bold; }
 
-        .info-btn { background: #444; color: gold; border: 1px solid gold; border-radius: 50%; width: 28px; height: 28px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .info-btn { background: #333; color: gold; border: 1px solid gold; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .info-btn:hover { background: gold; color: #000; }
 
-        .arena { height: 200px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; }
-        .hp-bar { width: 92%; height: 14px; background: #222; border-radius: 7px; margin: 2px auto; overflow: hidden; border: 1px solid #555; position: relative; z-index: 100; }
+        .arena { max-width: 500px; height: 220px; background: #050505; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0; margin: 0 auto; }
+        .hp-bar { width: 92%; height: 16px; background: #222; border-radius: 8px; margin: 2px auto; overflow: hidden; border: 1px solid #555; position: relative; z-index: 100; }
         #boss-en-bar { width: 60%; height: 6px; background: #111; border-radius: 3px; border: 1px solid #ff4500; display: none; position: relative; z-index: 100; margin: 0 auto; }
         .fill { height: 100%; width: 100%; transition: 0.2s ease-out; }
         
-        #mob-img { height: 110px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; transition: 0.1s; }
+        #mob-img { height: 120px; width: auto; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; transition: 0.1s; }
         
-        /* Всплывающие надписи */
-        .dmg-num { position: absolute; color: #ff4d4d; font-weight: 900; font-size: 24px; z-index: 150; pointer-events: none; animation: fly-up 0.6s ease-out forwards; text-shadow: 2px 2px #000; }
-        .dodge-txt { position: absolute; color: #3498db; font-weight: 900; font-size: 20px; z-index: 150; left: 50%; bottom: 20px; transform: translateX(-50%); animation: fly-up 0.8s forwards; }
-        @keyframes fly-up { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -60px); } }
+        /* Экраны */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .up-row { margin-bottom: 12px; width: 100%; display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; }
+        .up-btn { background: var(--accent); color: #fff; border: none; padding: 10px 25px; border-radius: 6px; font-weight: bold; font-size: 20px; transition: 0.2s; }
+        .up-btn:hover { background: #27ae60; transform: scale(1.05); }
 
-        /* Оверлеи с прокруткой */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: none; flex-direction: column; padding: 15px; box-sizing: border-box; overflow-y: auto; }
-        .up-row { margin-bottom: 10px; width: 100%; display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; }
-        .up-btn { background: #2ecc71; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 18px; }
+        /* СЕТКА */
+        #grid { width: 322px; margin: 10px auto; display: block; font-size: 0; background: #111; padding: 6px; border-radius: 12px; border: 2px solid #444; }
+        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-color: #222; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; transition: transform 0.1s; }
+        .cell:hover { border-color: #666; }
+        .sel { border: 3px solid #fff !important; transform: scale(0.9); box-shadow: 0 0 12px #fff; z-index: 50; position: relative; }
 
-        #grid { width: 322px; margin: 5px auto; display: block; font-size: 0; background: #111; padding: 4px; border-radius: 10px; border: 2px solid #444; }
-        .cell { display: inline-block; width: 42px; height: 42px; margin: 2px; background-size: cover; background-color: #222; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; vertical-align: top; }
-        .sel { border: 3px solid #fff !important; transform: scale(0.9); box-shadow: 0 0 12px #fff; }
-
-        .ui { padding: 8px 0; background: #111; }
-        .en-bar { width: 280px; height: 22px; background: #222; margin: 0 auto 5px; border-radius: 11px; overflow: hidden; position: relative; border: 1px solid #3498db; }
-        .btn { width: 280px; padding: 12px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; font-size: 16px; margin-top: 5px; }
-        .ready { background: linear-gradient(135deg, #ff9900, #ff4400) !important; color: #fff !important; cursor: pointer; }
+        .ui { padding: 10px 0; background: #111; }
+        .en-bar { width: 280px; height: 24px; background: #222; margin: 0 auto 8px; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #3498db; }
+        .btn { width: 280px; padding: 14px; border: none; border-radius: 8px; background: #333; color: #666; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        .ready { background: linear-gradient(135deg, #ff9900, #ff4400) !important; color: #fff !important; box-shadow: 0 4px 15px rgba(255,150,0,0.3); }
+        .ready:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,150,0,0.5); }
         
-        .shake { animation: shake 0.1s infinite; }
-        @keyframes shake { 0% { transform: translate(2px,2px); } 50% { transform: translate(-2px,-2px); } 100% { transform: translate(0,0); } }
+        .dmg-num { position: absolute; color: #ff4d4d; font-weight: 900; font-size: 26px; z-index: 150; pointer-events: none; animation: fly-up 0.6s ease-out forwards; text-shadow: 2px 2px #000; }
+        @keyframes fly-up { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
     </style>
 </head>
 <body onload="init()">
 
     <div id="adm">
         <button class="adm-btn" onclick="s.lvl+=24; s.pts+=5; save(); init();">К БОССУ</button>
-        <button class="adm-btn" onclick="s.en=100; draw();">УЛЬТА</button>
-        <button class="adm-btn" onclick="localStorage.clear(); location.reload();">СБРОС</button>
+        <button class="adm-btn" onclick="s.en=100; draw();">MAX УЛЬТА</button>
+        <button class="adm-btn" onclick="localStorage.clear(); location.reload();">СБРОС ДАННЫХ</button>
     </div>
 
     <div class="header">
-        <div onmousedown="startAdmin()" onmouseup="stopAdmin()" ontouchstart="startAdmin()" ontouchend="stopAdmin()">
+        <div id="admin-trigger">
             <span id="lvl-txt" style="color:gold; font-weight:bold;">LVL 1</span>
         </div>
         <span id="pts-txt">PTS: 0</span>
@@ -65,9 +70,8 @@
 
     <div class="arena" id="arena">
         <div id="upgrade-menu" class="overlay">
-            <h2 style="color:gold; margin: 10px 0;">КУЗНИЦА</h2>
-            <p id="up-pts-info" style="color:#2ecc71; font-weight:bold;">Очков: 0</p>
-            
+            <h2 style="color:gold;">КУЗНИЦА</h2>
+            <p id="up-pts-info">Очков: 0</p>
             <div class="up-row">
                 <div><b>СИЛА (ATK)</b><div style="font-size:10px; color:#aaa;">Урон: <span id="cur-atk"></span></div></div>
                 <button class="up-btn" onclick="upgrade('atk')">+</button>
@@ -77,7 +81,7 @@
                 <button class="up-btn" onclick="upgrade('hp')">+</button>
             </div>
             <div class="up-row">
-                <div><b>ЛОВКОСТЬ (AGI)</b><div style="font-size:10px; color:#aaa;">Шанс уворота: <span id="cur-agi"></span>%</div></div>
+                <div><b>ЛОВКОСТЬ (AGI)</b><div style="font-size:10px; color:#aaa;">Уворот: <span id="cur-agi"></span>%</div></div>
                 <button class="up-btn" onclick="upgrade('agi')">+</button>
             </div>
             <div class="up-row">
@@ -87,26 +91,26 @@
         </div>
 
         <div id="info-screen" class="overlay">
-            <h3 style="color:gold">ГЕРОЙ И МАГИЯ</h3>
-            <div style="text-align:left; font-size:13px; line-height:1.5; background:#222; padding:15px; border-radius:10px; border:1px solid #444; margin-bottom:15px;">
-                ⚔️ <b>ATK:</b> Базовый урон за один камень.<br>
-                ❤️ <b>HP:</b> Твоя выносливость.<br>
-                💨 <b>Ловкость:</b> Дает шанс полностью избежать урона врага.<br>
-                🍀 <b>Удача:</b> Ускоряет зарядку Молота Тора.<br><br>
-                🔨 <b>УЛЬТА:</b> Мощный удар (20x ATK) + разрушение 15 камней.
+            <h3 style="color:gold">ОПИСАНИЕ МАГИИ</h3>
+            <div style="text-align:left; font-size:14px; line-height:1.6; background:#222; padding:15px; border-radius:10px; border:1px solid #444;">
+                ⚔️ <b>Сила:</b> Твой урон. <br>
+                ❤️ <b>Жизнь:</b> Твоё здоровье. <br>
+                💨 <b>Ловкость:</b> Шанс уклониться (DODGE). <br>
+                🍀 <b>Удача:</b> Бонус к энергии Молота. <br><br>
+                🔨 <b>МОЛОТ ТОРА (Space):</b> <br> Урон 2000% и хаос на поле!
             </div>
-            <button class="btn ready" onclick="toggleInfo()">ВЕРНУТЬСЯ В БОЙ</button>
+            <button class="btn ready" style="margin-top:20px" onclick="toggleInfo()">ПОНЯТНО</button>
         </div>
 
         <div class="hp-bar"><div id="ehp" class="fill" style="background: #e74c3c;"></div></div>
         <div id="boss-en-bar"><div id="boss-en-fill" class="fill" style="background: orange; width: 0%;"></div></div>
-        <img id="mob-img" src="mob1.png" onerror="this.src='https://via.placeholder.com/100/red?text=MOB'">
+        <img id="mob-img" src="mob1.png">
         <div class="hp-bar"><div id="php" class="fill" style="background: #2ecc71;"></div></div>
     </div>
 
     <div class="ui">
         <div class="en-bar">
-            <div id="en-txt" style="position:absolute; width:100%; line-height:22px; font-size:11px; font-weight:bold; z-index:11; text-shadow:1px 1px #000;">МОЛОТ ТОРА</div>
+            <div style="position:absolute; width:100%; line-height:24px; font-size:11px; font-weight:bold; z-index:11;">МОЛОТ ТОРА</div>
             <div id="en-f" class="fill" style="background: #3498db; width: 0%;"></div>
         </div>
         <button id="s-btn" class="btn" onclick="useSuper()">УДАР МОЛОТОМ</button>
@@ -125,43 +129,38 @@
         luck: parseInt(localStorage.getItem('v_luck')) || 5,
         agi: parseInt(localStorage.getItem('v_agi')) || 0,
         pts: parseInt(localStorage.getItem('v_pts')) || 0,
-        en: 0, hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null, bossEn: 0
+        en: 0, hp: 100, ehp: 100, maxEHP: 100, lock: false, board: [], sel: null
     };
 
     function play(f) { new Audio(f + '.mp3').play().catch(()=>{}); }
 
-    let adminTimer;
-    function startAdmin() { adminTimer = setTimeout(() => { document.getElementById('adm').style.display = 'block'; }, 2000); }
-    function stopAdmin() { clearTimeout(adminTimer); }
+    // УНИВЕРСАЛЬНЫЙ ТРИГГЕР АДМИНКИ
+    let admT;
+    const trig = document.getElementById('admin-trigger');
+    const startA = () => { admT = setTimeout(() => document.getElementById('adm').style.display='block', 2000); };
+    const stopA = () => clearTimeout(admT);
+
+    trig.addEventListener('mousedown', startA);
+    trig.addEventListener('touchstart', startA);
+    trig.addEventListener('mouseup', stopA);
+    trig.addEventListener('mouseleave', stopA);
+    trig.addEventListener('touchend', stopA);
+
+    // СЛУШАТЕЛЬ КЛАВИАТУРЫ
+    window.addEventListener('keydown', (e) => { if(e.code === 'Space') useSuper(); });
 
     function toggleInfo() {
         const el = document.getElementById('info-screen');
         el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
     }
 
-    function spawnDmg(val, isPlayer) {
-        const d = document.createElement('div');
-        d.className = 'dmg-num';
-        d.innerText = '-' + Math.floor(val);
-        d.style.left = '50%';
-        d.style.top = isPlayer ? '70%' : '30%';
-        document.getElementById('arena').appendChild(d);
-        setTimeout(() => d.remove(), 600);
-        
-        const mob = document.getElementById('mob-img');
-        if (!isPlayer) {
-            mob.style.filter = 'brightness(3)';
-            setTimeout(() => mob.style.filter = s.lvl % 25 === 0 ? 'drop-shadow(0 0 20px red)' : 'none', 100);
-        }
-    }
-
     function init() {
-        const isBoss = s.lvl % 25 === 0;
-        document.getElementById('boss-en-bar').style.display = isBoss ? 'block' : 'none';
-        document.getElementById('mob-img').src = isBoss ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
+        const isB = s.lvl % 25 === 0;
+        document.getElementById('boss-en-bar').style.display = isB ? 'block' : 'none';
+        document.getElementById('mob-img').src = isB ? 'mob4.png' : (s.lvl % 5 === 0 ? 'mob2.png' : 'mob1.png');
         
-        s.maxEHP = (100 + (s.lvl * 30)) * (isBoss ? 4 : 1);
-        s.ehp = s.maxEHP; s.hp = s.maxHP; s.bossEn = 0;
+        s.maxEHP = (100 + (s.lvl * 30)) * (isB ? 4 : 1);
+        s.ehp = s.maxEHP; s.hp = s.maxHP;
         
         const g = document.getElementById('grid');
         g.innerHTML = ''; s.board = [];
@@ -169,7 +168,7 @@
             s.board.push(Math.floor(Math.random() * 5));
             let d = document.createElement('div');
             d.className = 'cell'; d.id = 'c' + i;
-            d.onclick = () => touch(i);
+            d.addEventListener('click', () => touch(i));
             g.appendChild(d);
         }
         draw();
@@ -181,9 +180,8 @@
         if (type === 'hp') s.maxHP += 20;
         if (type === 'luck') s.luck += 1;
         if (type === 'agi') s.agi += 5;
-        s.pts--;
-        save(); 
-        if (s.pts <= 0) { document.getElementById('upgrade-menu').style.display = 'none'; init(); } 
+        s.pts--; save(); 
+        if (s.pts <= 0) { document.getElementById('upgrade-menu').style.display='none'; init(); } 
         else draw();
     }
 
@@ -200,12 +198,9 @@
         document.getElementById('lvl-txt').innerText = "LVL " + s.lvl;
         document.getElementById('pts-txt').innerText = "PTS: " + s.pts;
         document.getElementById('pts-txt').className = s.pts > 0 ? 'has-pts' : '';
-        document.getElementById('i-btn').className = s.pts > 0 ? 'info-btn has-pts' : 'info-btn';
-        
         document.getElementById('up-pts-info').innerText = "Доступно очков: " + s.pts;
         document.getElementById('cur-atk').innerText = s.atk;
         document.getElementById('cur-hp').innerText = s.maxHP;
-        document.getElementById('cur-luck').innerText = s.luck;
         document.getElementById('cur-agi').innerText = Math.floor((1 - (100 / (100 + s.agi))) * 100);
 
         s.board.forEach((t, i) => {
@@ -217,8 +212,15 @@
         document.getElementById('php').style.width = (s.hp / s.maxHP * 100) + '%';
         document.getElementById('ehp').style.width = (s.ehp / s.maxEHP * 100) + '%';
         document.getElementById('en-f').style.width = s.en + '%';
-        document.getElementById('boss-en-fill').style.width = s.bossEn + '%';
         document.getElementById('s-btn').className = 'btn' + (s.en >= 100 ? ' ready' : '');
+    }
+
+    function spawnDmg(val, isP) {
+        const d = document.createElement('div');
+        d.className = 'dmg-num'; d.innerText = '-' + Math.floor(val);
+        d.style.left = '50%'; d.style.top = isP ? '75%' : '35%';
+        document.getElementById('arena').appendChild(d);
+        setTimeout(() => d.remove(), 600);
     }
 
     async function touch(i) {
@@ -244,20 +246,16 @@
             for (let i = 0; i < 49; i++) {
                 if (s.board[i] === -1) continue;
                 if (i % 7 < 5 && s.board[i] === s.board[i+1] && s.board[i] === s.board[i+2]) {
-                    let m = 3; if (i % 7 < 4 && s.board[i] === s.board[i+3]) m = 4;
-                    if (i % 7 < 3 && s.board[i] === s.board[i+4]) m = 5;
-                    for(let k=0; k<m; k++) del.add(i+k);
+                    for(let k=0; k<3; k++) del.add(i+k);
                 }
                 if (i < 35 && s.board[i] === s.board[i+7] && s.board[i] === s.board[i+14]) {
-                    let m = 3; if (i < 28 && s.board[i] === s.board[i+21]) m = 4;
-                    if (i < 21 && s.board[i] === s.board[i+28]) m = 5;
-                    for(let k=0; k<m; k++) del.add(i+k*7);
+                    for(let k=0; k<3; k++) del.add(i+k*7);
                 }
             }
             if (del.size === 0) break;
             found = true; combo++; play('match');
-            let totalDmg = del.size * s.atk * combo;
-            s.ehp -= totalDmg; spawnDmg(totalDmg, false);
+            let d = del.size * s.atk * combo;
+            s.ehp -= d; spawnDmg(d, false);
             del.forEach(idx => {
                 if (s.board[idx] === 1) s.en = Math.min(100, s.en + s.luck);
                 s.board[idx] = -1;
@@ -288,26 +286,14 @@
     }
 
     function enemy() {
-        let dodgeChance = 1 - (100 / (100 + s.agi));
-        if (Math.random() < dodgeChance) {
-            const dt = document.createElement('div');
-            dt.className = 'dodge-txt'; dt.innerText = 'DODGE!';
-            document.getElementById('arena').appendChild(dt);
-            setTimeout(() => dt.remove(), 800);
-            return;
+        if (Math.random() < (1 - (100 / (100 + s.agi)))) {
+            spawnDmg(0, true); return; // Dodge
         }
-
         let dmg = 5 + Math.floor(s.lvl/5);
-        if (s.lvl % 25 === 0) {
-            s.bossEn += 20;
-            if (s.bossEn >= 100) { dmg *= 3; s.bossEn = 0; }
-        }
         s.hp -= dmg; spawnDmg(dmg, true); play('hit');
-        
-        const mob = document.getElementById('mob-img');
-        mob.style.transform = 'translate(-50%, -40%) scale(1.2)';
-        setTimeout(() => mob.style.transform = 'translate(-50%, -50%) scale(1)', 100);
-
+        const m = document.getElementById('mob-img');
+        m.style.transform = 'translate(-50%, -45%) scale(1.1)';
+        setTimeout(() => m.style.transform = 'translate(-50%, -50%) scale(1)', 100);
         if (s.hp <= 0) { alert("Game Over"); location.reload(); }
         draw();
     }
