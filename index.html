@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking Saga: Abilities Restored</title>
+    <title>Viking Saga: 3 Turns Valkyrie</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --white: #fff; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
@@ -11,7 +11,7 @@
         .header { background: #111; height: 35px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 13px; }
         .arena { height: 25vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
         .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .p-icon { width: 85px; height: 85px; border-radius: 12px; border: 3px solid #444; background: #111; }
+        .p-icon { width: 85px; height: 85px; border-radius: 12px; border: 3px solid #444; background: #111; object-fit: cover; }
         
         .bar-bg { width: 100%; height: 18px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
@@ -24,14 +24,14 @@
         
         .frozen { border: 2px solid var(--blue); filter: brightness(0.6) grayscale(0.5); }
         .light { border: 2px solid var(--gold); box-shadow: inset 0 0 10px var(--gold); }
-        .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: #fff; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #fff; font-weight: bold; }
+        .timer-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: #fff; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #fff; font-weight: bold; z-index: 10; }
 
         #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #555; font-weight: bold; }
-        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; cursor: pointer; }
+        #thor-btn.ready { background: var(--blue); color: #fff; border-color: #fff; box-shadow: 0 0 10px var(--blue); cursor: pointer; }
 
-        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 80%; }
-        .menu-btn { width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; background: var(--accent); }
+        .menu-btn { width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; background: var(--accent); color: #000; cursor: pointer; }
         
         .dmg-text { position: absolute; font-size: 24px; font-weight: bold; animation: fly 1s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; color: var(--gold); }
         @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
@@ -41,7 +41,7 @@
 
     <div class="header">
         <div style="color:var(--gold)" onclick="admTrig()">УРОВЕНЬ: <span id="lvl">1</span></div>
-        <div onclick="openF()" style="color:var(--accent); font-weight:bold">PTS: <span id="pts-val">0</span></div>
+        <div onclick="openF()" style="color:var(--accent); font-weight:bold; cursor:pointer">PTS: <span id="pts-val">0</span></div>
     </div>
 
     <div class="arena">
@@ -63,7 +63,7 @@
     <div id="admin-overlay" class="overlay">
         <div class="card">
             <h3>АДМИНКА</h3>
-            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:90%; padding:10px; margin-bottom:10px; text-align:center">
+            <input type="number" id="jump-lvl" placeholder="Уровень" style="width:90%; padding:10px; margin-bottom:10px; text-align:center; background:#222; color:#fff; border:1px solid #444;">
             <button class="menu-btn" onclick="jumpTo()">ПЕРЕЙТИ</button>
             <button class="menu-btn" onclick="addPts()" style="background:var(--blue); color:#fff">+10 PTS</button>
             <button class="menu-btn" onclick="resetAll()" style="background:var(--red); color:#fff">СБРОСИТЬ ВСЁ</button>
@@ -73,7 +73,7 @@
 
     <div id="info-overlay" class="overlay" onclick="closeO()">
         <div class="card" onclick="event.stopPropagation()">
-            <h2 id="info-t"></h2>
+            <h2 id="info-t" style="margin-top:0; color:var(--gold)"></h2>
             <p id="info-b" style="text-align:left; font-size:14px; line-height:1.4;"></p>
             <button class="menu-btn" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
@@ -81,7 +81,7 @@
 
     <div id="f-menu" class="overlay">
         <div class="card">
-            <h2>КУЗНИЦА</h2>
+            <h2 style="color:var(--gold)">КУЗНИЦА</h2>
             <button class="menu-btn" onclick="buy('atk')">УРОН +2</button>
             <button class="menu-btn" onclick="buy('hp')">ОЗ +20</button>
             <button class="menu-btn" onclick="buy('agi')">ЛОВКОСТЬ +1%</button>
@@ -159,8 +159,7 @@
 
     async function resolveBoard() {
         st.combo = 1;
-        let active = true;
-        while (active) {
+        while (true) {
             let toClear = new Set();
             let rows4 = []; let expl5 = [];
 
@@ -234,33 +233,23 @@
         let d = Math.floor(5 + st.lvl * 1.5);
         st.turnCnt++;
 
-        // Применение способностей боссов
         if (isB && st.turnCnt >= 4) {
             st.turnCnt = 0;
-            if (st.lvl === 25) { 
-                pop("ICE!"); 
-                for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen = 3; 
-            }
-            if (st.lvl === 50) { 
-                pop("FIRE!"); d *= 3; 
-            }
-            if (st.lvl === 75) { 
-                pop("LIGHT!"); 
-                for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light = 3; 
-            }
+            if (st.lvl === 25) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].frozen = 3; pop("ICE!"); }
+            if (st.lvl === 50) { d *= 3; pop("CRIT!"); }
+            if (st.lvl === 75) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].light = 4; pop("LIGHT!"); }
         }
 
-        // Обработка эффектов плиток
         st.board.forEach(o => {
             if (o.light > 0) {
                 o.light--;
-                if (o.light === 0) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.15); pop("HEAL"); }
+                if (o.light === 1) { st.ehp = Math.min(st.mehp, st.ehp + st.mehp*0.15); pop("HEAL"); o.light = 0; }
             }
             if (o.frozen > 0) o.frozen--;
         });
 
         if (Math.random()*100 > st.agi) st.hp -= d; else pop("MISS");
-        if (st.hp <= 0) { alert("Вальхалла зовет!"); resetAll(); }
+        if (st.hp <= 0) { alert("Game Over!"); resetAll(); }
         draw();
     }
 
@@ -274,22 +263,21 @@
     function pop(txt) {
         const p = document.createElement('div'); p.className = 'dmg-text';
         p.innerText = isNaN(txt) ? txt : "-"+txt;
-        p.style.left = (40 + Math.random()*20) + '%'; p.style.top = '30%';
+        p.style.left = '50%'; p.style.top = '30%';
         document.body.appendChild(p); setTimeout(() => p.remove(), 1000);
     }
 
     function showInfo(t) {
         const o = document.getElementById('info-overlay');
-        document.getElementById('info-t').innerText = t==='p' ? "ГЕРОЙ" : "ПРОТИВНИК";
+        document.getElementById('info-t').innerText = t==='p' ? "ВИКИНГ" : "ВРАГ";
         let b = "";
         if (t === 'p') {
-            b = `Урон: ${st.atk}<br>ОЗ: ${st.mHP}<br>Ловкость: ${st.agi}%<br><br><b>Комбо:</b><br>4 в ряд - уничтожит весь ряд.<br>5 в ряд - мощный взрыв.`;
+            b = `Урон: ${st.atk}<br>Здоровье: ${st.mHP}<br>Ловкость: ${st.agi}%<br><br><b>Комбо:</b><br>4 в ряд - очистка линии.<br>5 в ряд - мощный взрыв вокруг.`;
         } else {
-            const isB = st.lvl % 25 === 0;
-            let abi = "Обычный моб.";
-            if (st.lvl === 25) abi = "<b>Босс Льда:</b> Каждые 4 хода замораживает 3 плитки на 3 хода.";
-            if (st.lvl === 50) abi = "<b>Босс Огня:</b> Каждые 4 хода наносит тройной урон.";
-            if (st.lvl === 75) abi = "<b>Валькирия:</b> Каждые 4 хода создает 3 плитки Света. Если не убрать за 3 хода - лечится.";
+            let abi = "Рядовой противник.";
+            if (st.lvl === 25) abi = "<b>Босс Льда:</b> Морозит плитки на 3 хода.";
+            if (st.lvl === 50) abi = "<b>Босс Огня:</b> Наносит критический урон.";
+            if (st.lvl === 75) abi = "<b>Валькирия:</b> Создает 3 плитки Света. У тебя есть 3 хода, чтобы их убрать, иначе она исцелится.";
             b = `Здоровье: ${st.mehp}<br>Урон: ${Math.floor(5 + st.lvl * 1.5)}<br><br>${abi}`;
         }
         document.getElementById('info-b').innerHTML = b;
