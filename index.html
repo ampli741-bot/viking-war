@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking RPG: Falling Runes</title>
+    <title>Viking RPG: Loot Rain</title>
     <style>
-        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --shield: #5dade2; --ice: #a2d9ff; }
+        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --shield: #5dade2; --ice: #a2d9ff; --gray: #95a5a6; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
         .header { background: #111; height: 40px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 11px; z-index: 1001; }
         #exp-bar { width: 100%; height: 8px; background: #222; position: relative; border-bottom: 1px solid #444; }
         #exp-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--purple); }
-        .exp-label { position: absolute; width: 100%; top: 10px; font-size: 10px; color: #fff; font-weight: bold; text-shadow: 1px 1px #000; pointer-events: none; z-index: 5; }
-
+        
         .arena { height: 28vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
         .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; position: relative; }
         .p-icon { width: 85px; height: 85px; border-radius: 12px; border: 3px solid #444; background: #111; overflow: hidden; cursor: pointer; transition: transform 0.3s; }
-        .p-icon:active { transform: scale(0.9); }
         .p-icon img { width: 100%; height: 100%; object-fit: cover; }
         
         .bar-bg { width: 100%; height: 18px; background: #222; border-radius: 4px; margin-top: 4px; border: 1px solid #444; position: relative; overflow: hidden; }
@@ -26,80 +24,54 @@
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
         #grid-container { width: 92vw; max-width: 340px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; overflow: hidden; }
         
-        .cell { 
-            background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; 
-            border: 1px solid #333; border-radius: 4px; position: relative;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-        
-        /* Анимация падения */
-        @keyframes fallIn {
-            0% { transform: translateY(-300px); opacity: 0; }
-            60% { transform: translateY(10px); opacity: 1; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
+        .cell { background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; transition: transform 0.3s, opacity 0.3s; }
+        @keyframes fallIn { 0% { transform: translateY(-300px); opacity: 0; } 60% { transform: translateY(10px); opacity: 1; } 100% { transform: translateY(0); opacity: 1; } }
         .falling { animation: fallIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-        
         .cell.vanish { transform: scale(0); opacity: 0; }
-        .frozen { box-shadow: inset 0 0 15px var(--ice); border: 2px solid var(--ice) !important; }
-        .frozen::after { content: '❄️'; position: absolute; top:0; right:0; font-size: 10px; }
-        .valk-mark { box-shadow: inset 0 0 15px var(--gold); border: 2px solid var(--gold) !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #fff; font-weight: bold; font-size: 16px; transition: 0.5s; }
-        #thor-btn.ready { box-shadow: 0 0 15px var(--blue); cursor: pointer; border-color: #fff; }
 
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 85%; max-width: 350px; }
         .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: #fff; }
 
-        .stat-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; background: #222; padding: 5px 10px; border-radius: 4px; }
-        .plus-btn { background: var(--accent); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; }
-
-        .dmg-text { position: absolute; font-size: 26px; font-weight: bold; animation: fly 1.5s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
+        .dmg-text { position: absolute; font-size: 24px; font-weight: bold; animation: fly 1.5s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
         @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-150px); } }
+
+        /* Грейды в тексте */
+        .rarity-0 { color: var(--gray); }
+        .rarity-1 { color: var(--blue); font-weight: bold; }
+        .rarity-2 { color: var(--purple); font-weight: bold; }
+        .rarity-3 { color: var(--gold); font-weight: bold; text-shadow: 0 0 5px var(--gold); }
     </style>
 </head>
 <body>
 
     <div id="death-screen" class="overlay">
-        <h1 style="color:var(--red);">В ВАЛЬХАЛЛУ</h1>
+        <h1 style="color:var(--red);">ПАВШИЙ В БОЮ</h1>
         <h2 id="ban-timer" style="font-size: 40px; color:var(--gold)">60:00</h2>
         <div id="res-action-box" style="width: 80%;"></div>
     </div>
 
     <div id="levelup-screen" class="overlay">
         <div class="card">
-            <h2 style="color:var(--purple)">НОВЫЙ УРОВЕНЬ</h2>
-            <p>Очки: <span id="stat-points">0</span></p>
-            <div class="stat-row"><span>⚔️ СИЛА</span><span id="st-atk-val">0</span><button class="plus-btn" onclick="addStat('atk')">+</button></div>
-            <div class="stat-row"><span>❤️ ЖИЗНЬ</span><span id="st-hp-val">0</span><button class="plus-btn" onclick="addStat('hp')">+</button></div>
-            <div class="stat-row"><span>🍃 ЛОВКОСТЬ</span><span id="st-agi-val">0</span><button class="plus-btn" onclick="addStat('agi')">+</button></div>
-            <button class="menu-btn" style="background:var(--blue)" onclick="closeLevelUp()">ГОТОВО</button>
+            <h2 style="color:var(--purple)">УРОВЕНЬ ПОВЫШЕН!</h2>
+            <div id="stat-points-ui"></div>
+            <button class="menu-btn" style="background:var(--blue)" onclick="closeLevelUp()">ПРОДОЛЖИТЬ</button>
         </div>
     </div>
 
     <div id="info-screen" class="overlay" onclick="closeO()">
         <div class="card" onclick="event.stopPropagation()">
-            <div id="info-content" style="text-align: left; font-size: 14px;"></div>
+            <div id="info-content" style="text-align: left;"></div>
             <button class="menu-btn" style="background:#444" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
-    <div id="admin-screen" class="overlay">
-        <div class="card">
-            <button class="menu-btn" style="background:#333" onclick="adminAction('res')">ВОСКРЕСНУТЬ</button>
-            <button class="menu-btn" style="background:#333" onclick="adminAction('lvl')">ЭТАП</button>
-            <button class="menu-btn" style="background:var(--red)" onclick="closeO()">ЗАКРЫТЬ</button>
-        </div>
-    </div>
-
     <div class="header">
-        <div onclick="admTrig()" style="cursor:pointer">STG: <span id="lvl">1</span></div>
+        <div>STAGE: <span id="lvl">1</span></div>
         <div style="color:var(--accent)">HP: <span id="hp-val">100</span></div>
-        <div style="color:var(--purple); font-weight:bold;">🧴 <span id="bottles-val">0</span></div>
+        <div style="color:var(--purple)">🧴 <span id="bottles-val">0</span></div>
     </div>
-    <div id="exp-bar"><div id="exp-fill"></div><div class="exp-label">УР. <span id="hLvl">1</span> | EXP: <span id="exp-txt">0 / 800</span></div></div>
+    <div id="exp-bar"><div id="exp-fill"></div></div>
 
     <div class="arena">
         <div class="char-box">
@@ -108,18 +80,18 @@
         </div>
         <div class="char-box">
             <div class="p-icon" style="border-color:var(--red)" onclick="showEnemyInfo()"><img id="enemy-img" src=""></div>
-            <div class="bar-bg"><div id="e-skill-fill" class="bar-fill" style="background:var(--purple); width:0%"></div><div class="bar-text" id="e-skill-txt">ЯРОСТЬ: 0%</div></div>
+            <div class="bar-bg"><div id="e-skill-fill" class="bar-fill" style="background:var(--purple); width:0%"></div><div class="bar-text" id="e-skill-txt">ЯРОСТЬ</div></div>
             <div class="bar-bg" style="margin-top:2px;"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div class="bar-text" id="hp-e-txt">100 / 100</div></div>
         </div>
     </div>
 
     <div class="game-space">
         <div id="grid-container"></div>
-        <button id="thor-btn" onclick="useThor()">МОЛОТ ТОРА</button>
+        <button id="thor-btn" style="width:90%; padding:10px; margin:10px; background:#222; border:1px solid #444; color:#fff;" onclick="useThor()">МОЛОТ ТОРА</button>
     </div>
 
 <script>
-    const SND = { hit: new Audio('hit.mp3'), combo: new Audio('combo.mp3'), thor: new Audio('thor.mp3'), lvlup: new Audio('lvlup.mp3'), death: new Audio('death.mp3') };
+    const SND = { hit: new Audio('hit.mp3'), death: new Audio('death.mp3') };
     function playSnd(name) { try { SND[name].currentTime = 0; SND[name].play(); } catch(e) {} }
 
     let st = {
@@ -134,40 +106,73 @@
         statPoints: parseInt(localStorage.getItem('v_sp')) || 0,
         equip: JSON.parse(localStorage.getItem('v_equip')) || {},
         atk: 10, mHP: 100, hp: 100, agi: 5, ehp: 0, mehp: 100,
-        thor: 0, board: [], sel: null, lock: false, valkTimer: 0, eSkill: 0, adm: 0
+        thor: 0, board: [], sel: null, lock: false, eSkill: 0
     };
 
-    const itemPool = [
-        { name: "Топор Викинга", slot: "Weapon", atk: 15 },
-        { name: "Кольчуга", slot: "Armor", hp: 150 },
-        { name: "Шлем Ворона", slot: "Head", agi: 5 }
+    const RARITY = [
+        { n: "Обычное", c: "rarity-0", mult: 1 },
+        { n: "Редкое", c: "rarity-1", mult: 1.5 },
+        { n: "Эпическое", c: "rarity-2", mult: 2.2 },
+        { n: "Легендарное", c: "rarity-3", mult: 3.5 }
+    ];
+
+    const lootTable = [
+        { name: "Топор", slot: "Weapon", stat: "atk", base: 10 },
+        { name: "Кольчуга", slot: "Armor", stat: "hp", base: 100 },
+        { name: "Шлем", slot: "Head", stat: "agi", base: 2 },
+        { name: "Щит", slot: "Shield", stat: "hp", base: 50 }
     ];
 
     function calcStats() {
         st.atk = st.bAtk; st.mHP = st.bHP; st.agi = st.bAgi;
-        Object.values(st.equip).forEach(i => { if(i.atk) st.atk += i.atk; if(i.hp) st.mHP += i.hp; if(i.agi) st.agi += i.agi; });
+        Object.values(st.equip).forEach(i => {
+            if(i.stat === "atk") st.atk += i.val;
+            if(i.stat === "hp") st.mHP += i.val;
+            if(i.stat === "agi") st.agi += i.val;
+        });
         if(st.hp > st.mHP) st.hp = st.mHP;
+    }
+
+    function generateDrop() {
+        let rRoll = Math.random() * 100;
+        let rIdx = 0;
+        if(rRoll > 99) rIdx = 3; else if(rRoll > 85) rIdx = 2; else if(rRoll > 60) rIdx = 1;
+
+        let baseItem = lootTable[Math.floor(Math.random() * lootTable.length)];
+        let rarity = RARITY[rIdx];
+        let itemLvl = Math.floor(st.lvl / 5) + 1;
+        
+        let newItem = {
+            name: baseItem.name,
+            slot: baseItem.slot,
+            stat: baseItem.stat,
+            rarityIdx: rIdx,
+            val: Math.floor(baseItem.base * itemLvl * rarity.mult)
+        };
+
+        // Авто-экипировка если лучше
+        if(!st.equip[newItem.slot] || newItem.val > st.equip[newItem.slot].val) {
+            st.equip[newItem.slot] = newItem;
+            pop("НОВЫЙ ТРОФЕЙ!", "var(--gold)");
+        }
     }
 
     function init() {
         calcStats();
         if (checkBan()) return;
         const isB = st.lvl % 25 === 0;
-        let savedEHP = parseInt(localStorage.getItem('v_ehp'));
         st.mehp = isB ? (100 + st.lvl * 95) * 6 : 100 + st.lvl * 95;
-        st.ehp = (savedEHP > 0) ? savedEHP : st.mehp;
-        localStorage.removeItem('v_ehp');
-        st.valkTimer = 0; st.eSkill = 0;
+        st.ehp = st.mehp; st.eSkill = 0;
         
         const img = document.getElementById('enemy-img');
-        img.src = isB ? `boss${Math.floor(Math.random()*3)+1}.png` : `mob${Math.floor(Math.random()*15)+1}.png`;
+        img.src = isB ? `boss1.png` : `mob${(st.lvl%15)+1}.png`;
         img.onerror = () => img.src = 'https://cdn-icons-png.flaticon.com/512/606/606548.png';
         
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
         for (let i = 0; i < 49; i++) {
-            st.board.push({type: Math.floor(Math.random() * 5), frozen: false, valk: false, isNew: true});
+            st.board.push({type: Math.floor(Math.random() * 5), frozen: false, isNew: true});
             let c = document.createElement('div'); c.className = 'cell falling'; 
-            c.id = 'c-' + i; c.style.animationDelay = (i * 0.02) + 's';
+            c.id = 'c-' + i; c.style.animationDelay = (i * 0.01) + 's';
             c.onclick = () => handle(i); g.appendChild(c);
         }
         draw();
@@ -175,43 +180,29 @@
 
     function draw() {
         document.getElementById('lvl').innerText = st.lvl;
-        document.getElementById('hLvl').innerText = st.hLvl;
         document.getElementById('hp-val').innerText = Math.floor(st.hp);
-        document.getElementById('bottles-val').innerText = st.bottles;
-        let expReq = st.hLvl * 800;
-        document.getElementById('exp-fill').style.width = (st.exp/expReq*100) + '%';
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
         document.getElementById('hp-p-txt').innerText = `${Math.floor(st.hp)} / ${st.mHP}`;
         document.getElementById('hp-e-fill').style.width = (st.ehp/st.mehp*100)+'%';
         document.getElementById('hp-e-txt').innerText = `${Math.floor(st.ehp)} / ${st.mehp}`;
         document.getElementById('e-skill-fill').style.width = st.eSkill + '%';
         
-        const btn = document.getElementById('thor-btn');
-        btn.className = st.thor >= 100 ? 'ready' : '';
-        btn.style.background = `linear-gradient(90deg, var(--blue) ${st.thor}%, #222 ${st.thor}%)`;
-        
         st.board.forEach((o, i) => {
             const c = document.getElementById('c-' + i);
-            if(o.type === -1) { 
-                c.classList.add('vanish'); 
-            } else {
+            if(o.type === -1) c.classList.add('vanish');
+            else {
                 c.classList.remove('vanish');
                 c.style.backgroundImage = `url(rune${o.type+1}.png)`;
                 if(o.isNew) {
-                    c.classList.remove('falling');
-                    void c.offsetWidth; // Триггер рефлоу
-                    c.classList.add('falling');
-                    o.isNew = false;
+                    c.classList.remove('falling'); void c.offsetWidth;
+                    c.classList.add('falling'); o.isNew = false;
                 }
             }
-            c.style.outline = st.sel === i ? '2px solid #fff' : 'none';
-            c.classList.toggle('frozen', o.frozen);
-            c.classList.toggle('valk-mark', o.valk);
         });
     }
 
     async function resolveBoard() {
-        st.lock = true; let combo = 1;
+        st.lock = true;
         while (true) {
             let toClear = new Set();
             for(let r=0; r<7; r++) {
@@ -230,132 +221,92 @@
             toClear.forEach(i => document.getElementById('c-'+i).classList.add('vanish'));
             await new Promise(r => setTimeout(r, 400));
 
-            let d = Math.floor(toClear.size * st.atk * (1 + (combo-1)*0.2));
-            st.ehp -= d; st.exp += toClear.size * 10; st.thor = Math.min(100, st.thor + toClear.size * 2);
-            playSnd('hit'); pop("-"+d, 'var(--gold)');
-            checkLevelUp();
-
-            toClear.forEach(i => { st.board[i].type = -1; st.board[i].frozen = false; st.board[i].valk = false; }); 
+            let d = toClear.size * st.atk;
+            st.ehp -= d; pop("-"+d, 'var(--gold)');
+            toClear.forEach(i => { st.board[i].type = -1; }); 
             draw(); 
             await new Promise(r => setTimeout(r, 200));
             fillBoard(); draw(); 
             await new Promise(r => setTimeout(r, 500));
-            combo++;
         }
 
         if (st.ehp <= 0) { 
-            if(st.lvl % 25 === 0) {
-                let item = itemPool[Math.floor(Math.random()*itemPool.length)];
-                st.equip[item.slot] = item;
-                alert("ВЫБИТО: " + item.name);
-            }
-            st.ehp = 0; st.lvl++; 
-            await new Promise(r => setTimeout(r, 600));
-            save(); init(); 
+            generateDrop(); // Шмотка с каждого!
+            st.lvl++; save(); init(); 
         } else {
-            if(st.valkTimer > 0) {
-                st.valkTimer--;
-                if(st.valkTimer === 0 && st.board.some(o => o.valk)) {
-                    st.ehp = Math.min(st.mehp, st.ehp + Math.floor(st.mehp * 0.1));
-                    st.board.forEach(o => o.valk = false);
-                }
-            }
             await new Promise(r => setTimeout(r, 800));
             enemyTurn(); 
         }
         st.lock = false; save();
     }
 
-    function fillBoard() {
-        for(let c=0; c<7; c++) {
-            let emptyCount = 0;
-            for(let r=6; r>=0; r--) {
-                let i = r * 7 + c;
-                if(st.board[i].type === -1) emptyCount++;
-                else if(emptyCount > 0) {
-                    st.board[i + emptyCount * 7] = {...st.board[i]};
-                    st.board[i].type = -1;
-                }
-            }
-            for(let r=0; r<emptyCount; r++) {
-                st.board[r * 7 + c] = {type: Math.floor(Math.random()*5), frozen: false, valk: false, isNew: true};
-            }
-        }
-    }
-
     function enemyTurn() {
-        const isB = st.lvl % 25 === 0;
-        let d = Math.floor(8 + st.lvl * 3.5);
-        if(isB) {
+        let d = Math.floor(8 + st.lvl * 3);
+        if(st.lvl % 25 === 0) {
             st.eSkill += 25;
-            if(st.eSkill >= 100) {
-                st.eSkill = 0;
-                if(st.lvl === 15) { 
-                    for(let i=0; i<8; i++) st.board[Math.floor(Math.random()*49)].frozen = true;
-                } else if(st.lvl === 75) {
-                    for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].valk = true;
-                    st.valkTimer = 3;
-                } else d *= 2;
-            }
+            if(st.eSkill >= 100) { d *= 2; st.eSkill = 0; pop("КРИТ!", "var(--red)"); }
         }
         if(Math.random()*100 > st.agi) { st.hp -= d; pop("-"+d, "var(--red)"); }
         else pop("УКЛОН", "#fff");
-        if(st.hp <= 0) {
-            st.hp = 0; st.exp = Math.floor(st.exp * 0.9);
-            st.banUntil = Date.now() + 3600000;
-            localStorage.setItem('v_ehp', st.ehp);
-            playSnd('death'); save(); checkBan();
-        }
+        
+        if(st.hp <= 0) { st.banUntil = Date.now() + 3600000; playSnd('death'); checkBan(); }
         draw();
     }
 
-    function handle(i) {
-        if(st.lock || st.board[i].frozen) return;
-        if(st.sel === null) { st.sel = i; draw(); }
-        else {
-            let a = st.sel, b = i;
-            if((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
-                st.lock = true;
-                let t = {...st.board[a]}; st.board[a] = {...st.board[b]}; st.board[b] = t;
-                resolveBoard(); st.sel = null;
-            } else { st.sel = i; draw(); }
+    function fillBoard() {
+        for(let c=0; c<7; c++) {
+            let e=0; for(let r=6; r>=0; r--) {
+                let i=r*7+c; if(st.board[i].type===-1) e++;
+                else if(e>0) { st.board[i+e*7]={...st.board[i]}; st.board[i].type=-1; }
+            }
+            for(let r=0; r<e; r++) st.board[r*7+c]={type:Math.floor(Math.random()*5), isNew:true};
         }
     }
 
-    async function useThor() {
-        if(st.thor<100 || st.lock) return; st.lock=true; st.thor=0;
-        playSnd('thor');
-        st.board.forEach(o => { if(Math.random()>0.4) o.type = -1; o.frozen = false; o.valk = false; });
-        st.ehp -= st.atk * 10; pop("МОЛНИЯ!", "var(--blue)");
-        draw(); await new Promise(r => setTimeout(r, 500));
-        fillBoard(); draw(); resolveBoard();
-    }
-
     function showHeroInfo() {
-        let items = Object.values(st.equip).map(i => `• ${i.name}`).join('<br>') || "Пусто";
-        document.getElementById('info-content').innerHTML = `<h2 style="color:var(--gold)">ВИКИНГ</h2>⚔️ Атака: ${st.atk}<br>❤️ HP: ${Math.floor(st.hp)}/${st.mHP}<br>🍃 Уклонение: ${st.agi}%<br><br><b>ВЕЩИ:</b><br>${items}`;
+        let itemsHtml = Object.values(st.equip).map(i => {
+            let r = RARITY[i.rarityIdx];
+            return `<div class="${r.c}">${i.name} (${i.slot}): +${i.val} ${i.stat.toUpperCase()}</div>`;
+        }).join('') || "Нет снаряжения";
+
+        document.getElementById('info-content').innerHTML = `
+            <h2 style="color:var(--gold)">ГЕРОЙ (УР. ${st.hLvl})</h2>
+            ⚔️ Атака: ${st.atk}<br>❤️ HP: ${st.mHP}<br>🍃 Уворот: ${st.agi}%<br><br>
+            <b>СНАРЯЖЕНИЕ:</b><br>${itemsHtml}
+        `;
         document.getElementById('info-screen').style.display = 'flex';
     }
 
-    function showEnemyInfo() {
-        document.getElementById('info-content').innerHTML = `<h2 style="color:var(--red)">ВРАГ</h2>⚔️ Урон: ~${Math.floor(8 + st.lvl * 3.5)}<br>❤️ HP: ${Math.floor(st.ehp)}/${st.mehp}`;
-        document.getElementById('info-screen').style.display = 'flex';
+    function handle(i) {
+        if(st.lock) return;
+        if(st.sel === null) { st.sel = i; }
+        else {
+            let a = st.sel, b = i;
+            if(Math.abs(a-b)===1 || Math.abs(a-b)===7) {
+                let t = {...st.board[a]}; st.board[a] = {...st.board[b]}; st.board[b] = t;
+                resolveBoard(); st.sel = null;
+            } else st.sel = i;
+        }
     }
 
-    function checkLevelUp() {
-        let req = st.hLvl * 800;
-        if(st.exp >= req) { st.exp -= req; st.hLvl++; st.statPoints += 3; playSnd('lvlup'); document.getElementById('levelup-screen').style.display = 'flex'; updateStatUI(); }
+    function checkBan() {
+        if (st.banUntil > Date.now()) {
+            document.getElementById('death-screen').style.display = 'flex';
+            let diff = Math.ceil((st.banUntil - Date.now()) / 1000);
+            document.getElementById('ban-timer').innerText = `${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}`;
+            setTimeout(checkBan, 1000); return true;
+        }
+        document.getElementById('death-screen').style.display = 'none'; return false;
     }
-    function updateStatUI() { document.getElementById('stat-points').innerText = st.statPoints; document.getElementById('st-atk-val').innerText = st.bAtk; document.getElementById('st-hp-val').innerText = st.bHP; document.getElementById('st-agi-val').innerText = st.bAgi; }
-    function addStat(type) { if(st.statPoints <= 0) return; if(type === 'atk') st.bAtk += 2; if(type === 'hp') st.bHP += 25; if(type === 'agi') st.bAgi = Math.min(40, st.bAgi + 1); st.statPoints--; updateStatUI(); calcStats(); }
-    function closeLevelUp() { if(st.statPoints > 0) return; document.getElementById('levelup-screen').style.display = 'none'; save(); draw(); }
-    function checkBan() { const now = Date.now(); if (st.banUntil > now) { document.getElementById('death-screen').style.display = 'flex'; const btnBox = document.getElementById('res-action-box'); btnBox.innerHTML = st.bottles > 0 ? `<button class="menu-btn" style="background:var(--purple)" onclick="useBottle()">🧴 ВОСКРЕСНУТЬ</button>` : `<p>Ждите 1 час.</p>`; let diff = Math.ceil((st.banUntil - now) / 1000); document.getElementById('ban-timer').innerText = `${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}`; setTimeout(checkBan, 1000); return true; } document.getElementById('death-screen').style.display = 'none'; return false; }
-    function useBottle() { st.bottles--; st.hp = st.mHP; st.banUntil = 0; save(); init(); }
-    function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_hlvl', st.hLvl); localStorage.setItem('v_exp', st.exp); localStorage.setItem('v_bot', st.bottles); localStorage.setItem('v_batk', st.bAtk); localStorage.setItem('v_bhp', st.bHP); localStorage.setItem('v_bagi', st.bAgi); localStorage.setItem('v_sp', st.statPoints); localStorage.setItem('v_equip', JSON.stringify(st.equip)); }
-    function admTrig() { st.adm++; if(st.adm>=5){ st.adm=0; document.getElementById('admin-screen').style.display='flex'; } }
-    function adminAction(act) { if(act==='res') { st.banUntil=0; st.hp=st.mHP; } if(act==='lvl') { let l=prompt("Этап:"); if(l) st.lvl=parseInt(l); st.ehp=0; } save(); init(); closeO(); }
-    function closeO() { document.querySelectorAll('.overlay').forEach(o => { if(o.id!=='death-screen') o.style.display='none'; }); }
-    function pop(txt, col) { const p = document.createElement('div'); p.className = 'dmg-text'; p.innerText = txt; p.style.color = col; p.style.left = '50%'; p.style.top = '30%'; document.body.appendChild(p); setTimeout(() => p.remove(), 1500); }
+
+    function pop(txt, col) {
+        const p = document.createElement('div'); p.className = 'dmg-text';
+        p.innerText = txt; p.style.color = col; p.style.left = '50%'; p.style.top = '30%';
+        document.body.appendChild(p); setTimeout(() => p.remove(), 1500);
+    }
+    
+    function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_equip', JSON.stringify(st.equip)); }
+    function closeO() { document.getElementById('info-screen').style.display='none'; }
     init();
 </script>
 </body>
