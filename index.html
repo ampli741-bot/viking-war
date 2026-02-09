@@ -3,72 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking RPG: Saga Fixed Exp</title>
+    <title>Viking RPG: Smooth Saga</title>
     <style>
         :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --shield: #5dade2; --ice: #a2d9ff; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
         .header { background: #111; height: 40px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 11px; z-index: 1001; }
-        #exp-bar { width: 100%; height: 6px; background: #222; position: relative; border-bottom: 1px solid #333; }
-        #exp-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.4s ease-out; box-shadow: 0 0 10px var(--purple); }
-        .exp-label { position: absolute; width: 100%; top: 8px; font-size: 10px; color: #fff; font-weight: bold; text-shadow: 1px 1px #000; pointer-events: none; z-index: 5; }
+        #exp-bar { width: 100%; height: 8px; background: #222; position: relative; border-bottom: 1px solid #444; }
+        #exp-fill { height: 100%; width: 0%; background: var(--purple); transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--purple); }
+        .exp-label { position: absolute; width: 100%; top: 10px; font-size: 10px; color: #fff; font-weight: bold; text-shadow: 1px 1px #000; pointer-events: none; z-index: 5; }
 
         .arena { height: 28vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
         .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; position: relative; }
-        .p-icon { width: 85px; height: 85px; border-radius: 12px; border: 3px solid #444; background: #111; overflow: hidden; }
+        .p-icon { width: 85px; height: 85px; border-radius: 12px; border: 3px solid #444; background: #111; overflow: hidden; cursor: pointer; transition: transform 0.3s; }
+        .p-icon:active { transform: scale(0.9); }
         .p-icon img { width: 100%; height: 100%; object-fit: cover; }
         
-        .bar-bg { width: 100%; height: 16px; background: #222; border-radius: 4px; margin-top: 4px; border: 1px solid #444; position: relative; overflow: hidden; }
-        .bar-fill { height: 100%; width: 100%; transition: 0.3s; }
-        .bar-text { position: absolute; width: 100%; top: 0; left: 0; font-size: 10px; line-height: 16px; font-weight: bold; text-shadow: 1px 1px #000; pointer-events: none; }
+        .bar-bg { width: 100%; height: 18px; background: #222; border-radius: 4px; margin-top: 4px; border: 1px solid #444; position: relative; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .bar-text { position: absolute; width: 100%; top: 0; left: 0; font-size: 11px; line-height: 18px; font-weight: bold; text-shadow: 1px 1px #000; pointer-events: none; }
 
         .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #050505; }
         #grid-container { width: 92vw; max-width: 340px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
-        .cell { background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; position: relative; }
         
-        .frozen { box-shadow: inset 0 0 12px var(--ice); border-color: var(--ice); }
-        .valk-mark { box-shadow: inset 0 0 15px var(--gold); border: 2px solid var(--gold); }
+        .cell { 
+            background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; 
+            border: 1px solid #333; border-radius: 4px; position: relative;
+            transition: transform 0.4s ease, opacity 0.4s ease, background-image 0.2s;
+        }
+        
+        /* Анимация исчезновения плитки */
+        .cell.vanish { transform: scale(0); opacity: 0; }
+        
+        .frozen { box-shadow: inset 0 0 15px var(--ice); border: 2px solid var(--ice) !important; }
+        .valk-mark { box-shadow: inset 0 0 15px var(--gold); border: 2px solid var(--gold) !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #fff; font-weight: bold; font-size: 16px; }
-        #thor-btn.ready { box-shadow: 0 0 15px var(--blue); cursor: pointer; border-color: #fff; }
+        #thor-btn { width: 90%; max-width: 350px; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #333; background: #222; color: #fff; font-weight: bold; font-size: 16px; transition: 0.5s; }
+        #thor-btn.ready { box-shadow: 0 0 15px var(--blue); cursor: pointer; border-color: #fff; transform: translateY(-2px); }
 
-        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 15px; width: 85%; max-width: 350px; }
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 85%; max-width: 350px; }
         .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: #fff; }
 
         .stat-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; background: #222; padding: 5px 10px; border-radius: 4px; }
-        .plus-btn { background: var(--accent); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; }
+        .plus-btn { background: var(--accent); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; }
 
-        .dmg-text { position: absolute; font-size: 24px; font-weight: bold; animation: fly 1.2s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
-        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
+        .dmg-text { position: absolute; font-size: 26px; font-weight: bold; animation: fly 1.5s forwards; z-index: 100; text-shadow: 2px 2px #000; pointer-events: none; }
+        @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-150px); } }
     </style>
 </head>
 <body>
 
     <div id="death-screen" class="overlay">
-        <h1 style="color:var(--red);">ПАВШИЙ В БОЮ</h1>
-        <p>Потеря опыта: -10% | Прогресс боя сохранен</p>
+        <h1 style="color:var(--red);">В ГЕЙМОВЕРЕ</h1>
         <h2 id="ban-timer" style="font-size: 40px; color:var(--gold)">60:00</h2>
         <div id="res-action-box" style="width: 80%;"></div>
     </div>
 
     <div id="levelup-screen" class="overlay">
         <div class="card">
-            <h2 style="color:var(--purple)">УРОВЕНЬ ПОВЫШЕН!</h2>
-            <p>Свободные очки: <span id="stat-points">0</span></p>
-            <div class="stat-row"><span>⚔️ АТАКА</span><span id="st-atk-val">0</span><button class="plus-btn" onclick="addStat('atk')">+</button></div>
-            <div class="stat-row"><span>❤️ HP</span><span id="st-hp-val">0</span><button class="plus-btn" onclick="addStat('hp')">+</button></div>
+            <h2 style="color:var(--purple)">LEVEL UP!</h2>
+            <p>Очки характеристик: <span id="stat-points">0</span></p>
+            <div class="stat-row"><span>⚔️ СИЛА</span><span id="st-atk-val">0</span><button class="plus-btn" onclick="addStat('atk')">+</button></div>
+            <div class="stat-row"><span>❤️ ЖИЗНЬ</span><span id="st-hp-val">0</span><button class="plus-btn" onclick="addStat('hp')">+</button></div>
             <div class="stat-row"><span>🍃 ЛОВКОСТЬ</span><span id="st-agi-val">0</span><button class="plus-btn" onclick="addStat('agi')">+</button></div>
-            <button class="menu-btn" style="background:var(--blue)" onclick="closeLevelUp()">ПОДТВЕРДИТЬ</button>
+            <button class="menu-btn" style="background:var(--blue)" onclick="closeLevelUp()">ПРИНЯТЬ</button>
+        </div>
+    </div>
+
+    <div id="info-screen" class="overlay" onclick="closeO()">
+        <div class="card" onclick="event.stopPropagation()">
+            <div id="info-content" style="text-align: left; font-size: 14px;"></div>
+            <button class="menu-btn" style="background:#444" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
     <div id="admin-screen" class="overlay">
         <div class="card">
             <h2 style="color:var(--red)">ОДИН-ПАНЕЛЬ</h2>
-            <button class="menu-btn" style="background:#333" onclick="adminAction('res')">МГНОВЕННОЕ ВОСКРЕШЕНИЕ</button>
-            <button class="menu-btn" style="background:#333" onclick="adminAction('lvl')">ПЕРЕЙТИ НА ЭТАП</button>
-            <button class="menu-btn" style="background:#333" onclick="adminAction('exp')">+1000 ОПЫТА</button>
+            <button class="menu-btn" style="background:#333" onclick="adminAction('res')">ВОСКРЕСНУТЬ</button>
+            <button class="menu-btn" style="background:#333" onclick="adminAction('lvl')">ЭТАП</button>
+            <button class="menu-btn" style="background:#333" onclick="adminAction('exp')">+1000 EXP</button>
             <button class="menu-btn" style="background:var(--red)" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
     </div>
@@ -79,25 +95,16 @@
         <div style="color:var(--shield)">🛡️: <span id="sh-val">0</span></div>
         <div style="color:var(--purple); font-weight:bold;">🧴 <span id="bottles-val">0</span></div>
     </div>
-    <div id="exp-bar">
-        <div id="exp-fill"></div>
-        <div class="exp-label">УР. <span id="hLvl">1</span> | ОПЫТ: <span id="exp-txt">0 / 800</span></div>
-    </div>
+    <div id="exp-bar"><div id="exp-fill"></div><div class="exp-label">УР. <span id="hLvl">1</span> | EXP: <span id="exp-txt">0 / 800</span></div></div>
 
     <div class="arena">
         <div class="char-box">
-            <div class="p-icon" style="border-color:var(--accent)" onclick="showInfo('hero')">
-                <img src="hero1.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3534/3534065.png'">
-            </div>
-            <div class="bar-bg"><div id="sh-p-fill" class="bar-fill" style="background:var(--shield); width:0%"></div><div class="bar-text" id="sh-p-txt">0 / 0</div></div>
-            <div class="bar-bg" style="margin-top:2px;"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div><div class="bar-text" id="hp-p-txt">100 / 100</div></div>
+            <div class="p-icon" style="border-color:var(--accent)" onclick="showHeroInfo()"><img src="hero1.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3534/3534065.png'"></div>
+            <div class="bar-bg"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div><div class="bar-text" id="hp-p-txt">100 / 100</div></div>
         </div>
         <div class="char-box">
-            <div class="p-icon" style="border-color:var(--red)" onclick="showInfo('enemy')">
-                <img id="enemy-img" src="" alt="mob">
-            </div>
-            <div class="bar-bg"><div id="e-skill-fill" class="bar-fill" style="background:var(--purple); width:0%"></div><div class="bar-text" id="e-skill-txt">ЯРОСТЬ: 0%</div></div>
-            <div class="bar-bg" style="margin-top:2px;"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div class="bar-text" id="hp-e-txt">100 / 100</div></div>
+            <div class="p-icon" style="border-color:var(--red)" onclick="showEnemyInfo()"><img id="enemy-img" src=""></div>
+            <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div class="bar-text" id="hp-e-txt">100 / 100</div></div>
         </div>
     </div>
 
@@ -106,70 +113,43 @@
         <button id="thor-btn" onclick="useThor()">МОЛОТ ТОРА</button>
     </div>
 
-    <div id="loot-overlay" class="overlay">
-        <div class="card">
-            <h2 id="loot-title">ДОБЫЧА</h2>
-            <div id="loot-desc" style="font-size:12px; color:var(--blue); font-weight:bold;"></div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin:10px 0;">
-                <div id="current-item" style="font-size:10px; padding:5px; background:#000; border:1px solid #333;"></div>
-                <div id="new-item" style="font-size:10px; padding:5px; background:#000; border:1px solid #333;"></div>
-            </div>
-            <button class="menu-btn" style="background:var(--accent)" onclick="equipLoot()">ВЗЯТЬ</button>
-            <button class="menu-btn" style="background:var(--red)" onclick="closeLoot()">ВЫБРОСИТЬ</button>
-        </div>
-    </div>
-
 <script>
-    const TYPES = ["Пр. Рука", "Лев. Рука", "Шлем", "Грудь", "Ноги", "Кольцо"];
-    
+    const SND = { hit: new Audio('hit.mp3'), combo: new Audio('combo.mp3'), thor: new Audio('thor.mp3'), lvlup: new Audio('lvlup.mp3'), death: new Audio('death.mp3') };
+    function playSnd(name) { try { SND[name].currentTime = 0; SND[name].play(); } catch(e) {} }
+
     let st = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
         hLvl: parseInt(localStorage.getItem('v_hlvl')) || 1,
         exp: parseInt(localStorage.getItem('v_exp')) || 0,
         bottles: parseInt(localStorage.getItem('v_bot')) || 0,
         banUntil: parseInt(localStorage.getItem('v_ban')) || 0,
-        equip: JSON.parse(localStorage.getItem('v_equip')) || {},
         bAtk: parseInt(localStorage.getItem('v_batk')) || 10,
         bHP: parseInt(localStorage.getItem('v_bhp')) || 100,
         bAgi: parseInt(localStorage.getItem('v_bagi')) || 5,
         statPoints: parseInt(localStorage.getItem('v_sp')) || 0,
-        atk: 10, mHP: 100, mSH: 0, hp: 100, sh: 0, agi: 5, ehp: 0, mehp: 100,
-        thor: 0, board: [], sel: null, lock: false, eSkill: 0, adm: 0, 
-        valkTimer: 0, pendingItem: null
+        equip: JSON.parse(localStorage.getItem('v_equip')) || {},
+        atk: 10, mHP: 100, hp: 100, agi: 5, ehp: 0, mehp: 100,
+        thor: 0, board: [], sel: null, lock: false, valkTimer: 0, adm: 0
     };
 
     function calcStats() {
-        st.atk = st.bAtk; st.mHP = st.bHP; st.mSH = 0; st.agi = st.bAgi;
-        Object.entries(st.equip).forEach(([slot, i]) => {
-            if(i.atk) st.atk += i.atk;
-            if(i.hp) st.mHP += i.hp;
-            if(i.shd) st.mSH += i.shd;
-            if(i.agi) st.agi += i.agi;
-        });
+        st.atk = st.bAtk; st.mHP = st.bHP; st.agi = st.bAgi;
+        Object.values(st.equip).forEach(i => { if(i.atk) st.atk += i.atk; if(i.hp) st.mHP += i.hp; if(i.agi) st.agi += i.agi; });
         if(st.hp > st.mHP) st.hp = st.mHP;
     }
 
     function init() {
         calcStats();
         if (checkBan()) return;
-        
         const isB = st.lvl % 25 === 0;
         let savedEHP = parseInt(localStorage.getItem('v_ehp'));
-        
-        if (savedEHP > 0) {
-            st.mehp = isB ? (100 + st.lvl * 95) * 6 : 100 + st.lvl * 95;
-            st.ehp = savedEHP;
-            localStorage.removeItem('v_ehp'); // Очищаем после загрузки
-        } else {
-            st.mehp = isB ? (100 + st.lvl * 95) * 6 : 100 + st.lvl * 95;
-            st.ehp = st.mehp;
-        }
-        
-        st.eSkill = 0; st.valkTimer = 0;
+        st.mehp = isB ? (100 + st.lvl * 95) * 6 : 100 + st.lvl * 95;
+        st.ehp = (savedEHP > 0) ? savedEHP : st.mehp;
+        localStorage.removeItem('v_ehp');
+        st.valkTimer = 0;
         const img = document.getElementById('enemy-img');
         img.src = isB ? `boss${Math.floor(Math.random()*3)+1}.png` : `mob${Math.floor(Math.random()*15)+1}.png`;
         img.onerror = () => img.src = 'https://cdn-icons-png.flaticon.com/512/606/606548.png';
-        
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
         for (let i = 0; i < 49; i++) {
             st.board.push({type: Math.floor(Math.random() * 5), frozen: false, valk: false});
@@ -183,38 +163,22 @@
         document.getElementById('lvl').innerText = st.lvl;
         document.getElementById('hLvl').innerText = st.hLvl;
         document.getElementById('hp-val').innerText = Math.floor(st.hp);
-        document.getElementById('sh-val').innerText = Math.floor(st.sh);
-        document.getElementById('bottles-val').innerText = st.bottles;
-        
-        // Опыт
         let expReq = st.hLvl * 800;
-        let expPerc = Math.min(100, (st.exp / expReq) * 100);
-        document.getElementById('exp-fill').style.width = expPerc + '%';
+        document.getElementById('exp-fill').style.width = (st.exp/expReq*100) + '%';
         document.getElementById('exp-txt').innerText = `${Math.floor(st.exp)} / ${expReq}`;
-
-        // HP Героя
         document.getElementById('hp-p-fill').style.width = (st.hp/st.mHP*100)+'%';
         document.getElementById('hp-p-txt').innerText = `${Math.floor(st.hp)} / ${st.mHP}`;
-        
-        // Щит
-        document.getElementById('sh-p-fill').style.width = st.mSH > 0 ? (st.sh/st.mSH*100)+'%' : '0%';
-        document.getElementById('sh-p-txt').innerText = `${Math.floor(st.sh)} / ${st.mSH}`;
-
-        // HP Врага
         document.getElementById('hp-e-fill').style.width = (st.ehp/st.mehp*100)+'%';
         document.getElementById('hp-e-txt').innerText = `${Math.floor(st.ehp)} / ${st.mehp}`;
-
-        // Босс скилл
-        document.getElementById('e-skill-fill').style.width = st.eSkill + "%";
-        document.getElementById('e-skill-txt').innerText = `ЯРОСТЬ: ${st.eSkill}%`;
-
         const btn = document.getElementById('thor-btn');
         btn.className = st.thor >= 100 ? 'ready' : '';
         btn.style.background = `linear-gradient(90deg, var(--blue) ${st.thor}%, #222 ${st.thor}%)`;
-
         st.board.forEach((o, i) => {
             const c = document.getElementById('c-' + i);
-            c.style.backgroundImage = o.type === -1 ? 'none' : `url(rune${o.type+1}.png)`;
+            if(o.type === -1) { c.classList.add('vanish'); } else {
+                c.classList.remove('vanish');
+                c.style.backgroundImage = `url(rune${o.type+1}.png)`;
+            }
             c.style.outline = st.sel === i ? '2px solid #fff' : 'none';
             c.classList.toggle('frozen', o.frozen);
             c.classList.toggle('valk-mark', o.valk);
@@ -222,137 +186,71 @@
     }
 
     async function resolveBoard() {
-        st.lock = true;
-        let combo = 1;
+        st.lock = true; let combo = 1;
         while (true) {
             let toClear = new Set();
-            let specialCells = [];
-
             for(let r=0; r<7; r++) {
                 for(let c=0; c<7; c++) {
-                    let i = r*7+c;
-                    if(st.board[i].type === -1) continue;
+                    let i = r*7+c; if(st.board[i].type === -1) continue;
                     if(c<5 && st.board[i].type===st.board[i+1].type && st.board[i].type===st.board[i+2].type) {
-                        let count = 3; 
-                        if(c<4 && st.board[i].type===st.board[i+3].type) count=4; 
-                        if(c<3 && st.board[i].type===st.board[i+4].type) count=5;
-                        for(let k=0; k<count; k++) toClear.add(i+k);
-                        if(count === 4) specialCells.push({idx: i, mode: 'line'});
-                        if(count === 5) specialCells.push({idx: i, mode: 'bomb'});
+                        for(let k=0; k<3; k++) toClear.add(i+k);
                     }
                     if(r<5 && st.board[i].type===st.board[i+7].type && st.board[i].type===st.board[i+14].type) {
-                        let count = 3; 
-                        if(r<4 && st.board[i].type===st.board[i+21].type) count=4; 
-                        if(r<3 && st.board[i].type===st.board[i+28].type) count=5;
-                        for(let k=0; k<count; k++) toClear.add(i+k*7);
-                        if(count === 4) specialCells.push({idx: i, mode: 'line'});
-                        if(count === 5) specialCells.push({idx: i, mode: 'bomb'});
+                        for(let k=0; k<3; k++) toClear.add(i+k*7);
                     }
                 }
             }
-
             if (toClear.size === 0) break;
-
-            specialCells.forEach(s => {
-                if(s.mode === 'line') {
-                    let row = Math.floor(s.idx/7); for(let x=0; x<7; x++) toClear.add(row*7+x);
-                } else if(s.mode === 'bomb') {
-                    let r=Math.floor(s.idx/7), c=s.idx%7;
-                    for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
-                        let nr=r+i, nc=c+j; if(nr>=0&&nr<7&&nc>=0&&nc<7) toClear.add(nr*7+nc);
-                    }
-                }
-            });
+            
+            // Анимация исчезновения
+            toClear.forEach(i => document.getElementById('c-'+i).classList.add('vanish'));
+            await new Promise(r => setTimeout(r, 400)); // Задержка на "красоту"
 
             let d = Math.floor(toClear.size * st.atk * (1 + (combo-1)*0.2));
-            st.ehp -= d; 
-            st.exp += toClear.size * 10 * combo; // Даем больше опыта за плитки
-            st.thor = Math.min(100, st.thor + toClear.size * 2);
-            
-            pop("-"+d, 'var(--gold)');
+            st.ehp -= d; st.exp += toClear.size * 10; st.thor = Math.min(100, st.thor + toClear.size * 2);
+            playSnd('hit'); pop("-"+d, 'var(--gold)');
             checkLevelUp();
 
             toClear.forEach(i => { st.board[i].type = -1; st.board[i].frozen = false; st.board[i].valk = false; }); 
-            draw();
-            await new Promise(r => setTimeout(r, 250));
-            fillBoard(); draw(); await new Promise(r => setTimeout(r, 200));
+            draw(); 
+            await new Promise(r => setTimeout(r, 300));
+            fillBoard(); draw(); 
+            await new Promise(r => setTimeout(r, 400)); // Пауза перед следующим комбо
             combo++;
         }
-        
-        if (st.ehp <= 0) {
-            st.ehp = 0; generateLoot(st.lvl % 25 === 0);
+
+        if (st.ehp <= 0) { 
+            st.ehp = 0; st.lvl++; 
+            await new Promise(r => setTimeout(r, 600)); // Пауза перед новым мобом
+            save(); init(); 
         } else {
             if(st.valkTimer > 0) {
                 st.valkTimer--;
                 if(st.valkTimer === 0 && st.board.some(o => o.valk)) {
-                    let h = Math.floor(st.mehp * 0.10);
-                    st.ehp = Math.min(st.mehp, st.ehp + h);
-                    pop("+"+h, "var(--accent)");
+                    st.ehp = Math.min(st.mehp, st.ehp + Math.floor(st.mehp * 0.1));
                     st.board.forEach(o => o.valk = false);
                 }
             }
-            enemyTurn();
+            await new Promise(r => setTimeout(r, 800)); // ЗАДЕРЖКА ПЕРЕД ХОДОМ ВРАГА
+            enemyTurn(); 
         }
-        st.lock = false;
-        save();
-    }
-
-    function checkLevelUp() {
-        let req = st.hLvl * 800;
-        if(st.exp >= req) {
-            st.exp -= req; st.hLvl++; st.statPoints += 3;
-            document.getElementById('levelup-screen').style.display = 'flex';
-            updateStatUI();
-        }
-    }
-
-    function updateStatUI() {
-        document.getElementById('stat-points').innerText = st.statPoints;
-        document.getElementById('st-atk-val').innerText = st.bAtk;
-        document.getElementById('st-hp-val').innerText = st.bHP;
-        document.getElementById('st-agi-val').innerText = st.bAgi;
-    }
-
-    function addStat(type) {
-        if(st.statPoints <= 0) return;
-        if(type === 'atk') st.bAtk += 2;
-        if(type === 'hp') st.bHP += 25;
-        if(type === 'agi') st.bAgi = Math.min(40, st.bAgi + 1);
-        st.statPoints--; updateStatUI(); calcStats();
-    }
-
-    function closeLevelUp() {
-        if(st.statPoints > 0) return alert("Потратьте все очки!");
-        document.getElementById('levelup-screen').style.display = 'none';
-        save(); draw();
+        st.lock = false; save();
     }
 
     function enemyTurn() {
         const isB = st.lvl % 25 === 0;
-        let d = Math.floor(8 + st.lvl * 3);
+        let d = Math.floor(8 + st.lvl * 3.5);
         if(isB) {
-            st.eSkill += 25;
-            if(st.eSkill >= 100) {
-                st.eSkill = 0;
-                if(st.lvl === 15) {
-                    for(let i=0; i<8; i++) st.board[Math.floor(Math.random()*49)].frozen = true;
-                    pop("МОРОЗ", "var(--ice)");
-                } else if(st.lvl === 75) {
-                    for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].valk = true;
-                    st.valkTimer = 3; pop("МЕТКИ", "var(--gold)");
-                } else d *= 2;
-            }
+            if(st.lvl === 15 && Math.random() > 0.7) { for(let i=0; i<8; i++) st.board[Math.floor(Math.random()*49)].frozen = true; }
+            else if(st.lvl === 75 && Math.random() > 0.7) { for(let i=0; i<3; i++) st.board[Math.floor(Math.random()*49)].valk = true; st.valkTimer = 3; }
         }
-        if(Math.random()*100 > st.agi) {
-            if(st.sh > 0) { let sD = Math.min(st.sh, d); st.sh -= sD; d -= sD; }
-            if(d > 0) st.hp -= d;
-        } else pop("УКЛОН", "#fff");
-
+        if(Math.random()*100 > st.agi) { st.hp -= d; pop("-"+d, "var(--red)"); }
+        else pop("УКЛОН", "#fff");
         if(st.hp <= 0) {
             st.hp = 0; st.exp = Math.floor(st.exp * 0.9);
             st.banUntil = Date.now() + 3600000;
-            localStorage.setItem('v_ehp', st.ehp); // Сохраняем ХП врага при смерти
-            save(); checkBan();
+            localStorage.setItem('v_ehp', st.ehp);
+            playSnd('death'); save(); checkBan();
         }
         draw();
     }
@@ -363,13 +261,11 @@
         else {
             let a = st.sel, b = i;
             if((Math.abs(a-b)===1 && Math.floor(a/7)===Math.floor(b/7)) || Math.abs(a-b)===7) {
-                st.lock = true; swap(a,b); resolveBoard(); st.sel = null;
+                st.lock = true;
+                let t = {...st.board[a]}; st.board[a] = {...st.board[b]}; st.board[b] = t;
+                resolveBoard(); st.sel = null;
             } else { st.sel = i; draw(); }
         }
-    }
-
-    function swap(a, b) { 
-        let t = {...st.board[a]}; st.board[a] = {...st.board[b]}; st.board[b] = t; 
     }
 
     function fillBoard() {
@@ -385,65 +281,36 @@
 
     async function useThor() {
         if(st.thor<100 || st.lock) return; st.lock=true; st.thor=0;
-        st.board.forEach((o, i) => {
-            if(Math.random() > 0.6) { o.type = -1; o.frozen = false; o.valk = false; }
-        });
-        st.ehp -= st.atk * 8; pop("ТОР", "var(--blue)");
+        playSnd('thor');
+        st.board.forEach(o => { if(Math.random()>0.4) o.type = -1; o.frozen = false; o.valk = false; });
+        st.ehp -= st.atk * 10; pop("МОЛНИЯ!", "var(--blue)");
+        draw(); await new Promise(r => setTimeout(r, 500));
         fillBoard(); draw(); resolveBoard();
     }
 
-    function checkBan() {
-        const now = Date.now();
-        if (st.banUntil > now) {
-            document.getElementById('death-screen').style.display = 'flex';
-            const btnBox = document.getElementById('res-action-box');
-            btnBox.innerHTML = st.bottles > 0 ? `<button class="menu-btn" style="background:var(--purple)" onclick="useBottle()">🧴 ВОСКРЕСНУТЬ</button>` : `<p>Нужна бутылка!</p>`;
-            let diff = Math.ceil((st.banUntil - now) / 1000);
-            document.getElementById('ban-timer').innerText = `${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}`;
-            setTimeout(checkBan, 1000); return true;
-        }
-        document.getElementById('death-screen').style.display = 'none'; return false;
+    function showHeroInfo() {
+        document.getElementById('info-content').innerHTML = `<h2 style="color:var(--gold)">ВИКИНГ (УР. ${st.hLvl})</h2>⚔️ Атака: ${st.atk}<br>❤️ Жизнь: ${Math.floor(st.hp)}/${st.mHP}<br>🍃 Ловкость: ${st.agi}%`;
+        document.getElementById('info-screen').style.display = 'flex';
+    }
+    function showEnemyInfo() {
+        document.getElementById('info-content').innerHTML = `<h2 style="color:var(--red)">ВРАГ (ЭТАП ${st.lvl})</h2>⚔️ Урон: ~${Math.floor(8 + st.lvl * 3.5)}<br>❤️ Жизнь: ${Math.floor(st.ehp)}/${st.mehp}`;
+        document.getElementById('info-screen').style.display = 'flex';
     }
 
+    function checkLevelUp() {
+        let req = st.hLvl * 800;
+        if(st.exp >= req) { st.exp -= req; st.hLvl++; st.statPoints += 3; playSnd('lvlup'); document.getElementById('levelup-screen').style.display = 'flex'; updateStatUI(); }
+    }
+    function updateStatUI() { document.getElementById('stat-points').innerText = st.statPoints; document.getElementById('st-atk-val').innerText = st.bAtk; document.getElementById('st-hp-val').innerText = st.bHP; document.getElementById('st-agi-val').innerText = st.bAgi; }
+    function addStat(type) { if(st.statPoints <= 0) return; if(type === 'atk') st.bAtk += 2; if(type === 'hp') st.bHP += 25; if(type === 'agi') st.bAgi = Math.min(40, st.bAgi + 1); st.statPoints--; updateStatUI(); calcStats(); }
+    function closeLevelUp() { if(st.statPoints > 0) return; document.getElementById('levelup-screen').style.display = 'none'; save(); draw(); }
+    function checkBan() { const now = Date.now(); if (st.banUntil > now) { document.getElementById('death-screen').style.display = 'flex'; const btnBox = document.getElementById('res-action-box'); btnBox.innerHTML = st.bottles > 0 ? `<button class="menu-btn" style="background:var(--purple)" onclick="useBottle()">🧴 ВОСКРЕСНУТЬ</button>` : `<p>Ждите 1 час.</p>`; let diff = Math.ceil((st.banUntil - now) / 1000); document.getElementById('ban-timer').innerText = `${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}`; setTimeout(checkBan, 1000); return true; } document.getElementById('death-screen').style.display = 'none'; return false; }
     function useBottle() { st.bottles--; st.hp = st.mHP; st.banUntil = 0; save(); init(); }
-
-    function generateLoot(isB) {
-        const type = TYPES[Math.floor(Math.random()*TYPES.length)];
-        const rare = isB ? 2 : (Math.random() > 0.9 ? 1 : 0);
-        st.pendingItem = { type, rare, atk: Math.floor(5*(rare+1)*(1+st.lvl*0.1)), hp: Math.floor(40*(rare+1)), shd: 0 };
-        document.getElementById('loot-overlay').style.display = 'flex';
-        document.getElementById('loot-title').innerText = type;
-        document.getElementById('new-item').innerText = `АТК: +${st.pendingItem.atk}`;
-    }
-
-    function equipLoot() { st.equip[st.pendingItem.type] = st.pendingItem; closeLoot(); }
-    function closeLoot() { 
-        document.getElementById('loot-overlay').style.display = 'none'; 
-        if(st.ehp <= 0) { st.lvl++; save(); init(); } 
-    }
-
-    function save() {
-        localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_hlvl', st.hLvl);
-        localStorage.setItem('v_exp', st.exp); localStorage.setItem('v_bot', st.bottles);
-        localStorage.setItem('v_batk', st.bAtk); localStorage.setItem('v_bhp', st.bHP);
-        localStorage.setItem('v_bagi', st.bAgi); localStorage.setItem('v_sp', st.statPoints);
-        localStorage.setItem('v_equip', JSON.stringify(st.equip));
-    }
-
+    function save() { localStorage.setItem('v_lvl', st.lvl); localStorage.setItem('v_hlvl', st.hLvl); localStorage.setItem('v_exp', st.exp); localStorage.setItem('v_bot', st.bottles); localStorage.setItem('v_batk', st.bAtk); localStorage.setItem('v_bhp', st.bHP); localStorage.setItem('v_bagi', st.bAgi); localStorage.setItem('v_sp', st.statPoints); localStorage.setItem('v_equip', JSON.stringify(st.equip)); }
     function admTrig() { st.adm++; if(st.adm>=5){ st.adm=0; document.getElementById('admin-screen').style.display='flex'; } }
-    function adminAction(act) {
-        if(act==='res') { st.banUntil=0; st.hp=st.mHP; }
-        if(act==='lvl') { let l=prompt("Этап:"); if(l) st.lvl=parseInt(l); st.ehp=0; }
-        if(act==='exp') { st.exp += 1000; checkLevelUp(); }
-        save(); init(); closeO();
-    }
+    function adminAction(act) { if(act==='res') { st.banUntil=0; st.hp=st.mHP; } if(act==='lvl') { let l=prompt("Этап:"); if(l) st.lvl=parseInt(l); st.ehp=0; } if(act==='exp') { st.exp += 1000; checkLevelUp(); } save(); init(); closeO(); }
     function closeO() { document.querySelectorAll('.overlay').forEach(o => { if(o.id!=='death-screen') o.style.display='none'; }); }
-    function pop(txt, col) {
-        const p = document.createElement('div'); p.className = 'dmg-text';
-        p.innerText = txt; p.style.color = col; p.style.left = '50%'; p.style.top = '30%';
-        document.body.appendChild(p); setTimeout(() => p.remove(), 1200);
-    }
-    
+    function pop(txt, col) { const p = document.createElement('div'); p.className = 'dmg-text'; p.innerText = txt; p.style.color = col; p.style.left = '50%'; p.style.top = '30%'; document.body.appendChild(p); setTimeout(() => p.remove(), 1500); }
     init();
 </script>
 </body>
