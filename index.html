@@ -3,33 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viking RPG: Dev & Loot</title>
+    <title>Viking RPG: Final Fix</title>
     <style>
-        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --gray: #95a5a6; --ice: #a2d9ff; }
+        :root { --gold: #ffd700; --accent: #2ecc71; --red: #e74c3c; --blue: #3498db; --purple: #a55eea; --gray: #95a5a6; }
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; overflow: hidden; user-select: none; touch-action: manipulation; height: 100vh; display: flex; flex-direction: column; }
 
-        /* Слои */
-        .header { background: #111; height: 40px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 11px; z-index: 100; position: relative; }
-        .arena { height: 28vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; position: relative; z-index: 100; }
-        .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; z-index: 10; }
-
-        /* Иконки и полоски */
-        .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .header { background: #111; height: 40px; display: flex; justify-content: space-around; align-items: center; border-bottom: 1px solid #333; font-size: 11px; z-index: 1000; position: relative; }
+        
+        .arena { height: 28vh; background: #0a0a0a; border-bottom: 2px solid #444; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; position: relative; z-index: 1000; }
+        .char-box { width: 45%; display: flex; flex-direction: column; align-items: center; cursor: pointer; pointer-events: auto; }
+        
+        /* Иконки теперь кликабельны */
         .p-icon { width: 80px; height: 80px; border-radius: 12px; border: 3px solid #444; background: #111; overflow: hidden; pointer-events: none; }
         .p-icon img { width: 100%; height: 100%; object-fit: cover; }
         
         .bar-bg { width: 100%; height: 16px; background: #222; border-radius: 4px; margin-top: 4px; border: 1px solid #444; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: 0.5s; }
-        .bar-text { position: absolute; width: 100%; top: 0; left: 0; font-size: 10px; line-height: 16px; font-weight: bold; text-shadow: 1px 1px #000; }
+        .bar-text { position: absolute; width: 100%; top: 0; left: 0; font-size: 10px; line-height: 16px; font-weight: bold; text-shadow: 1px 1px #000; pointer-events: none; }
 
-        /* Сетка */
+        .game-space { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; z-index: 10; }
         #grid-container { width: 92vw; max-width: 340px; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #111; padding: 6px; border-radius: 8px; border: 2px solid #333; }
+        
         .cell { background-color: #1a1a1a; background-size: 85%; background-repeat: no-repeat; background-position: center; border: 1px solid #333; border-radius: 4px; }
         @keyframes fallIn { 0% { transform: translateY(-300px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
         .falling { animation: fallIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
         .cell.vanish { transform: scale(0); opacity: 0; transition: 0.3s; }
 
-        /* Оверлеи */
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .card { background: #1a1a1a; border: 2px solid var(--gold); border-radius: 12px; padding: 20px; width: 85%; max-width: 320px; }
         .menu-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: #fff; text-transform: uppercase; }
@@ -39,7 +38,7 @@
         #thor-btn { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 2px solid #444; background: #222; color: #fff; font-weight: bold; }
         #thor-btn.ready { border-color: var(--blue); box-shadow: 0 0 10px var(--blue); }
 
-        .dmg-text { position: absolute; font-size: 24px; font-weight: bold; animation: fly 1s forwards; z-index: 1000; pointer-events: none; }
+        .dmg-text { position: absolute; font-size: 24px; font-weight: bold; animation: fly 1s forwards; z-index: 2000; pointer-events: none; }
         @keyframes fly { 0% { opacity: 0; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
@@ -48,7 +47,7 @@
     <div id="admin-screen" class="overlay">
         <div class="card">
             <h2 style="color:var(--red)">ОДИН-ПАНЕЛЬ</h2>
-            <button class="menu-btn" style="background:#333" onclick="adminAction('lvl')">ПЕРЕЙТИ НА ЭТАП</button>
+            <button class="menu-btn" style="background:#333" onclick="adminAction('lvl')">ВЫБРАТЬ ЭТАП</button>
             <button class="menu-btn" style="background:#333" onclick="adminAction('res')">ВОСКРЕСНУТЬ</button>
             <button class="menu-btn" style="background:var(--red)" onclick="closeO()">ЗАКРЫТЬ</button>
         </div>
@@ -56,7 +55,7 @@
 
     <div id="loot-screen" class="overlay">
         <div class="card">
-            <h2 id="loot-title" style="margin:0 0 10px 0; color:var(--gold)">ТРОФЕЙ!</h2>
+            <h2 id="loot-title" style="margin:0 0 10px 0; color:var(--gold)">НОВЫЙ ТРОФЕЙ!</h2>
             <div id="loot-info" style="text-align:left; background:#222; padding:15px; border-radius:8px; margin-bottom:15px; font-size:14px; border:1px solid #444;"></div>
             <button class="menu-btn" style="background:var(--accent)" onclick="takeLoot()">ВЗЯТЬ</button>
             <button class="menu-btn" style="background:var(--red)" onclick="closeLoot()">ВЫБРОСИТЬ</button>
@@ -78,11 +77,15 @@
 
     <div class="arena">
         <div class="char-box" onclick="showHeroInfo()">
-            <div class="p-icon" style="border-color:var(--accent)"><img src="https://cdn-icons-png.flaticon.com/512/3534/3534065.png"></div>
+            <div class="p-icon" style="border-color:var(--accent)">
+                <img src="https://img.freepik.com/free-photo/view-fierce-viking-warrior_23-2150710034.jpg" alt="Hero">
+            </div>
             <div class="bar-bg"><div id="hp-p-fill" class="bar-fill" style="background:var(--accent)"></div><div class="bar-text" id="hp-p-txt">100/100</div></div>
         </div>
         <div class="char-box" onclick="showEnemyInfo()">
-            <div class="p-icon" style="border-color:var(--red)"><img id="enemy-img" src="https://cdn-icons-png.flaticon.com/512/606/606548.png"></div>
+            <div class="p-icon" style="border-color:var(--red)">
+                <img id="enemy-img" src="https://img.freepik.com/free-photo/creepy-halloween-monster-isolated_23-2151693892.jpg" alt="Enemy">
+            </div>
             <div class="bar-bg"><div id="hp-e-fill" class="bar-fill" style="background:var(--red)"></div><div class="bar-text" id="hp-e-txt">100/100</div></div>
         </div>
     </div>
@@ -95,8 +98,6 @@
 <script>
     let st = {
         lvl: parseInt(localStorage.getItem('v_lvl')) || 1,
-        bottles: parseInt(localStorage.getItem('v_bot')) || 0,
-        banUntil: parseInt(localStorage.getItem('v_ban')) || 0,
         equip: JSON.parse(localStorage.getItem('v_equip')) || {},
         bAtk: 10, bHP: 100, bAgi: 5,
         atk: 10, mHP: 100, hp: 100, agi: 5, ehp: 0, mehp: 100,
@@ -128,14 +129,11 @@
 
     function admTrig() {
         st.adm++;
-        if(st.adm >= 5) {
-            st.adm = 0;
-            document.getElementById('admin-screen').style.display = 'flex';
-        }
+        if(st.adm >= 5) { st.adm = 0; document.getElementById('admin-screen').style.display = 'flex'; }
     }
 
     function adminAction(act) {
-        if(act === 'res') { st.banUntil = 0; st.hp = st.mHP; }
+        if(act === 'res') { st.hp = st.mHP; }
         if(act === 'lvl') { let l = prompt("Номер этапа:"); if(l) st.lvl = parseInt(l); }
         save(); closeO(); init();
     }
@@ -143,7 +141,7 @@
     function generateDrop() {
         let rRoll = Math.random() * 100;
         let rIdx = 0;
-        if(rRoll > 99) rIdx = 3; else if(rRoll > 85) rIdx = 2; else if(rRoll > 60) rIdx = 1;
+        if(rRoll > 98) rIdx = 3; else if(rRoll > 85) rIdx = 2; else if(rRoll > 60) rIdx = 1;
 
         let base = lootTable[Math.floor(Math.random() * lootTable.length)];
         let rarity = RARITY[rIdx];
@@ -162,17 +160,14 @@
             Слот: <b>${base.slot}</b><br>
             Бонус: <span style="color:var(--accent)">+${st.pendingLoot.val} ${base.stat.toUpperCase()}</span><br><br>
             <div style="border-top:1px solid #444; padding-top:10px">
-                <small style="color:#888">Сейчас надето: +${curVal} ${base.stat.toUpperCase()}</small>
+                <small style="color:#888">Текущий бонус слота: +${curVal}</small>
             </div>
         `;
         document.getElementById('loot-screen').style.display = 'flex';
     }
 
     function takeLoot() {
-        if(st.pendingLoot) {
-            st.equip[st.pendingLoot.slot] = st.pendingLoot;
-            save(); calcStats();
-        }
+        if(st.pendingLoot) { st.equip[st.pendingLoot.slot] = st.pendingLoot; save(); calcStats(); }
         closeLoot();
     }
 
@@ -184,11 +179,15 @@
 
     function init() {
         calcStats();
-        if (st.banUntil > Date.now()) return;
         st.mehp = 100 + st.lvl * 95;
         if(st.lvl % 25 === 0) st.mehp *= 6;
         st.ehp = st.mehp;
         
+        // Рандомная картинка врага
+        const enemyImg = document.getElementById('enemy-img');
+        const enemyIds = [2151693892, 2151693895, 2150710001];
+        enemyImg.src = `https://img.freepik.com/free-photo/creepy-monster-${enemyIds[st.lvl % 3] || 2151693892}.jpg`;
+
         const g = document.getElementById('grid-container'); g.innerHTML = ''; st.board = [];
         for (let i = 0; i < 49; i++) {
             st.board.push({type: Math.floor(Math.random() * 5), isNew: true});
@@ -217,7 +216,8 @@
             if(o.type === -1) c.classList.add('vanish');
             else {
                 c.classList.remove('vanish');
-                c.style.backgroundImage = `url(rune${o.type+1}.png)`;
+                c.style.backgroundImage = `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png)`; // Заглушка руны
+                c.style.backgroundColor = ['#2c3e50','#8e44ad','#2980b9','#27ae60','#e67e22'][o.type];
                 if(o.isNew) {
                     c.classList.remove('falling'); void c.offsetWidth;
                     c.classList.add('falling'); o.isNew = false;
@@ -258,7 +258,7 @@
 
         if (st.ehp <= 0) {
             st.lvl++; save(); 
-            generateDrop(); // Остановка здесь
+            generateDrop();
         } else {
             await new Promise(r => setTimeout(r, 600));
             enemyTurn();
@@ -270,7 +270,7 @@
         let d = Math.floor(8 + st.lvl * 3.5);
         if(Math.random()*100 > st.agi) { st.hp -= d; pop("-"+d, "var(--red)"); }
         else pop("УКЛОН", "#fff");
-        if(st.hp <= 0) { st.banUntil = Date.now() + 3600000; alert("Вы погибли!"); location.reload(); }
+        if(st.hp <= 0) { st.hp = 0; alert("Вы погибли! Перезагрузка."); location.reload(); }
         draw();
     }
 
@@ -286,9 +286,12 @@
 
     function handle(i) {
         if(st.lock) return;
-        if(st.sel === null) st.sel = i;
-        else {
+        if(st.sel === null) {
+            st.sel = i;
+            document.getElementById('c-'+i).style.border = '2px solid #fff';
+        } else {
             let a = st.sel, b = i;
+            document.getElementById('c-'+a).style.border = '1px solid #333';
             if(Math.abs(a-b)===1 || Math.abs(a-b)===7) {
                 let t = {...st.board[a]}; st.board[a] = {...st.board[b]}; st.board[b] = t;
                 resolveBoard(); st.sel = null;
@@ -297,8 +300,8 @@
     }
 
     function showHeroInfo() {
-        let items = Object.values(st.equip).map(i => `<div class="${RARITY[i.rarityIdx].c}">• ${i.name}: +${i.val} ${i.stat.toUpperCase()}</div>`).join('') || "Пусто";
-        document.getElementById('info-content').innerHTML = `<h3>ВИКИНГ</h3>⚔️ Атака: ${st.atk}<br>❤️ HP: ${st.mHP}<br>🍃 Ловкость: ${st.agi}%<br><br><b>СНАРЯЖЕНИЕ:</b><br>${items}`;
+        let items = Object.values(st.equip).map(i => `<div class="${RARITY[i.rarityIdx].c}">• ${i.name}: +${i.val} ${i.stat.toUpperCase()}</div>`).join('') || "Нет вещей";
+        document.getElementById('info-content').innerHTML = `<h3>ВИКИНГ</h3>⚔️ Атака: ${st.atk}<br>❤️ HP: ${st.mHP}<br>🍃 Уворот: ${st.agi}%<br><br><b>СНАРЯЖЕНИЕ:</b><br>${items}`;
         document.getElementById('info-screen').style.display = 'flex';
     }
 
